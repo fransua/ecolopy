@@ -157,7 +157,7 @@ class Abundance (object):
             lsummand = self.factor + log(x[0]) * self.S - \
                        lpochham (x[1], int (self.J)) + K [int (A)] + \
                        A * log (x[1]) - lpochham (x[0], int (A)) - divisor
-            ...
+            
 
     def get_kda (self):
 
@@ -221,65 +221,12 @@ from os import listdir
 from cPickle import load
 
 
-def parthy_cmd (parthy_path, abd):
-    '''
-    run parthy just has function name!
-    '''
-    return '%s -i %s -s 1 -n 0 -N 100000 -J %i -t1 %f -I1 %f -L1 %1.2f\n' % \
-           (parthy_path, abd.data_path[:-4],
-            abd.J_tot, abd.theta, float(abd.J)/10, abd.lnl)
-
 def main():
     """
     main function
     infile = '/home/francisco/tools/parthy/bci.txt'
     """
-    dataset = 'my_mask'
-    PATH = '/home/francisco/project/repetitiones/dataset/pickle_%s/' % (dataset)
-    parthy_path = '/home/francisco/bin/parthy'
-    parthy_dir = '/home/francisco/project/repetitiones/dataset/parthy_ewens/'
-    
-    # repeat dict
-    repeats    = {}
-    # dict randomization
-    chr_len = {}
-    for spe in listdir (PATH):
-        if spe.startswith (('Ornithorhynchus', 'Phaeodactylum')):
-            continue
-        if not spe.endswith ('_repeats.pik'):
-            continue
-        spe = '_'.join(spe.split('_')[:-1])
-        try:
-            print spe
-            repeats.update (load (open (PATH + spe + '_repeats.pik')))
-            chr_len.update (load (open (PATH + spe + '_length.pik' )))
-        except IOError:
-            continue
-
-    print 'Computing abundances for:'
-    abundances = []
-    Popen (['mkdir', '-p', parthy_dir]).wait()
-    for spe in repeats:
-        print '    '+spe
-        Popen (['mkdir', '-p', parthy_dir + spe.replace (' ','_')]).wait()
-        for crm in chr_len [spe]:
-            Popen (['mkdir', '-p',
-                    parthy_dir + spe.replace (' ','_') + '/' + crm]).wait()
-            infile = parthy_dir + spe.replace (' ',
-                                               '_') + '/' + crm + '/reps.txt'
-            reps = []
-            for rep in repeats[spe]:
-                if not crm in repeats[spe][rep] or rep == 'total':
-                    continue
-                reps.append(repeats[spe][rep][crm])
-            open (infile, 'w').write ('\n'.join (map (str, reps)))
-            abundances.append ( Abundance (infile,
-                                           J_tot=sum(repeats [spe]['total'].values())))
-
-    cola = open ('Parthy_ewens.q', 'w')
-    for abd in abundances:
-        cola.write (parthy_cmd (parthy_path, abd))
-    cola.close()
+    pass
 
     
 
