@@ -10,12 +10,15 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.0"
 
-
-from scipy import optimize
-from numpy import log
-from scipy.special import gammaln
-from random import random
+try:
+    from math import lgamma
+except ImportError:
+    from scipy.special import gammaln as lgamma
+from numpy       import log
+from random      import random
 from scipy.stats import chisqprob
+from scipy       import optimize
+from numpy import logaddexp
 
 def table (out, spp=None):
     '''
@@ -29,7 +32,7 @@ def table (out, spp=None):
         counts[ind] += 1
     return counts.values()
 
-lpochham = lambda x, n: gammaln(x+n)-gammaln(x)
+lpochham = lambda x, n: lgamma(x+n)-lgamma(x)
 
 class Abundance (object):
     '''
@@ -60,13 +63,13 @@ class Abundance (object):
         get likelihood value of Ewens according to parthy/tetame
         returns likelihood and factor
         '''
-        factor = gammaln (self.J+1)
+        factor = lgamma (self.J+1)
         phi = table (self.abund)
         phi += [0] * (max (self.abund)-len (phi))
         for spe in xrange (self.S):
             factor -= log (max (1, self.abund[spe]))
         for spe in xrange (max (self.abund)):
-            factor -= gammaln (phi[spe] + 1)
+            factor -= lgamma (phi[spe] + 1)
         return (lpochham (self.theta,
                           self.J) - log (self.theta) * self.S - factor,
                 factor)
@@ -82,8 +85,10 @@ class Abundance (object):
         '''
         returns the likelihood of theta for a given dataset
         '''
+        if theta < 0:
+            return float ('-inf')
         theta = float (theta)
-        return self.S * log (theta) + gammaln (theta) - gammaln (theta + self.J)
+        return self.S * log (theta) + lgamma (theta) - lgamma (theta + self.J)
 
     def _shannon_entropy (self):
         '''
@@ -157,7 +162,6 @@ class Abundance (object):
             lsummand = self.factor + log(x[0]) * self.S - \
                        lpochham (x[1], int (self.J)) + K [int (A)] + \
                        A * log (x[1]) - lpochham (x[0], int (A)) - divisor
-            
 
     def get_kda (self):
 
@@ -200,35 +204,70 @@ class Abundance (object):
                     ls2 [im] = ls1 [im] + float (ls1 [im - 1] * (im - 1)) / (n - 1)
             for im in xrange (2, unq_abd [_in] + 1):
                 T [_in][im] = ls2 [im]
+        old_T = T[:]
+        for i in xrange (len (old_T)):
+            for j in xrange (len (old_T[i])):
+                T[i][j] = log (old_T[i][j]) if old_T[i][j]>0 else float ('-inf')
 
-        K = [0] * self.J
+        K = [None] * (self.J + 1)
         poly2 = K[:]
-        K [0] = 1
-        degree  = 0
-        for i in  xrange (len_unq):
+        K [0] = 0.0
+        degree  = 1
+        const = log (10**(4500.0/self.S))
+        for i in xrange (len_unq):
+            local_t = T [i]
+            deg = unq_abd [i]
             for j in xrange (frq_unq[i]):
-                for nn in xrange (degree+1):
-                    for mm in xrange (1, unq_abd [i]+1):
-                        if K[nn] > 0:
-                            poly2 [nn+mm] += T[i][mm]*K[nn]
-                degree += unq_abd[i]
-                for nn in xrange (degree+1):
-                    K [nn] = float (poly2[nn])/10**(4500.0/self.S)
-                    poly2[nn] = 0.0
+                nn = 0
+                while K[nn] is None:
+                    nn += 1
+                for nn in xrange (nn, degree):
+                    for mm in xrange (1, deg + 1):
+                        if poly2 [nn+mm] is None:
+                            print mm, nn, i, j, degree
+                            poly2 [nn+mm] = local_t[mm] + K[nn]
+                        else:
+                            print "  ", mm, nn, i, j, degree
+                            poly2 [nn+mm] = logaddexp (poly2 [nn+mm], local_t[mm] + K[nn])
+                degree += deg
+                nn = 0
+                while poly2[nn] is None:
+                    K [nn] = None
+                    nn+=1
+                for nn in xrange (nn, degree):
+                    K [nn] = poly2[nn] - const
+                    poly2[nn] = None
+        K = K [self.S:]
 
-from subprocess import Popen
-from os import listdir
-from cPickle import load
 
+#        K = [None] * (self.J + 1)
+#        poly2 = K[:]
+#        K [0] = 0.0
+#        degree  = 1
+#        const = log (10**(4500.0/self.S))
+#        for i in xrange (len_unq):
+#            for _ in xrange (frq_unq[i]):
+#                for nn in xrange (degree):
+#                    if K[nn] is None: continue
+#                    for mm in xrange (1, unq_abd [i]+1):
+#                        if poly2 [nn+mm] is None:
+#                            poly2 [nn+mm] = T[i][mm] + K[nn]
+#                        else:
+#                            poly2 [nn+mm] = logaddexp (poly2 [nn+mm], T[i][mm] + K[nn])
+#                degree += unq_abd[i]
+#                for nn in xrange (degree):
+#                    K [nn] = None if poly2[nn] is None else (poly2[nn] - const)
+#                    poly2[nn] = None
+#        K = K [self.S:]
 
 def main():
     """
     main function
     infile = '/home/francisco/tools/parthy/bci.txt'
     """
-    pass
-
-    
+    infile = '/home/francisco/tools/tetame/bci.txt'
+    abd = Abundance (infile)
+    abd.get_kda()
 
 if __name__ == "__main__":
     exit(main())
