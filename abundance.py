@@ -140,7 +140,7 @@ class Abundance (object):
         return abundances
 
 
-    def etienne_likelihood(self, x):
+    def etienne_likelihood(self, x, factor, K):
         '''
         logikelihood function where
           x[0]=theta
@@ -154,7 +154,7 @@ class Abundance (object):
         newdivisor = 0.0
         summand = 0.0
         for A in xrange (self.S, self.J):
-            lsummand = self.factor + log(x[0]) * self.S - \
+            lsummand = factor + log(x[0]) * self.S - \
                        lpochham (x[1], int (self.J)) + K [int (A)] + \
                        A * log (x[1]) - lpochham (x[0], int (A)) - divisor
             
@@ -205,8 +205,8 @@ class Abundance (object):
         poly2 = K[:]
         K [0] = 1
         degree  = 0
-        for i in  xrange (len_unq):
-            for j in xrange (frq_unq[i]):
+        for i in xrange (len_unq):
+            for _ in xrange (frq_unq[i]):
                 for nn in xrange (degree+1):
                     for mm in xrange (1, unq_abd [i]+1):
                         if K[nn] > 0:
@@ -216,16 +216,12 @@ class Abundance (object):
                     K [nn] = float (poly2[nn])/10**(4500.0/self.S)
                     poly2[nn] = 0.0
 
-from subprocess import Popen
-from os import listdir
-from cPickle import load
-
-
 def main():
     """
     main function
-    infile = '/home/francisco/tools/parthy/bci.txt'
+    infile = 'bci.txt'
     """
+    abd = Abundance ('bci.txt')
     pass
 
     
