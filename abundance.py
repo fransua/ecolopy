@@ -221,25 +221,21 @@ class Abundance (object):
                 nn = 0
                 while K[nn] is None:
                     nn += 1
+                nn_start = nn + 1
                 for mm in xrange (1, deg + 1):
-                    #print "-",nn, mm, i, j, degree
                     poly2 [nn+mm] = local_t[mm] + K[nn]
-                for nn in xrange (nn+1, degree):
+                for nn in xrange (nn_start, degree):
                     for mm in xrange (1, deg):
-                        #print "*", nn, mm, i, j, degree
                         poly2 [nn+mm] = logaddexp (poly2 [nn+mm], local_t[mm] + K[nn])
-                    #print "-",nn, mm, i, j, degree
                     poly2 [nn+mm+1] = local_t[mm+1] + K[nn]
                 degree += deg
-                nn = 0
-                while poly2[nn] is None:
+                for nn in xrange (nn_start):
                     K [nn] = None
-                    nn+=1
-                for nn in xrange (nn, degree):
+                for nn in xrange (nn_start, degree):
                     K [nn] = poly2[nn] - const
                     poly2[nn] = None
         K = K [self.S:]
-
+        print K
 
 #        K = [None] * (self.J + 1)
 #        poly2 = K[:]
