@@ -14,11 +14,13 @@ try:
     from math import lgamma
 except ImportError:
     from scipy.special import gammaln as lgamma
-from numpy         import log, float128, exp, logaddexp
+from numpy         import log, float128, exp
 from random        import random
 from scipy.stats   import chisqprob
 from scipy         import optimize
-from utils         import table, lpochham, get_kda
+from scipy.special.orthogonal import poch
+
+from utils         import table, get_kda
 
 class Abundance (object):
     '''
@@ -61,8 +63,9 @@ class Abundance (object):
             factor -= log (max (1, self.abund[spe]))
         for spe in xrange (max (self.abund)):
             factor -= lgamma (phi[spe] + 1)
-        self.ewens_lnl = lpochham (self.theta,
-                          self.J) - log (self.theta) * self.S - factor
+        self.ewens_lnl = poch (self.theta,
+                               self.J) - log (self.theta) * \
+                               self.S - factor
         self.factor    = factor
         return self.ewens_lnl
 
@@ -154,11 +157,11 @@ class Abundance (object):
         if not self.factor:
             self.ewens_likelihood()
         if not self.K:
-            self.K = get_kda(self.abund)
+            self.K = get_kda (self.abund)
         for A in xrange (self.J-self.S):
             lsummand = float128 (self.factor + log(x[0]) * self.S - \
-                                 lpochham (x[1], int (self.J)) + self.K [A] + \
-                                 (A + self.S) * log (x[1]) - lpochham (x[0], A + self.S) - divisor)
+                                 poch (x[1], int (self.J)) + self.K [A] + \
+                                 (A + self.S) * log (x[1]) - poch (x[0], A + self.S) - divisor)
             if lsummand > 11300:
                 newdivisor = float128 (lsummand - 11300)
                 divisor += float128 (newdivisor)
@@ -179,7 +182,6 @@ class Abundance (object):
             return -log (summand0) - 4500.0 * log (10) - divisor
         return -summand1 - 4500.0 * log (10)
 
-
 def main():
     """
     main function
@@ -187,8 +189,8 @@ def main():
     infile = 'bci.txt'
     abd = Abundance (infile)
     x = [48.1838, 1088.19]
-    abd.etienne_likelihood (x)
+    lnl = abd.etienne_likelihood (x)
+    print lnl
 
 if __name__ == "__main__":
     exit(main())
-
