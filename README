@@ -1,0 +1,17 @@
+###  README --- ecology/
+
+## Copyright 2011 Francois Serra
+##
+## Keywords: install
+
+PREREQUISITE
+GMPY2: apt-get install python2.7-dev libmpfr-dev libgmp3-dev
+       http://code.google.com/p/gmpy/downloads/list
+       for huge numbers.
+
+NZMATH: http://tnt.math.se.tmu.ac.jp/nzmath/
+        for computation of stirling numbers
+
+
+
+
