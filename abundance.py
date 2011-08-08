@@ -161,7 +161,8 @@ class Abundance (object):
         for A in xrange (self.J-self.S):
             lsummand = float128 (self.factor + log(x[0]) * self.S - \
                                  poch (x[1], int (self.J)) + self.K [A] + \
-                                 (A + self.S) * log (x[1]) - poch (x[0], A + self.S) - divisor)
+                                 (A + self.S) * log (x[1]) - \
+                                 poch (x[0], A + self.S) - divisor)
             if lsummand > 11300:
                 newdivisor = float128 (lsummand - 11300)
                 divisor += float128 (newdivisor)

@@ -2,7 +2,7 @@
 """
 13 Jul 2011
 
-some utils for abundance
+some utils for abundance, essentially for computation of K(D,A)
 """
 
 __author__  = "Francois-Jose Serra"
@@ -12,8 +12,10 @@ __version__ = "0.0"
 
 from nzmath.combinatorial import stirling1
 from gmpy2 import log, mul, mpfr
-from itertools import combinations, product
+from itertools import product
 
+global STIRLINGS
+STIRLINGS = {}
 
 def table (out, spp=None):
     '''
@@ -27,31 +29,29 @@ def table (out, spp=None):
         counts[ind] += 1
     return counts.values()
 
-
-def factorial_div (a, b):
+def factorial_div (one, two):
     '''
     computes a!/b!
     '''
-    if a < b:
-        return 1. / reduce (mul, xrange(a, b))
-    elif a > b:
-        return reduce (mul, xrange(b, a))
+    if one < two:
+        return 1. / reduce (mul, xrange(one, two))
+    elif one > two:
+        return reduce (mul, xrange(two, one))
     else:
         return mpfr (1.)
-
 
 def exp_polyn(polyn, expon):
     '''
     computes polynomial exponential
     '''
-    if expon <= 1:
+    if expon < 1:
         return polyn
     polyn2 = {}
-    for it in combinations(polyn.keys(), expon-1):
-        polyn2.setdefault (sum (it), 0)
-        polyn2[sum (it)] = polyn2[sum (it)] + reduce (mul, (polyn[i] for i in it))
+    for one in xrange (max (polyn.keys())*expon + 1):
+        polyn2.setdefault(one, mpfr(0))
+    for cmb in product (polyn.keys(), repeat=expon):
+        polyn2[sum (cmb)] += reduce (mul, (polyn[i] for i in cmb))
     return polyn2
-
 
 def mul_polyn(polyn_a, polyn_b):
     '''
@@ -59,27 +59,63 @@ def mul_polyn(polyn_a, polyn_b):
     '''
     if not polyn_a:
         return polyn_b
+    if not polyn_b:
+        return polyn_a
+    # set default values
     polyn2 = {}
-    for it in product(polyn_a.keys(), polyn_b.keys()):
-        polyn2.setdefault(it[0] + it[1], 0)
-        polyn2[it[0] + it[1]] = polyn2[it[0] + it[1]] + mul (polyn_a [it[0]],
-                                                             polyn_b[it[1]])
+    for i in xrange (min(polyn_a.keys()) + min(polyn_b.keys()),
+                     max(polyn_a.keys()) + max(polyn_b.keys()) + 1):
+        polyn2[i] = mpfr(0)
+    # compute comulative product
+    for one, two in product (polyn_a.keys(), polyn_b.keys()):
+        polyn2 [one+two] += mul (polyn_a [one], polyn_b [two])
     return polyn2
-    
-        
-def get_kda (abund):
+
+def pre_get_stirlings(max_nm):
+    '''
+    takes advantage of recurrence function:
+    s(n,m) = s(n-1, m-1) - (n-1) * s(n-1,m)
+    '''
+    for one in xrange (1, max_nm+1):
+        STIRLINGS [one, 1] = stirling1 (one, 1)
+    for one in xrange (2, max_nm+1):
+        for two in xrange (2, max_nm+1):
+            if two > one:
+                continue
+            if two == one:
+                STIRLINGS[one, two] = STIRLINGS [one-1, two-1] - 0
+            else:
+                STIRLINGS[one, two] = STIRLINGS [one-1, two-1] - \
+                                          mul ((one-1), STIRLINGS [one-1,
+                                                                       two])
+
+def stirling (one, two):
+    '''
+    returns log unsingned stirling number, taking advantage of the fact that
+    if x+y if odd signed stirling will be negative.
+    takes also advantage of recurrence function:
+    s(n,m) = s(n-1, m-1) - (n-1) * s(n-1,m)
+    '''
+    # return abs of stirling number
+    if (one + two)%2:
+        return -STIRLINGS [one, two]
+    return STIRLINGS [one, two]
+
+def get_kda (abund, verbose=False):
     '''
     compute kda according to etienne formula
     '''
     abund.sort ()
     specabund = [sorted (list (set (abund))), table (abund)]
-    Sdiff     = len (specabund [1])
+    sdiff     = len (specabund [1])
     polyn     = {}
-    for i in xrange (Sdiff):
-        polyn1 = {}
-        print "  Computing species %s out of %s" % (i+1, Sdiff)
-        for k in xrange (1, specabund[0][i]+1):
-            coeff = abs (stirling1 (specabund[0][i], k)) * \
+    pre_get_stirlings (max (specabund[0]))
+    for i in xrange (sdiff):
+        polyn1 = {0: mpfr(1.)}
+        if verbose:
+            print "  Computing species %s out of %s" % (i+1, sdiff)
+        for k in xrange (1, specabund[0][i]):
+            coeff = stirling (specabund[0][i], k) * \
                     factorial_div (k, specabund[0][i])
             polyn1[k-1] = coeff
         # get of polyn1 exponential the number of individues for current species
@@ -90,84 +126,3 @@ def get_kda (abund):
     for i in sorted(polyn, reverse=True):
         kda.append (float (log (polyn[i])))
     return kda
-
-
-
-#try:
-#    from math import lgamma
-#except ImportError:
-#    from scipy.special import gammaln as lgamma
-# from numpy import logaddexp
-#
-#def get_kda_old (abund):
-#    '''
-#    slow function to get K(D,A)
-#    '''
-#    unq_abd = sorted (list (set (abund))) # g
-#    len_unq = len (unq_abd)                    # NDA = i 
-#    frq_unq = table (abund)               # f
-#    max_a   = max(abund)                  # MaxA
-#    phi = [0] * (max_a +1)
-#    for s in xrange (len (abund)):
-#        phi [abund[s]] += 1
-#    T = [[] for _ in xrange (len_unq)]
-#    T[0] = [0] * (unq_abd[0] + 1)
-#    T[0][0] = 0
-#    T[0][1] = 1
-#    if unq_abd [0] != 1:
-#        ls2 = [0] * (unq_abd[0] + 1)
-#        ls2[1] = 1
-#        for n in xrange (2, unq_abd [0]+1):
-#            ls1 = [0] * (n + 1)
-#            for im in xrange (n):
-#                ls1 [im] = ls2 [im]
-#            ls1 [n] = 0
-#            for im in xrange (2, n+1):
-#                ls2[im] = ls1[im] + float (ls1[im-1] * (im - 1)) / (n - 1)
-#        for im in xrange (2, unq_abd[0]+1):
-#            T[0][im] = ls2[im]
-#    for _in in xrange (1, len_unq):
-#        T[_in] = [0] * (unq_abd [_in] + 1)
-#        T[_in] [1] = 1
-#        ls2 = [0] * (unq_abd[_in] + 1)
-#        for im in xrange (unq_abd [_in-1]+1):
-#            ls2[im] = T[_in-1][im]
-#        for n in xrange (unq_abd[_in-1]+1, unq_abd[_in]+1):
-#            ls1 = [0] * (n + 1)
-#            for im in xrange (n):
-#                ls1 [im] = ls2 [im]
-#            ls1 [n] = 0
-#            for im in xrange (2, n + 1):
-#                ls2 [im] = ls1 [im] + float (ls1 [im - 1] * (im - 1)) / (n - 1)
-#        for im in xrange (2, unq_abd [_in] + 1):
-#            T [_in][im] = ls2 [im]
-#    old_T = T[:]
-#    for i in xrange (len (old_T)):
-#        for j in xrange (len (old_T[i])):
-#            T[i][j] = log (old_T[i][j]) if old_T[i][j]>0 else float ('-inf')
-#    K = [None] * (sum (abund) + 1)
-#    poly2 = K[:]
-#    K [0] = 0.0
-#    degree  = 1
-#    const = log (10**mpfr(4500.0/len (abund)))
-#    for i in xrange (len_unq):
-#        local_t = T [i]
-#        deg = unq_abd [i]
-#        for j in xrange (frq_unq[i]):
-#            nn = 0
-#            while K[nn] is None:
-#                nn += 1
-#            nn_start = nn + 1
-#            for mm in xrange (1, deg + 1):
-#                poly2 [nn+mm] = local_t[mm] + K[nn]
-#            for nn in xrange (nn_start, degree):
-#                for mm in xrange (1, deg):
-#                    poly2 [nn+mm] = logaddexp (poly2 [nn+mm], local_t[mm] + K[nn])
-#                poly2 [nn+mm+1] = local_t[mm+1] + K[nn]
-#            degree += deg
-#            for nn in xrange (nn_start):
-#                K [nn] = None
-#            for nn in xrange (nn_start, degree):
-#                K [nn] = poly2[nn] - const
-#                poly2[nn] = None
-#    return K [len (abund):]
