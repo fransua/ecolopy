@@ -12,7 +12,6 @@ __version__ = "0.0"
 
 from nzmath.combinatorial import stirling1
 from gmpy2 import log, mul, mpfr
-from itertools import product
 
 global STIRLINGS
 STIRLINGS = {}
@@ -42,20 +41,19 @@ def factorial_div (one, two):
 
 def mul_polyn(polyn_a, polyn_b):
     '''
-    returns product of polynomes
+    returns product of 2 polynomes
     '''
     if not polyn_a:
         return polyn_b
     if not polyn_b:
         return polyn_a
     # set default values
-    polyn2 = {}
-    for i in xrange (min(polyn_a.keys()) + min(polyn_b.keys()),
-                     max(polyn_a.keys()) + max(polyn_b.keys()) + 1):
-        polyn2[i] = mpfr(0)
-    # compute comulative product
-    for one, two in product (polyn_a.keys(), polyn_b.keys()):
-        polyn2 [one+two] += mul (polyn_a [one], polyn_b [two])
+    len_a = len (polyn_a)
+    len_b = len (polyn_b)
+    polyn2 = [mpfr(0)] * (len_a + len_b - 1)
+    for i in xrange (len_a):
+        for j in xrange (len_b):
+            polyn2 [i + j] += mul (polyn_a[i], polyn_b[j])
     return polyn2
 
 def pre_get_stirlings(max_nm):
@@ -88,31 +86,36 @@ def stirling (one, two):
         return -STIRLINGS [one, two]
     return STIRLINGS [one, two]
 
-def get_kda (abund, verbose=False):
+def get_kda (abund, verbose=True):
     '''
     compute kda according to etienne formula
     '''
-    abund.sort ()
+
+    abund = sorted (abund)
     specabund = [sorted (list (set (abund))), table (abund)]
     sdiff     = len (specabund [1])
-    polyn     = {}
+    polyn     = []
+    # compute all stirling numbers taking advantage of recurrence function
     pre_get_stirlings (max (specabund[0]))
     for i in xrange (sdiff):
-        polyn1 = {0: mpfr(1.)}
         if verbose:
             print "  Computing species %s out of %s" % (i+1, sdiff)
+        polyn1 = []
         for k in xrange (1, specabund[0][i] + 1):
             coeff = stirling (specabund[0][i], k) * \
                     factorial_div (k, specabund[0][i])
-            polyn1[k-1] = coeff
+            polyn1.append (mpfr(coeff))
+        if not polyn1:
+            polyn1.append(mpfr(1.))
         #polyn1[k] = mpfr (1.)
         # get of polyn1 exponential the number of individues for current species
-        polyn2 = polyn1.copy()
+        polyn2 = polyn1[:]
         for _ in xrange (1, specabund[1][i]):
-            polyn1 = mul_polyn(polyn1, polyn2)
+            polyn1 = mul_polyn (polyn1, polyn2)
         # polyn = polyn * polyn1
         polyn = mul_polyn (polyn, polyn1)
     kda = []
-    for i in sorted(polyn, reverse=True):
-        kda.append (float (log (polyn[i])))
+    for i in polyn:
+        kda.append (float (log (i)))
     return kda
+
