@@ -40,19 +40,6 @@ def factorial_div (one, two):
     else:
         return mpfr (1.)
 
-def exp_polyn(polyn, expon):
-    '''
-    computes polynomial exponential
-    '''
-    if expon < 1:
-        return polyn
-    polyn2 = {}
-    for one in xrange (max (polyn.keys())*expon + 1):
-        polyn2.setdefault(one, mpfr(0))
-    for cmb in product (polyn.keys(), repeat=expon):
-        polyn2[sum (cmb)] += reduce (mul, (polyn[i] for i in cmb))
-    return polyn2
-
 def mul_polyn(polyn_a, polyn_b):
     '''
     returns product of polynomes
@@ -114,12 +101,15 @@ def get_kda (abund, verbose=False):
         polyn1 = {0: mpfr(1.)}
         if verbose:
             print "  Computing species %s out of %s" % (i+1, sdiff)
-        for k in xrange (1, specabund[0][i]):
+        for k in xrange (1, specabund[0][i] + 1):
             coeff = stirling (specabund[0][i], k) * \
                     factorial_div (k, specabund[0][i])
             polyn1[k-1] = coeff
+        #polyn1[k] = mpfr (1.)
         # get of polyn1 exponential the number of individues for current species
-        polyn1 = exp_polyn(polyn1, specabund[1][i])
+        polyn2 = polyn1.copy()
+        for _ in xrange (1, specabund[1][i]):
+            polyn1 = mul_polyn(polyn1, polyn2)
         # polyn = polyn * polyn1
         polyn = mul_polyn (polyn, polyn1)
     kda = []
