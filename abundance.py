@@ -10,18 +10,12 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.0"
 
-try:
-    from math import lgamma
-except ImportError:
-    from scipy.special import gammaln as lgamma
-from numpy         import float128, exp
 from random        import random
 from scipy.stats   import chisqprob
 from scipy         import optimize
-from nzmath.combinatorial import risingfactorial as poch
-from gmpy2 import mul, mpfr, log, exp
+from gmpy2 import mul, mpfr, log, exp, div, lngamma
 
-from utils         import table, get_kda
+from utils         import table, get_kda, poch, lpoch
 
 class Abundance (object):
     '''
@@ -57,14 +51,14 @@ class Abundance (object):
         get likelihood value of Ewens according to parthy/tetame
         returns likelihood
         '''
-        factor = mpfr (lgamma (self.J+1))
+        factor = lngamma (self.J+1)
         phi = table (self.abund)
         phi += [0] * (max (self.abund)-len (phi))
         for spe in xrange (self.S):
             factor -= log (max (1, self.abund[spe]))
         for spe in xrange (max (self.abund)):
-            factor -= lgamma (phi[spe] + 1)
-        self.ewens_lnl = mpfr(poch (int(self.theta),
+            factor -= lngamma (phi[spe] + 1)
+        self.ewens_lnl = mpfr(poch (self.theta,
                                self.J)) - log (self.theta) * \
                                self.S - factor
         self.factor    = factor
@@ -83,8 +77,7 @@ class Abundance (object):
         '''
         if theta < 0:
             return mpfr ('-inf')
-        theta = mpfr (theta)
-        return self.S * log (theta) + mpfr(lgamma (theta)) - mpfr(lgamma (theta + self.J))
+        return self.S * log (theta) + lngamma (theta) - lngamma (theta + self.J)
 
     def _shannon_entropy (self):
         '''
@@ -130,7 +123,7 @@ class Abundance (object):
             else:
                 out [ind] = out [int (random () * ind)]
         return table (out, spp)
-        
+
     def parse_infile (self):
         '''
         parse infile and return list of abundances
@@ -140,7 +133,7 @@ class Abundance (object):
             abundances.append (int (line.strip()))
         return abundances
 
-    def etienne_likelihood(self, x):
+    def etienne_likelihood(self, x, verbose=True):
         '''
         logikelihood function where
           x[0] = theta
@@ -154,32 +147,38 @@ class Abundance (object):
         newdivisor = mpfr(0.0)
         summand0   = mpfr(0.0)
         summand1   = mpfr(0.0)
-        lnum = mpfr (11300)
-        if not self.factor:
+        logx1      = log (x[1])
+        lnum       = exp (11300)
+        if not self.factor: # define it
             self.ewens_likelihood()
+        poch1      = self.factor + log(x[0]) * self.S - lpoch (x[1], self.J)
+        poch1 += logx1 * self.S
         if not self.K:
-            self.K = get_kda (self.abund)
+            if verbose:
+                print "\nGetting K(D,A) according to Etienne 2005 formula:"
+            self.K = get_kda (self.abund, verbose=verbose)
+        if verbose:
+            print "\nComputing etienne likelihood..."
+        get_lsummand = lambda A, D: poch1 + self.K[A] + mul (A, logx1) - \
+                                    lpoch (x[0], A + self.S) - D
         for A in xrange (self.J - self.S):
-            lsummand = self.factor + log(x[0]) * self.S - \
-                       mpfr(poch (int (x[1]), self.J)) + self.K [A] + \
-                       (A + self.S) * log (x[1]) - \
-                       mpfr(poch (int (x[0]), A + self.S)) - divisor
+            lsummand = get_lsummand (A, divisor)
             if lsummand > 11300:
-                newdivisor = mpfr (lsummand - 11300)
-                divisor += mpfr (newdivisor)
-                summand0 = mpfr (summand0 / exp (newdivisor) + exp (lnum))
+                newdivisor = lsummand - 11300
+                divisor   += newdivisor
+                summand0   = div (summand0, exp (newdivisor)) + lnum
             else:
                 if lsummand > -11333.2 and summand0 < 11330:
                     summand0 += exp (lsummand)
                 else:
                     if summand0 > 11330:
-                        divisor  = mpfr (1 + divisor)
-                        summand0 = mpfr (summand0/exp(1)) + exp (mpfr (lsummand - 1))
+                        divisor  = 1 + divisor
+                        summand0 = div (summand0, exp(1)) + exp (lsummand - 1)
                     else:
                         if not summand1:
-                            summand1 = mpfr (lsummand)
+                            summand1 = lsummand
                         else:
-                            summand1 = mpfr (summand1 + log (1 + exp (mpfr (lsummand - summand1))))
+                            summand1 += log (1 + exp (lsummand - summand1))
         if summand0 > 0:
             return -log (summand0) - 4500.0 * log (10) - divisor
         return -summand1 - 4500.0 * log (10)
@@ -190,8 +189,8 @@ def main():
     """
     infile = 'bci.txt'
     abd = Abundance (infile)
-    x = [48.1838, 1088.19]
-    lnl = abd.etienne_likelihood (x)
+    x = [78.9545, 161.016]
+    lnl = abd.etienne_likelihood (x, verbose=True)
     print lnl
 
 if __name__ == "__main__":

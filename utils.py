@@ -11,10 +11,24 @@ __licence__ = "GPLv3"
 __version__ = "0.0"
 
 from nzmath.combinatorial import stirling1
-from gmpy2 import log, mul, mpfr
+from gmpy2 import log, mul, mpfr, gamma, div, lngamma
 
 global STIRLINGS
 STIRLINGS = {}
+
+def poch (z, m):
+    '''
+    returns Pochhammer symbol taking advantage of:
+    Pochhammer symbol (z)_m = (z)(z+1)....(z+m-1) = gamma(z+m)/gamma(z)
+    '''
+    return div (gamma(z+m), gamma(z))
+
+def lpoch (z, m):
+    '''
+    returns log Pochhammer symbol taking advantage of:
+    Pochhammer symbol (z)_m = (z)(z+1)....(z+m-1) = gamma(z+m)/gamma(z)
+    '''
+    return lngamma(z+m) - lngamma(z)
 
 def table (out, spp=None):
     '''
@@ -22,10 +36,10 @@ def table (out, spp=None):
     any kind of data
     '''
     if spp == None:
-        spp = max (out)
-    counts = dict (zip (set (out), [0]*spp))
+        spp = int (max (out))
+    counts = dict (zip (set (out), [mpfr(0.)]*spp))
     for ind in out:
-        counts[ind] += 1
+        counts[ind] += mpfr(1)
     return counts.values()
 
 def factorial_div (one, two):
@@ -33,7 +47,7 @@ def factorial_div (one, two):
     computes a!/b!
     '''
     if one < two:
-        return 1. / reduce (mul, xrange(one, two))
+        return div(1., reduce (mul, xrange(one, two)))
     elif one > two:
         return reduce (mul, xrange(two, one))
     else:
@@ -52,8 +66,9 @@ def mul_polyn(polyn_a, polyn_b):
     len_b = len (polyn_b)
     polyn2 = [mpfr(0)] * (len_a + len_b - 1)
     for i in xrange (len_a):
+        pai = polyn_a[i]
         for j in xrange (len_b):
-            polyn2 [i + j] += mul (polyn_a[i], polyn_b[j])
+            polyn2 [i + j] += pai * polyn_b[j]
     return polyn2
 
 def pre_get_stirlings(max_nm):
@@ -92,6 +107,7 @@ def get_kda (abund, verbose=True):
     '''
 
     abund = sorted (abund)
+    abund = [mpfr(x) for x in abund]
     specabund = [sorted (list (set (abund))), table (abund)]
     sdiff     = len (specabund [1])
     polyn     = []
@@ -104,10 +120,9 @@ def get_kda (abund, verbose=True):
         for k in xrange (1, specabund[0][i] + 1):
             coeff = stirling (specabund[0][i], k) * \
                     factorial_div (k, specabund[0][i])
-            polyn1.append (mpfr(coeff))
+            polyn1.append (coeff)
         if not polyn1:
             polyn1.append(mpfr(1.))
-        #polyn1[k] = mpfr (1.)
         # get of polyn1 exponential the number of individues for current species
         polyn2 = polyn1[:]
         for _ in xrange (1, specabund[1][i]):
@@ -116,6 +131,82 @@ def get_kda (abund, verbose=True):
         polyn = mul_polyn (polyn, polyn1)
     kda = []
     for i in polyn:
-        kda.append (float (log (i)))
+        kda.append (log (i))
     return kda
+
+
+
+
+
+## polyn_a = [1,2,3,4,5,6,7,8,9,1,2,3,5,4]
+## polyn_b = [11,2,3,4,5,6,7,8,9,1,2,3,5,4]
+## len_a = len (polyn_a)
+## len_b = len (polyn_b)
+## polyn_c = [0.] * (len_a + len_b - 1)
+## 
+## 
+## from scipy.weave import converters, inline
+## 
+## code = """
+##            #line 120 "laplace.py" (This is only useful for debugging)
+##            //int len_c = (len_a + len_b - 1);
+##            #line 121
+##            for (int i=1; i<=len_a; ++i) {
+##                for (int j=1; j<=len_b; ++j) {
+##                    polyn_c[(i+j)] = polyn_c[i+j] + polyn_a*polyn_b;
+##                }
+##            }
+##            return_val = polyn_c;
+##            """
+## # compiler keyword only needed on windows with MSVC installed
+## err = inline(code,
+##              ['polyn_a', 'polyn_b', 'polyn_c', 'len_a', 'len_b'],
+##                type_converters=converters.blitz,
+##                compiler = 'gcc')
+
+import numpy as np
+
+def cartesian(arrays, out=None):
+    """
+    Generate a cartesian product of input arrays.
+    Parameters
+    ----------
+    arrays : list of array-like
+        1-D arrays to form the cartesian product of.
+    out : ndarray
+        Array to place the cartesian product in.
+    Returns
+    -------
+    out : ndarray
+        2-D array of shape (M, len(arrays)) containing cartesian products
+        formed of input arrays.
+    Examples
+    --------
+    >>> cartesian(([1, 2, 3], [4, 5], [6, 7]))
+    array([[1, 4, 6],
+           [1, 4, 7],
+           [1, 5, 6],
+           [1, 5, 7],
+           [2, 4, 6],
+           [2, 4, 7],
+           [2, 5, 6],
+           [2, 5, 7],
+           [3, 4, 6],
+           [3, 4, 7],
+           [3, 5, 6],
+           [3, 5, 7]])
+    """
+    arrays = [np.asarray(x) for x in arrays]
+    dtype = arrays[0].dtype
+    n = np.prod([x.size for x in arrays])
+    if out is None:
+        out = np.zeros([n, len(arrays)], dtype=dtype)
+
+    m = n / arrays[0].size
+    out[:,0] = np.repeat(arrays[0], m)
+    if arrays[1:]:
+        cartesian(arrays[1:], out=out[0:m,1:])
+        for j in xrange(1, arrays[0].size):
+            out[j*m:(j+1)*m,1:] = out[0:m,1:]
+    return out
 
