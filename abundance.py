@@ -195,11 +195,33 @@ def main():
     """
     main function
     """
-    infile = 'bci.txt'
-    abd = Abundance (infile)
-    x = [78.9545, 161.016]
-    lnl = abd.etienne_likelihood (x, verbose=True)
-    print lnl
+    test ('short')
 
+def test(kind):
+    '''
+    test basic functions
+    '''
+    from time import time
+    if kind == 'short':
+        infile = 'bci2.txt'
+        etienne_lnl = '-10217.051548359694'
+        time_max = '15 sec'
+    else:
+        infile = 'bci.txt'
+        etienne_lnl = '-10087.610335418967'
+        time_max = '100 sec'
+    print '\n  Testing Etienne algorithm (%s test)\n\n' % kind
+    t0 = time()
+    x = [78.9545, 161.016]
+    abd = Abundance (infile)
+    lnl = abd.etienne_likelihood (x, verbose=True)
+    print 'Etienne lnL computed :', lnl
+    print 'Etienne lnL should be:', etienne_lnl
+    print ''
+    print 'Elapsed time (should be < %s): %s sec\n' % (time_max, time() - t0)
+    
+
+
+        
 if __name__ == "__main__":
     exit(main())
