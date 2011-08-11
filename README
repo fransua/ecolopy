@@ -12,6 +12,7 @@ GMPY2: apt-get install python2.7-dev libmpfr-dev libgmp3-dev
 NZMATH: http://tnt.math.se.tmu.ac.jp/nzmath/
         for computation of stirling numbers
 
-
+SCIPY: easy_install scipy
+       for optimization of log likelihood
 
 
