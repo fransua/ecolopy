@@ -13,7 +13,7 @@ __version__ = "0.0"
 from random        import random
 from scipy.stats   import chisqprob
 from scipy         import optimize
-from gmpy2 import mul, mpfr, log, exp, div, lngamma
+from gmpy2         import mul, mpfr, log, exp, div, lngamma
 
 from utils         import table, get_kda, poch, lpoch
 
@@ -70,6 +70,14 @@ class Abundance (object):
         '''
         theta_like = lambda x: -self._ewens_theta_likelihood (x)
         return optimize.golden(theta_like, brack=[.01/self.J, self.J])
+
+    def _etienne_optimal_args (self):
+        '''
+        optimize theta and I using etienne likelihood function
+        '''
+        theta_like = lambda x: -self._ewens_theta_likelihood (x)
+        return optimize.golden(theta_like, args=(theta, I),
+                               brack=[.01/self.J, self.J])
 
     def _ewens_theta_likelihood (self, theta):
         '''

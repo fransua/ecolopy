@@ -56,6 +56,10 @@ def factorial_div (one, two):
 def mul_polyn(polyn_a, polyn_b):
     '''
     returns product of 2 polynomes
+    to test multiplication of pylnomes try equality of the two functions:
+            _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b)
+                                ==
+            _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)
     '''
     if not polyn_a:
         return polyn_b
@@ -64,12 +68,55 @@ def mul_polyn(polyn_a, polyn_b):
     # set default values
     len_a = len (polyn_a)
     len_b = len (polyn_b)
-    polyn2 = [mpfr(0)] * (len_a + len_b - 1)
+    diff = abs (len_a - len_b)
+    if len_a >= len_b:
+        polyn_b = polyn_b + [mpfr(0)] * (diff)
+    else:
+        _  = polyn_a + [mpfr(0.)] * (diff)
+        polyn_a = polyn_b[:]
+        polyn_b = _
+        len_a = len (polyn_a)
+        len_b = len (polyn_b)
+    # switcher
+    if len_a > len_b*2: # most
+        return _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b)
+    return _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)
+
+def _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b):
+    '''
+    fast polynomial multiplication when polynomes are nearly equal
+    -> iterates over factors
+    '''
+    def mult_one (la, lb, stop, start=0):
+        '''
+        internal that computes row multiplication of 2 lists
+        start and stops are here to skip multiplications by zero
+        '''
+        return [mul (la[i], lb[i]) for i in xrange (start, stop)]
+    max_len = len_a + len_b
+    diff = len_a - len_b
+    new = []
+    for i in xrange (1, len_a +1):
+        new.append (sum (mult_one (polyn_a[:i], polyn_b[i-1::-1], i)))
+    len_a2 = len_a * 2 - 1
+    len_a1 = len_a + 1
+    len_a3 = len_a - 1
+    for i in xrange (len_a, max_len - 1):
+        new.append (sum (mult_one (polyn_a[i-len_a3 : len_a1],
+                              polyn_b[len_a    : i-len_a :-1], len_a2-i, diff)))
+    return new    
+
+def _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b):
+    '''
+    fast polynomial multiplication when 1 polynome >~ 2 times larger.
+    -> iterates over coefficients
+    '''
+    new = [mpfr(0)] * (len_a + len_b - 1)
     for i in xrange (len_a):
         pai = polyn_a[i]
         for j in xrange (len_b):
-            polyn2 [i + j] += pai * polyn_b[j]
-    return polyn2
+            new [i + j] += pai * polyn_b[j]
+    return new
 
 def pre_get_stirlings(max_nm):
     '''
