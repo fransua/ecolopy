@@ -51,14 +51,14 @@ class Abundance (object):
         get likelihood value of Ewens according to parthy/tetame
         returns likelihood
         '''
-        factor = lngamma (self.J+1)
+        factor = lngamma (self.J + 1)
         phi = table (self.abund)
-        phi += [0] * (max (self.abund)-len (phi))
+        phi += [0] * (max (self.abund) - len (phi))
         for spe in xrange (self.S):
             factor -= log (max (1, self.abund[spe]))
         for spe in xrange (max (self.abund)):
             factor -= lngamma (phi[spe] + 1)
-        self.ewens_lnl = mpfr(poch (self.theta,
+        self.ewens_lnl = mpfr(lpoch (self.theta,
                                self.J)) - log (self.theta) * \
                                self.S - factor
         self.factor    = factor
