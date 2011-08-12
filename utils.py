@@ -148,39 +148,6 @@ def stirling (one, two):
         return -STIRLINGS [one, two]
     return STIRLINGS [one, two]
 
-def get_kda (abund, verbose=True):
-    '''
-    compute kda according to etienne formula
-    '''
-
-    abund = sorted (abund)
-    abund = [mpfr(x) for x in abund]
-    specabund = [sorted (list (set (abund))), table (abund)]
-    sdiff     = len (specabund [1])
-    polyn     = []
-    # compute all stirling numbers taking advantage of recurrence function
-    pre_get_stirlings (max (specabund[0]))
-    for i in xrange (sdiff):
-        if verbose:
-            print "  Computing species %s out of %s" % (i+1, sdiff)
-        polyn1 = []
-        for k in xrange (1, specabund[0][i] + 1):
-            coeff = stirling (specabund[0][i], k) * \
-                    factorial_div (k, specabund[0][i])
-            polyn1.append (coeff)
-        if not polyn1:
-            polyn1.append(mpfr(1.))
-        # get of polyn1 exponential the number of individues for current species
-        polyn2 = polyn1[:]
-        for _ in xrange (1, specabund[1][i]):
-            polyn1 = mul_polyn (polyn1, polyn2)
-        # polyn = polyn * polyn1
-        polyn = mul_polyn (polyn, polyn1)
-    kda = []
-    for i in polyn:
-        kda.append (log (i))
-    return kda
-
 
 
 

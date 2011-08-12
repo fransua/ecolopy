@@ -14,18 +14,20 @@ from random        import random
 from scipy.stats   import chisqprob
 from scipy         import optimize
 from gmpy2         import mul, mpfr, log, exp, div, lngamma
+from cPickle       import dump, load
 
-from utils         import table, get_kda, poch, lpoch
+from utils         import *
 
 class Abundance (object):
     '''
     Compute theta m I ect... for a given data sample
+     * J_tot is the size of the metacommunity, if not defined = J * 3
     '''
     def __init__ (self, data, J_tot=None):
         if type (data) != list:
             self.data_path = data
             data = self.parse_infile ()
-        self.abund     = data [:]
+        self.abund     = [mpfr(x) for x in sorted (data [:])]
         self.J         = mpfr(sum (data))
         self.S         = mpfr(len (data))
         self.theta     = mpfr(self._ewens_optimal_theta ())
@@ -53,7 +55,7 @@ class Abundance (object):
         '''
         factor = lngamma (self.J + 1)
         phi = table (self.abund)
-        phi += [0] * (max (self.abund) - len (phi))
+        phi += [0] * int (max (self.abund) - len (phi))
         for spe in xrange (self.S):
             factor -= log (max (1, self.abund[spe]))
         for spe in xrange (max (self.abund)):
@@ -71,13 +73,29 @@ class Abundance (object):
         theta_like = lambda x: -self._ewens_theta_likelihood (x)
         return optimize.golden(theta_like, brack=[.01/self.J, self.J])
 
-    def _etienne_optimal_args (self):
+    def _etienne_optimal_params (self):
         '''
         optimize theta and I using etienne likelihood function
+        using scipy package, values that are closest to the one proposed
+        by tetame, are raised by fmin function:
+          * fmin    : theta = 48.1838; I = 1088.19 ; lnL = -10091.166; t = 316s
+        but lower likelihoods are found using other algorithms:
+         -> bounds = [(1, self.S), (0, self.J_tot)]
+          * slsqp   : theta = 143.43 ; I = 82.41   ; lnL = -10088.943; t = 227s
+          * l_bfgs_b: theta = 140.11 ; I = 84.37   ; lnL = -10088.941; t = 343s
+          * tnc     : theta = 52.62  ; I = 729.34  ; lnL = -10090.912; t = 297s
+         -> bounds = [(1, self.S), (0, 2 * self.J_tot)]
+          * slsqp   : theta = 129.92 ; I = 92.18   ; lnL = -10088.902; t = 107s
+          * l_bfgs_b: theta = 133.88 ; I = 89.47   ; lnL = -10088.919; t = 246s
+          * tnc     : theta = 34.51  ; I = 10241.17; lnL = -10085.534; t = 429s
+         -> no bounds
+          * slsqp   : theta = 82.46  ; I = 190.73  ; lnL = -10088.589; t = 86s
+          * l_bfgs_b: theta = 144.87 ; I = 82.02   ; lnL = -10088.942; t = 220s
+          * tnc     : theta = 688.55 ; I = 38.43   ; lnL = -10083.546; t = 429s
         '''
-        theta_like = lambda x: -self._ewens_theta_likelihood (x)
-        return optimize.golden(theta_like, args=(theta, I),
-                               brack=[.01/self.J, self.J])
+        bounds = [(1, self.S), (0, self.J_tot)]
+        args_like = lambda x, y: -self._etienne_likelihood (x, y)
+        return optimize.fmin (args_like, [self.theta, self.I], args=(False, ))
 
     def _ewens_theta_likelihood (self, theta):
         '''
@@ -141,7 +159,7 @@ class Abundance (object):
             abundances.append (int (line.strip()))
         return abundances
 
-    def etienne_likelihood(self, x, verbose=True):
+    def _etienne_likelihood(self, x, verbose=True):
         '''
         logikelihood function where
           x[0] = theta
@@ -150,43 +168,92 @@ class Abundance (object):
           K[A] = K(D,A) in Etienne paper
         cf Etienne, 2005
         x = [48.1838, 1088.19]
+        returns log likelihood of given theta and I
         '''
-        divisor    = mpfr(0.0)
-        newdivisor = mpfr(0.0)
-        summand0   = mpfr(0.0)
-        summand1   = mpfr(0.0)
-        logx1      = log (x[1])
-        lnum       = exp (11300)
+        divisor     = newdivisor = sum0 = mpfr(0.0)
+        logx1       = log (x[1])
+        mpfr11300   = mpfr (11300)
+        lnum        = exp (mpfr11300)
+        minus_11333 = mpfr(-11333.2)
+        exp1        = exp (1)
+        mpfr1       = mpfr(1)
+        x0          = x[0]
         if not self.factor: # define it
             self.ewens_likelihood()
-        poch1      = self.factor + log(x[0]) * self.S - lpoch (x[1], self.J)
-        poch1 += logx1 * self.S
+        lgam_x0 = lngamma(x0)
+        # blablabla
+        if not self.factor: # define it
+            self.ewens_likelihood()
         if not self.K:
             if verbose:
                 print "\nGetting K(D,A) according to Etienne 2005 formula:"
-            self.K = get_kda (self.abund, verbose=verbose)
-        if verbose:
-            print "\nComputing etienne likelihood..."
-        get_lsummand = lambda A, D: poch1 + self.K[A] + mul (A, logx1) - \
-                                    lpoch (x[0], A + self.S) - D
-        for A in xrange (self.J - self.S):
-            lsummand = get_lsummand (A, divisor)
-            if lsummand > 11300:
-                newdivisor = lsummand - 11300
-                divisor   += newdivisor
-                summand0   = div (summand0, exp (newdivisor)) + lnum
-            else:
-                if lsummand > -11333.2 and summand0 < 11330:
-                    summand0 += exp (lsummand)
+            self._get_kda (verbose=verbose)
+        # pre calculate som staff for get_lsum
+        poch1 = self.factor + log (x0) * self.S - \
+                lpoch (x[1], self.J) + logx1 * self.S
+        def __get_lsum(A, D):
+            return poch1 + self.K [A] + A * logx1 - \
+                   (lngamma (x0 + A + self.S) - lgam_x0) - D
+        sum1 = __get_lsum (0,0)
+        for A in xrange (1, self.J - self.S):
+            lsum = __get_lsum (A, divisor)
+            if sum0 < mpfr11300:
+                if lsum < minus_11333:
+                    sum1 += log (mpfr1 + exp (lsum - sum1))
                 else:
-                    if summand0 > 11330:
-                        divisor  = 1 + divisor
-                        summand0 = div (summand0, exp(1)) + exp (lsummand - 1)
-                    else:
-                        if not summand1:
-                            summand1 = lsummand
-                        else:
-                            summand1 += log (1 + exp (lsummand - summand1))
-        if summand0 > 0:
-            return -log (summand0) - 4500.0 * log (10) - divisor
-        return -summand1 - 4500.0 * log (10)
+                    sum0 += exp (lsum)
+                continue
+            if lsum > mpfr11300:
+                newdivisor = lsum - mpfr11300
+                divisor   += newdivisor
+                sum0       = sum0 / exp (newdivisor) + lnum
+                continue
+            divisor  += mpfr1
+            sum0 = sum0 / exp1 + exp (lsum - mpfr1)
+        if sum0 > 0:
+            return -log (sum0) - 4500.0 * log (10) - divisor
+        return -sum1 - 4500.0 * log (10)
+
+    def dump_kda (self, outfile):
+        '''
+        save kda with pickle
+        '''
+        if not self.K:
+            self._get_kda (verbose=False)
+        dump (self.K, open (outfile, 'w'))
+
+    def load_kda (self, infile):
+        '''
+        load kda with pickle from infile
+        '''
+        self.K = load (open (infile))
+
+    def _get_kda (self, verbose=True):
+        '''
+        compute kda according to etienne formula
+        '''
+        specabund = [sorted (list (set (self.abund))), table (self.abund)]
+        sdiff     = len (specabund [1])
+        polyn     = []
+        # compute all stirling numbers taking advantage of recurrence function
+        pre_get_stirlings (max (specabund[0]))
+        for i in xrange (sdiff):
+            if verbose:
+                print "  Computing species %s out of %s" % (i+1, sdiff)
+            polyn1 = []
+            for k in xrange (1, specabund[0][i] + 1):
+                coeff = stirling (specabund[0][i], k) * \
+                        factorial_div (k, specabund[0][i])
+                polyn1.append (coeff)
+            if not polyn1:
+                polyn1.append(mpfr(1.))
+            # polyn1 exponential the number of individues for current species
+            polyn2 = polyn1[:]
+            for _ in xrange (1, specabund[1][i]):
+                polyn1 = mul_polyn (polyn1, polyn2)
+            # polyn = polyn * polyn1
+            polyn = mul_polyn (polyn, polyn1)
+        kda = []
+        for i in polyn:
+            kda.append (log (i))
+        self.K = kda

@@ -56,7 +56,7 @@ def test_etienne (kind, abd):
     print ' Testing Etienne algorithm with BCI %s dataset' % kind
     t0 = time()
     x = [78.9545, 161.016]
-    lnl = abd.etienne_likelihood (x, verbose=False)
+    lnl = abd._etienne_likelihood (x, verbose=False)
     print '  -> Etienne lnL computed : %.3f' % lnl
     if round (lnl, 3) != etienne_lnl:
         exit('\n test failed in etienne test\n')
