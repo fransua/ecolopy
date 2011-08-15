@@ -67,10 +67,13 @@ def main():
     """
     main function
     """
-    kind = argv[1]
+    try:
+        kind = argv[1]
+    except IndexError:
+        kind = None
     
     kinds = ['short', 'full']
-    if not kind in kinds:
+    if not kind in kinds or not kind:
         exit('\nERROR: kind should be one of:%s\n' % \
              ((' "%s"' * len (kinds)) % tuple (kinds)))
 

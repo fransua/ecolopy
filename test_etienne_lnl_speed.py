@@ -23,7 +23,7 @@ from utils import lpoch
 def testfunc(x, abd, verbose=False):
     """
     """
-    divisor     = newdivisor = sum0 = mpfr(0.0)
+    divisor     = newdivisor = sum0 = sum1 = mpfr(0.0)
     logx1       = log (x[1])
     mpfr11300   = mpfr (11300)
     lnum        = exp (mpfr11300)
@@ -33,18 +33,16 @@ def testfunc(x, abd, verbose=False):
     x0          = x[0]
     if not abd.factor: # define it
         abd.ewens_likelihood()
-    poch1 = abd.factor + log (x0) * abd.S - lpoch (x[1], abd.J) + logx1 * abd.S
-    lgam_x0 = lngamma(x0)
+    poch1 = abd.factor + log (x0) * abd.S - lpoch (x[1], abd.J) + logx1 * abd.S + lngamma(x0)
     # blablabla
-    def get_lsum(A, D):
-        return poch1 + abd.K [A] + A * logx1 - \
-               (lngamma (x0 + A + abd.S) - lgam_x0) - D
-    sum1 = get_lsum (0,0)
-    for A in xrange (1, abd.J - abd.S):
-        lsum = get_lsum (A, divisor)
+    logx0S   = log(x0 + abd.S)
+    lgam_x0S = lngamma (x0 + abd.S)
+    for A in xrange (abd.J - abd.S):
+        lsum = poch1 + abd.K [A] + A * logx1 - lgam_x0S - divisor
+        lgam_x0S += logx0S
         if sum0 < mpfr11300:
             if lsum < minus_11333:
-                sum1 += log (mpfr1 + exp (lsum - sum1))
+                sum1 += log (mpfr1 + exp (lsum - sum1)) if sum1 else lsum
             else:
                 sum0 += exp (lsum)
             continue
@@ -62,8 +60,8 @@ def testfunc(x, abd, verbose=False):
 abd = Abundance('bci_short.txt')
 abd.load_kda ('kda_short.pik')
 
-for i in xrange(500):
+for i in xrange(100):
     testfunc([abd.theta, abd.m], abd)
 
-print testfunc([abd.theta, abd.m], abd)
-#-8752.7501182700435
+print 'etienne log lnL  :', testfunc([abd.theta, abd.m], abd)
+print 'should be arround: -8752.7501182700435\n'

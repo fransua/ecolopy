@@ -10,13 +10,13 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.0"
 
-from random        import random
-from scipy.stats   import chisqprob
-from scipy         import optimize
-from gmpy2         import mul, mpfr, log, exp, div, lngamma
-from cPickle       import dump, load
+from random         import random
+from scipy.stats    import chisqprob
+from scipy.optimize import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
+from gmpy2          import mpfr, log, exp, lngamma
+from cPickle        import dump, load
 
-from utils         import *
+from utils          import *
 
 class Abundance (object):
     '''
@@ -26,7 +26,7 @@ class Abundance (object):
     def __init__ (self, data, J_tot=None):
         if type (data) != list:
             self.data_path = data
-            data = self.parse_infile ()
+            data = self._parse_infile ()
         self.abund     = [mpfr(x) for x in sorted (data [:])]
         self.J         = mpfr(sum (data))
         self.S         = mpfr(len (data))
@@ -71,9 +71,9 @@ class Abundance (object):
         optimize theta using theta likelihood function
         '''
         theta_like = lambda x: -self._ewens_theta_likelihood (x)
-        return optimize.golden(theta_like, brack=[.01/self.J, self.J])
+        return golden (theta_like, brack=[.01/self.J, self.J])
 
-    def _etienne_optimal_params (self):
+    def _etienne_optimal_params (self, method='fmin'):
         '''
         optimize theta and I using etienne likelihood function
         using scipy package, values that are closest to the one proposed
@@ -95,7 +95,14 @@ class Abundance (object):
         '''
         bounds = [(1, self.S), (0, self.J_tot)]
         args_like = lambda x, y: -self._etienne_likelihood (x, y)
-        return optimize.fmin (args_like, [self.theta, self.I], args=(False, ))
+        if   method == 'fmin':
+            theta, I = fmin (args_like, [self.theta, self.I])
+        elif method == 'slsqp':
+            theta, I  = fmin_slsqp (args_like, [self.theta, self.I],
+                                    bounds=bounds)
+        elif method == 'l_bfgs_b':
+            theta, I  = fmin_l_bfgs_b (args_like, [self.theta, self.I],
+                                       bounds=bounds, approx_grad=True)[0]
 
     def _ewens_theta_likelihood (self, theta):
         '''
@@ -150,7 +157,7 @@ class Abundance (object):
                 out [ind] = out [int (random () * ind)]
         return table (out, spp)
 
-    def parse_infile (self):
+    def _parse_infile (self):
         '''
         parse infile and return list of abundances
         '''
@@ -170,7 +177,7 @@ class Abundance (object):
         x = [48.1838, 1088.19]
         returns log likelihood of given theta and I
         '''
-        divisor     = newdivisor = sum0 = mpfr(0.0)
+        divisor     = newdivisor = sum0 = sum1 = mpfr(0.0)
         logx1       = log (x[1])
         mpfr11300   = mpfr (11300)
         lnum        = exp (mpfr11300)
