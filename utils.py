@@ -14,7 +14,7 @@ try:
     from math import lgamma
 except ImportError:
     from scipy.special import gammaln as lgamma
-from numpy import log, logaddexp
+from numpy import log, logaddexp, float128
 
 def table (out, spp=None):
     '''
@@ -75,13 +75,14 @@ def get_kda (abund):
     old_T = T[:]
     for i in xrange (len (old_T)):
         for j in xrange (len (old_T[i])):
-            T[i][j] = log (old_T[i][j]) if old_T[i][j]>0 else float ('-inf')
+            T[i][j] = float128 (log (old_T[i][j]) if old_T[i][j]>0 \
+                                else float ('-inf'))
 
     K = [None] * (sum (abund) + 1)
     poly2 = K[:]
-    K [0] = 0.0
+    K [0] = float128 (0.0)
     degree  = 1
-    const = log (10**(4500.0/len (abund)))
+    const = 10 ** float128 (4500.0/len (abund))
     for i in xrange (len_unq):
         local_t = T [i]
         deg = unq_abd [i]
@@ -91,15 +92,43 @@ def get_kda (abund):
                 nn += 1
             nn_start = nn + 1
             for mm in xrange (1, deg + 1):
-                poly2 [nn+mm] = local_t[mm] + K[nn]
+                poly2 [nn+mm] = local_t[mm] * K[nn]
             for nn in xrange (nn_start, degree):
                 for mm in xrange (1, deg):
-                    poly2 [nn+mm] = logaddexp (poly2 [nn+mm], local_t[mm] + K[nn])
-                poly2 [nn+mm+1] = local_t[mm+1] + K[nn]
+                    poly2 [nn+mm] += float128 (local_t[mm] * K[nn])
+                poly2 [nn+mm+1] = float128 (local_t[mm+1] * K[nn])
             degree += deg
             for nn in xrange (nn_start):
                 K [nn] = None
             for nn in xrange (nn_start, degree):
-                K [nn] = poly2[nn] - const
+                K [nn] = poly2[nn] / const
                 poly2[nn] = None
     return K [len (abund):]
+
+
+## K = [None] * (sum (abund) + 1)
+## poly2 = K[:]
+## K [0] = 0.0
+## degree  = 1
+## const = log (10**(4500.0/len (abund)))
+## for i in xrange (len_unq):
+##     local_t = T [i]
+##     deg = unq_abd [i]
+##     for j in xrange (frq_unq[i]):
+##         nn = 0
+##         while K[nn] is None:
+##             nn += 1
+##         nn_start = nn + 1
+##         for mm in xrange (1, deg + 1):
+##             poly2 [nn+mm] = local_t[mm] + K[nn]
+##         for nn in xrange (nn_start, degree):
+##             for mm in xrange (1, deg):
+##                 poly2 [nn+mm] = logaddexp (poly2 [nn+mm], local_t[mm] + K[nn])
+##             poly2 [nn+mm+1] = local_t[mm+1] + K[nn]
+##         degree += deg
+##         for nn in xrange (nn_start):
+##             K [nn] = None
+##         for nn in xrange (nn_start, degree):
+##             K [nn] = poly2[nn] - const
+##             poly2[nn] = None
+## return K [len (abund):]

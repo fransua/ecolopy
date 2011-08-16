@@ -186,8 +186,11 @@ def main():
     """
     infile = 'bci.txt'
     abd = Abundance (infile)
-    x = [48.1838, 1088.19]
-    abd.etienne_likelihood (x)
+    abd.K = get_kda(abd.abund)
+    for i in abd.K:
+        print i
+    #x = [48.1838, 1088.19]
+    #abd.etienne_likelihood (x)
 
 if __name__ == "__main__":
     exit(main())
