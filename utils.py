@@ -2,7 +2,7 @@
 """
 13 Jul 2011
 
-some utils for abundance
+some utils for abundance, essentially for computation of K(D,A)
 """
 
 __author__  = "Francois-Jose Serra"
@@ -10,11 +10,25 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.0"
 
-try:
-    from math import lgamma
-except ImportError:
-    from scipy.special import gammaln as lgamma
-from numpy import log, logaddexp, float128
+from nzmath.combinatorial import stirling1
+from gmpy2 import log, mul, mpfr, gamma, div, lngamma
+
+global STIRLINGS
+STIRLINGS = {}
+
+def poch (z, m):
+    '''
+    returns Pochhammer symbol taking advantage of:
+    Pochhammer symbol (z)_m = (z)(z+1)....(z+m-1) = gamma(z+m)/gamma(z)
+    '''
+    return div (gamma(z+m), gamma(z))
+
+def lpoch (z, m):
+    '''
+    returns log Pochhammer symbol taking advantage of:
+    Pochhammer symbol (z)_m = (z)(z+1)....(z+m-1) = gamma(z+m)/gamma(z)
+    '''
+    return lngamma(z+m) - lngamma(z)
 
 def table (out, spp=None):
     '''
@@ -22,113 +36,118 @@ def table (out, spp=None):
     any kind of data
     '''
     if spp == None:
-        spp = max (out)
-    counts = dict (zip (set (out), [0]*spp))
+        spp = int (max (out))
+    counts = dict (zip (set (out), [mpfr(0.)]*spp))
     for ind in out:
-        counts[ind] += 1
-    return counts.values()
+        counts[ind] += mpfr(1)
+    return [counts[x] for x in sorted (counts)]
 
-lpochham = lambda x, n: lgamma(x+n)-lgamma(x)
-
-def get_kda (abund):
+def factorial_div (one, two):
     '''
-    slow function to get K(D,A)
+    computes a!/b!
     '''
-    unq_abd = sorted (list (set (abund))) # g
-    len_unq = len (unq_abd)                    # NDA = i 
-    frq_unq = table (abund)               # f
-    max_a   = max(abund)                  # MaxA
-    phi = [0] * (max_a +1)
-    for s in xrange (len (abund)):
-        phi [abund[s]] += 1
-    T = [[] for _ in xrange (len_unq)]
-    T[0] = [0] * (unq_abd[0] + 1)
-    T[0][0] = 0
-    T[0][1] = 1
-    if unq_abd [0] != 1:
-        ls2 = [0] * (unq_abd[0] + 1)
-        ls2[1] = 1
-        for n in xrange (2, unq_abd [0]+1):
-            ls1 = [0] * (n + 1)
-            for im in xrange (n):
-                ls1 [im] = ls2 [im]
-            ls1 [n] = 0
-            for im in xrange (2, n+1):
-                ls2[im] = ls1[im] + float (ls1[im-1] * (im - 1)) / (n - 1)
-        for im in xrange (2, unq_abd[0]+1):
-            T[0][im] = ls2[im]
-    for _in in xrange (1, len_unq):
-        T[_in] = [0] * (unq_abd [_in] + 1)
-        T[_in] [1] = 1
-        ls2 = [0] * (unq_abd[_in] + 1)
-        for im in xrange (unq_abd [_in-1]+1):
-            ls2[im] = T[_in-1][im]
-        for n in xrange (unq_abd[_in-1]+1, unq_abd[_in]+1):
-            ls1 = [0] * (n + 1)
-            for im in xrange (n):
-                ls1 [im] = ls2 [im]
-            ls1 [n] = 0
-            for im in xrange (2, n + 1):
-                ls2 [im] = ls1 [im] + float (ls1 [im - 1] * (im - 1)) / (n - 1)
-        for im in xrange (2, unq_abd [_in] + 1):
-            T [_in][im] = ls2 [im]
-    old_T = T[:]
-    for i in xrange (len (old_T)):
-        for j in xrange (len (old_T[i])):
-            T[i][j] = float128 (log (old_T[i][j]) if old_T[i][j]>0 \
-                                else float ('-inf'))
+    if one < two:
+        return div(1., reduce (mul, xrange(one, two)))
+    elif one > two:
+        return reduce (mul, xrange(two, one))
+    else:
+        return mpfr (1.)
 
-    K = [None] * (sum (abund) + 1)
-    poly2 = K[:]
-    K [0] = float128 (0.0)
-    degree  = 1
-    const = 10 ** float128 (4500.0/len (abund))
-    for i in xrange (len_unq):
-        local_t = T [i]
-        deg = unq_abd [i]
-        for j in xrange (frq_unq[i]):
-            nn = 0
-            while K[nn] is None:
-                nn += 1
-            nn_start = nn + 1
-            for mm in xrange (1, deg + 1):
-                poly2 [nn+mm] = local_t[mm] * K[nn]
-            for nn in xrange (nn_start, degree):
-                for mm in xrange (1, deg):
-                    poly2 [nn+mm] += float128 (local_t[mm] * K[nn])
-                poly2 [nn+mm+1] = float128 (local_t[mm+1] * K[nn])
-            degree += deg
-            for nn in xrange (nn_start):
-                K [nn] = None
-            for nn in xrange (nn_start, degree):
-                K [nn] = poly2[nn] / const
-                poly2[nn] = None
-    return K [len (abund):]
+def mul_polyn(polyn_a, polyn_b):
+    '''
+    returns product of 2 polynomes
+    to test multiplication of pylnomes try equality of the two functions:
+            _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b)
+                                ==
+            _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)
+    '''
+    if not polyn_a:
+        return polyn_b
+    if not polyn_b:
+        return polyn_a
+    # set default values
+    len_a = len (polyn_a)
+    len_b = len (polyn_b)
+    diff = abs (len_a - len_b)
+    if len_a >= len_b:
+        polyn_b = polyn_b + [mpfr(0)] * (diff)
+    else:
+        _  = polyn_a + [mpfr(0.)] * (diff)
+        polyn_a = polyn_b[:]
+        polyn_b = _
+        len_a = len (polyn_a)
+        len_b = len (polyn_b)
+    # switcher
+    if len_a > len_b*2: # most
+        return _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b)
+    return _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)
+
+def _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b):
+    '''
+    fast polynomial multiplication when polynomes are nearly equal
+    -> iterates over factors
+    '''
+    def mult_one (la, lb, stop, start=0):
+        '''
+        internal that computes row multiplication of 2 lists
+        start and stops are here to skip multiplications by zero
+        '''
+        return [mul (la[i], lb[i]) for i in xrange (start, stop)]
+    max_len = len_a + len_b
+    diff = len_a - len_b
+    new = []
+    for i in xrange (1, len_a +1):
+        new.append (sum (mult_one (polyn_a[:i], polyn_b[i-1::-1], i)))
+    len_a2 = len_a * 2 - 1
+    len_a1 = len_a + 1
+    len_a3 = len_a - 1
+    for i in xrange (len_a, max_len - 1):
+        new.append (sum (mult_one (polyn_a[i-len_a3 : len_a1],
+                              polyn_b[len_a    : i-len_a :-1], len_a2-i, diff)))
+    return new    
+
+def _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b):
+    '''
+    fast polynomial multiplication when 1 polynome >~ 2 times larger.
+    -> iterates over coefficients
+    '''
+    new = [mpfr(0)] * (len_a + len_b - 1)
+    for i in xrange (len_a):
+        pai = polyn_a[i]
+        for j in xrange (len_b):
+            new [i + j] += pai * polyn_b[j]
+    return new
+
+def pre_get_stirlings(max_nm):
+    '''
+    takes advantage of recurrence function:
+    s(n,m) = s(n-1, m-1) - (n-1) * s(n-1,m)
+    '''
+    for one in xrange (1, max_nm+1):
+        STIRLINGS [one, 1] = stirling1 (one, 1)
+    for one in xrange (2, max_nm+1):
+        for two in xrange (2, max_nm+1):
+            if two > one:
+                continue
+            if two == one:
+                STIRLINGS[one, two] = STIRLINGS [one-1, two-1] - 0
+            else:
+                STIRLINGS[one, two] = STIRLINGS [one-1, two-1] - \
+                                          mul ((one-1), STIRLINGS [one-1,
+                                                                       two])
+
+def stirling (one, two):
+    '''
+    returns log unsingned stirling number, taking advantage of the fact that
+    if x+y if odd signed stirling will be negative.
+    takes also advantage of recurrence function:
+    s(n,m) = s(n-1, m-1) - (n-1) * s(n-1,m)
+    '''
+    # return abs of stirling number
+    if (one + two)%2:
+        return -STIRLINGS [one, two]
+    return STIRLINGS [one, two]
 
 
-## K = [None] * (sum (abund) + 1)
-## poly2 = K[:]
-## K [0] = 0.0
-## degree  = 1
-## const = log (10**(4500.0/len (abund)))
-## for i in xrange (len_unq):
-##     local_t = T [i]
-##     deg = unq_abd [i]
-##     for j in xrange (frq_unq[i]):
-##         nn = 0
-##         while K[nn] is None:
-##             nn += 1
-##         nn_start = nn + 1
-##         for mm in xrange (1, deg + 1):
-##             poly2 [nn+mm] = local_t[mm] + K[nn]
-##         for nn in xrange (nn_start, degree):
-##             for mm in xrange (1, deg):
-##                 poly2 [nn+mm] = logaddexp (poly2 [nn+mm], local_t[mm] + K[nn])
-##             poly2 [nn+mm+1] = local_t[mm+1] + K[nn]
-##         degree += deg
-##         for nn in xrange (nn_start):
-##             K [nn] = None
-##         for nn in xrange (nn_start, degree):
-##             K [nn] = poly2[nn] - const
-##             poly2[nn] = None
-## return K [len (abund):]
+
+

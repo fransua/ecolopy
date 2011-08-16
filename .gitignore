@@ -1,2 +1,6 @@
 *~
 *.pyc
+.rope*
+build
+*.so
+*.c
