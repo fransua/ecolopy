@@ -16,12 +16,6 @@ from gmpy2 import log, mul, mpfr, gamma, div, lngamma
 global STIRLINGS
 STIRLINGS = {}
 
-def poch (z, m):
-    '''
-    returns Pochhammer symbol taking advantage of:
-    Pochhammer symbol (z)_m = (z)(z+1)....(z+m-1) = gamma(z+m)/gamma(z)
-    '''
-    return div (gamma(z+m), gamma(z))
 
 def lpoch (z, m):
     '''

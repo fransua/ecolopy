@@ -16,7 +16,8 @@ from scipy.optimize import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
 from gmpy2          import mpfr, log, exp, lngamma
 from cPickle        import dump, load
 
-from utils          import *
+from utils          import lpoch, table, factorial_div, mul_polyn
+from utils          import lngamma, gamma, pre_get_stirlings, stirling
 
 class Abundance (object):
     '''
@@ -30,13 +31,10 @@ class Abundance (object):
         self.abund     = [mpfr(x) for x in sorted (data [:])]
         self.J         = mpfr(sum (data))
         self.S         = mpfr(len (data))
-        self.theta     = mpfr(self._ewens_optimal_theta ())
-        self.m         = self.theta / self.J / mpfr(2)
-        self.I         = self.m * mpfr (self.J - 1) / (1 - self.m)
         self.J_tot     = J_tot if J_tot else self.J * 3
-        self.H         = self._shannon_entropy ()
+        self.shanon    = self._shannon_entropy ()
+        self.params    = {}
         self.factor    = None
-        self.ewens_lnl = None 
         self.K         = None
 
     def _lrt_ewens_etienne(self):
@@ -66,12 +64,17 @@ class Abundance (object):
         self.factor    = factor
         return self.ewens_lnl
 
-    def _ewens_optimal_theta (self):
+    def ewens_optimal_theta (self):
         '''
         optimize theta using theta likelihood function
         '''
         theta_like = lambda x: -self._ewens_theta_likelihood (x)
-        return golden (theta_like, brack=[.01/self.J, self.J])
+        self.params['theta_ewens'] = golden (theta_like, 
+                                             brack=[.01/self.J, self.J])
+        self.params['m_ewens'] = self.params['theta_ewens'] / self.J / mpfr(2)
+        self.params['I_ewens'] = self.params['m_ewens'] * (self.J - 1) / \
+                                 (1 - self.params['m_ewens'])
+        self.params['lnL_ewens']
 
     def _etienne_optimal_params (self, method='fmin'):
         '''
@@ -94,14 +97,15 @@ class Abundance (object):
           * tnc     : theta = 688.55 ; I = 38.43   ; lnL = -10083.546; t = 429s
         '''
         bounds = [(1, self.S), (1e-50, 1-1e-50)]
+        starting_vals = self.params ['theta_ewens'], self.params['m_ewens']
         args_like = lambda x, y: -self._etienne_likelihood (x, y)
         if   method == 'fmin':
-            theta, m = fmin (args_like, [self.theta, self.m])
+            theta, m = fmin (args_like, starting_vals)
         elif method == 'slsqp':
-            theta, m  = fmin_slsqp (args_like, [self.theta, self.m],
+            theta, m  = fmin_slsqp (args_like, starting_vals,
                                     bounds=bounds)
         elif method == 'l_bfgs_b':
-            theta, m  = fmin_l_bfgs_b (args_like, [self.theta, self.m],
+            theta, m  = fmin_l_bfgs_b (args_like, starting_vals,
                                        bounds=bounds, approx_grad=True)[0]
         return theta, m
 
@@ -122,7 +126,7 @@ class Abundance (object):
             H -= spe * log (spe)
         return (H + self.J * log(self.J)) / self.J
 
-    def test_neutrality (self, gens=100):
+    def test_neutrality (self, model='Ewens', gens=100):
         '''
         test for neutrality comparing shanon entropy
         returns p_value
@@ -136,18 +140,20 @@ class Abundance (object):
                 H -= spe * log (spe)
             return (H + J * log(J)) / J
         pval = 0
+        theta = self.params['theta_' + model.lower()]
         for _ in xrange (gens):
-            pval += local_shannon (self.rand_neutral(), self.J) < self.H
+            pval += local_shannon (self.rand_neutral(theta), 
+                                   self.J) < self.shanon
         return float (pval)/gens
     
-    def rand_neutral (self):
+    def rand_neutral (self, theta):
         '''
         J should be the number of individuals in the dataset, and theta,
         the optimal theta of the dataset accod
         J = 376
         theta = 9.99
         '''
-        theta = float (self.theta)
+        theta = float (theta)
         out = [0] * self.J
         out [0] = spp = 1
         for ind in xrange (1, self.J):

@@ -29,7 +29,7 @@ def test_ewens (kind, infile):
         wanted_theta = 33.302
         wanted_lnl   = 162.742
         time_max = 0.05
-    print '  -> Optimal value of theta: %.3f' % abd.theta
+    print '  -> Optimal value of theta: %.3f' % abd.params['theta_ewens']
     if round (abd.theta, 3) != wanted_theta:
         exit ('\n test failed in ewens test (theta should have been %s)\n' %\
               wanted_theta)
