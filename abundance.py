@@ -93,16 +93,17 @@ class Abundance (object):
           * l_bfgs_b: theta = 144.87 ; I = 82.02   ; lnL = -10088.942; t = 220s
           * tnc     : theta = 688.55 ; I = 38.43   ; lnL = -10083.546; t = 429s
         '''
-        bounds = [(1, self.S), (0, self.J_tot)]
+        bounds = [(1, self.S), (1e-50, 1-1e-50)]
         args_like = lambda x, y: -self._etienne_likelihood (x, y)
         if   method == 'fmin':
-            theta, I = fmin (args_like, [self.theta, self.I])
+            theta, m = fmin (args_like, [self.theta, self.m])
         elif method == 'slsqp':
-            theta, I  = fmin_slsqp (args_like, [self.theta, self.I],
+            theta, m  = fmin_slsqp (args_like, [self.theta, self.m],
                                     bounds=bounds)
         elif method == 'l_bfgs_b':
-            theta, I  = fmin_l_bfgs_b (args_like, [self.theta, self.I],
+            theta, m  = fmin_l_bfgs_b (args_like, [self.theta, self.m],
                                        bounds=bounds, approx_grad=True)[0]
+        return theta, m
 
     def _ewens_theta_likelihood (self, theta):
         '''
@@ -166,6 +167,7 @@ class Abundance (object):
             abundances.append (int (line.strip()))
         return abundances
 
+
     def _etienne_likelihood(self, x, verbose=True):
         '''
         logikelihood function where
@@ -177,49 +179,26 @@ class Abundance (object):
         x = [48.1838, 1088.19]
         returns log likelihood of given theta and I
         '''
-        divisor     = newdivisor = sum0 = sum1 = mpfr(0.0)
-        logx1       = log (x[1])
-        mpfr11300   = mpfr (11300)
-        lnum        = exp (mpfr11300)
-        minus_11333 = mpfr(-11333.2)
-        exp1        = exp (1)
-        mpfr1       = mpfr(1)
-        x0          = x[0]
-        if not self.factor: # define it
-            self.ewens_likelihood()
-        lgam_x0 = lngamma(x0)
-        # blablabla
         if not self.factor: # define it
             self.ewens_likelihood()
         if not self.K:
             if verbose:
                 print "\nGetting K(D,A) according to Etienne 2005 formula:"
             self._get_kda (verbose=verbose)
-        # pre calculate som staff for get_lsum
-        poch1 = self.factor + log (x0) * self.S - \
-                lpoch (x[1], self.J) + logx1 * self.S
-        def __get_lsum(A, D):
-            return poch1 + self.K [A] + A * logx1 - \
-                   (lngamma (x0 + A + self.S) - lgam_x0) - D
-        sum1 = __get_lsum (0,0)
-        for A in xrange (1, self.J - self.S):
-            lsum = __get_lsum (A, divisor)
-            if sum0 < mpfr11300:
-                if lsum < minus_11333:
-                    sum1 += log (mpfr1 + exp (lsum - sum1))
-                else:
-                    sum0 += exp (lsum)
-                continue
-            if lsum > mpfr11300:
-                newdivisor = lsum - mpfr11300
-                divisor   += newdivisor
-                sum0       = sum0 / exp (newdivisor) + lnum
-                continue
-            divisor  += mpfr1
-            sum0 = sum0 / exp1 + exp (lsum - mpfr1)
-        if sum0 > 0:
-            return -log (sum0) - 4500.0 * log (10) - divisor
-        return -sum1 - 4500.0 * log (10)
+        theta = x[0]
+        I = float(x[1])/(1 - x[1]) * (self.J - 1)
+        log_I    = log (I)
+        thetaS   = theta + self.S
+        if not self.factor: # define it
+            self.ewens_likelihood()
+        poch1 = exp (self.factor + log (theta) * self.S - lpoch (I, self.J) + \
+                     log_I * self.S + lngamma(theta))
+        gam_thetaS = gamma (thetaS)
+        lik = mpfr(0.0)
+        for A in xrange (self.J - self.S):
+            lik += poch1 * exp (self.K [A] + A * log_I) / gam_thetaS
+            gam_thetaS *= thetaS + A
+        return -log (lik)
 
     def dump_kda (self, outfile):
         '''
@@ -229,11 +208,13 @@ class Abundance (object):
             self._get_kda (verbose=False)
         dump (self.K, open (outfile, 'w'))
 
+
     def load_kda (self, infile):
         '''
         load kda with pickle from infile
         '''
         self.K = load (open (infile))
+
 
     def _get_kda (self, verbose=True):
         '''

@@ -40,7 +40,7 @@ def table (out, spp=None):
     counts = dict (zip (set (out), [mpfr(0.)]*spp))
     for ind in out:
         counts[ind] += mpfr(1)
-    return counts.values()
+    return [counts[x] for x in sorted (counts)]
 
 def factorial_div (one, two):
     '''

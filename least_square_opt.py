@@ -37,10 +37,14 @@ def testfunc1(x, abd, verbose=False):
     x0          = x[0]
     if not abd.factor: # define it
         abd.ewens_likelihood()
-    poch1 = abd.factor + log (x0) * abd.S - lpoch (x[1], abd.J) + logx1 * abd.S + lngamma(x0)
+    poch1 = abd.factor + log (x0) * abd.S - lpoch (x[1], abd.J) + \
+            logx1 * abd.S + lngamma(x0)
     # blablabla
+    #
+    #
     for A in xrange (abd.J - abd.S):
         lsum = poch1 + abd.K [A] + A * logx1 - lngamma (x0 + abd.S + A) - divisor
+        #
         if sum0 < mpfr11300:
             if lsum < minus_11333:
                 sum1 += log (mpfr1 + exp (lsum - sum1)) if sum1 else lsum
@@ -54,12 +58,12 @@ def testfunc1(x, abd, verbose=False):
             continue
         divisor  += mpfr1
         sum0 = sum0 / exp1 + exp (lsum - mpfr1)
-    print x, -log (sum0) - 4500.0 * log (10) - divisor
+    #print x, -log (sum0) - 4500.0 * log (10) - divisor
     if sum0 > 0:
         return -log (sum0) - 4500.0 * log (10) - divisor
     return -sum1 - 4500.0 * log (10)
 
-def testfunc2(x, abd, verbose=False):
+def testfunc(x, abd, verbose=False):
     """
     """
     divisor     = newdivisor = sum0 = sum1 = mpfr(0.0)
@@ -69,19 +73,19 @@ def testfunc2(x, abd, verbose=False):
     minus_11333 = mpfr(-11333.2)
     exp1        = exp (1)
     mpfr1       = mpfr(1)
-    x0          = x[0]
+    x0          = x[0] + abd.S
     if not abd.factor: # define it
         abd.ewens_likelihood()
-    poch1 = abd.factor + log (x0) * abd.S - lpoch (x[1], abd.J) + logx1 * abd.S + lngamma(x0)
+    poch1 = abd.factor + log (x[0]) * abd.S - lpoch (x[1], abd.J) + \
+            logx1 * abd.S + lngamma(x[0])
     # blablabla
-    log_x0S   = log    (x0 + abd.S)
-    lgam_x0S = lngamma (x0 + abd.S)
+    lgam_x0S = lngamma (x0)
     for A in xrange (abd.J - abd.S):
         lsum = poch1 + abd.K [A] + A * logx1 - lgam_x0S - divisor
-        lgam_x0S += log_x0S
+        lgam_x0S += log (x0 + A)
         if sum0 < mpfr11300:
             if lsum < minus_11333:
-                sum1 += log (mpfr1 + exp (lsum - sum1)) if sum1 else lsum
+                sum1 += log (mpfr1 + exp (lsum - sum1))# if sum1 else lsum
             else:
                 sum0 += exp (lsum)
             continue
@@ -92,7 +96,7 @@ def testfunc2(x, abd, verbose=False):
             continue
         divisor  += mpfr1
         sum0 = sum0 / exp1 + exp (lsum - mpfr1)
-    print x, -(-log (sum0) - 4500.0 * log (10) - divisor)
+    #print x, -(-log (sum0) - 4500.0 * log (10) - divisor)
     if sum0 > 0:
         return -log (sum0) - 4500.0 * log (10) - divisor
     return -sum1 - 4500.0 * log (10)
@@ -104,51 +108,57 @@ abd = Abundance('bci.txt')
 abd.load_kda ('kda.pik')
 
 
-print 'starting log lnL :', testfunc1([2.45935477e+00,1.22885104e+08], abd)
-print 'starting log lnL :', testfunc2([2.45935477e+00,1.22885104e+08], abd)
-print 'should be arround: -7989.8884768230655\n'
+#print 'starting log lnL :', testfunc1([2.45935477e+00,1.22885104e+08], abd)
+#print 'starting log lnL :', testfunc2([2.45935477e+00,1.22885104e+08], abd)
+#print 'should be arround: -7989.8884768230655\n'
 
+## for theta in xrange (1,100,10):
+##     for I in xrange (80,100):
+##         print theta, I, testfunc1 ([theta, I], abd)
+##         print theta, I, testfunc2 ([theta, I], abd)
+##         print '---------------------------------------'
+## 
+## exit()
 
+bounds = [(1, abd.S), (0, abd.J_tot)]
 
-##bounds = [(1, abd.S), (0, abd.J_tot)]
-##
-##print "fmin_sequential least square"
-##t0 = time()
-##x = optimize.fmin_slsqp(testfunc, [abd.theta, abd.I], args=(abd, ),
-##                        bounds = bounds)
-##print "Elapsed time:", (time()-t0), "s"
-##print "Results",x
-##print "\n\n"
-##
-##t0 = time()
-##print "fmin_sequential l-bfgs-b"
-##x = optimize.fmin_l_bfgs_b (testfunc, [abd.theta, abd.I], args=(abd, ),
-##                            bounds=bounds,
-##                            approx_grad=True)
-##print "Elapsed time:", (time()-t0), "s"
-##print "Results",x
-##print "\n\n"
-##
-##
-##
-##t0 = time()
-##print "fmin_sequential tnc"
-##x = optimize.fmin_tnc (testfunc, [abd.theta, abd.I], args=(abd, ),
-##                       bounds=bounds,
-##                       approx_grad=True)
-##print "Elapsed time:", (time()-t0), "s"
-##print "Results",x
-##print "\n\n"
-##
+print "fmin_sequential least square"
+t0 = time()
+x = optimize.fmin_slsqp(testfunc, [abd.theta, abd.I], args=(abd, ),
+                        bounds = bounds)
+print "Elapsed time:", (time()-t0), "s"
+print "Results",x
+print "\n\n"
 
 t0 = time()
-x = optimize.fmin (testfunc1, [abd.theta, abd.I], args=(abd, ))
+print "fmin_sequential l-bfgs-b"
+x = optimize.fmin_l_bfgs_b (testfunc, [abd.theta, abd.I], args=(abd, ),
+                            bounds=bounds,
+                            approx_grad=True)
+print "Elapsed time:", (time()-t0), "s"
+print "Results",x
+print "\n\n"
+
+
+
+t0 = time()
+print "fmin_sequential tnc"
+x = optimize.fmin_tnc (testfunc, [abd.theta, abd.I], args=(abd, ),
+                       bounds=bounds,
+                       approx_grad=True)
+print "Elapsed time:", (time()-t0), "s"
+print "Results",x
+print "\n\n"
+
+
+t0 = time()
+x = optimize.fmin (testfunc, [abd.theta, abd.I], args=(abd, ))
 print "Elapsed time:", (time()-t0), "s"
 print "Results",x
 
 
 t0 = time()
-x = optimize.fmin (testfunc2, [abd.theta, abd.I], args=(abd, ))
+x = optimize.fmin (testfunc, [abd.theta, abd.I], args=(abd, ))
 print "Elapsed time:", (time()-t0), "s"
 print "Results",x
 
