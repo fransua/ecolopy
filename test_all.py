@@ -12,14 +12,13 @@ __version__ = "0.0"
 
 from abundance import Abundance
 from time import time
-from sys import argv
+from sys import argv, stderr
 
-def test_ewens (kind, infile):
+def test_ewens (kind, abd):
     '''
     test estimation of theta by max likelihood with ewens formula
     '''
     t0 = time ()
-    abd = Abundance (infile)
     print ' Testing Ewens algorithm with BCI %s dataset' % kind
     if kind == 'full':
         wanted_theta = 32.214
@@ -29,43 +28,55 @@ def test_ewens (kind, infile):
         wanted_theta = 33.302
         wanted_lnl   = 162.742
         time_max = 0.05
-    print '  -> Optimal value of theta: %.3f' % abd.params['theta_ewens']
-    if round (abd.theta, 3) != wanted_theta:
-        exit ('\n test failed in ewens test (theta should have been %s)\n' %\
+    abd.ewens_optimal_params()
+    print '  -> Optimal value of theta: %.3f' % abd.params['ewens']['theta']
+    if round (abd.params ['ewens']['theta'], 3) != wanted_theta:
+        stderr.write ('\n test failed in ewens test (theta should have been %s)\n' %\
               wanted_theta)
 
-    print '  -> likelihood of theta: %.3f' % abd.ewens_likelihood()
-    if round (abd.ewens_lnl, 3) != wanted_lnl:
-        exit ('\n test failed in ewens test (theta should have been %s)\n' %\
+    print '  -> likelihood of theta: %.3f' % abd.params ['ewens']['lnL']
+    if round (abd.params ['ewens']['lnL'], 3) != wanted_lnl:
+        stderr.write ('\n test failed in ewens test (theta should have been %s)\n' %\
               wanted_lnl)
    
     print '\n  Elapsed time (should be < %s): %s sec\n' % (time_max, time() - t0)
-    return abd
 
 def test_etienne (kind, abd):
     '''
     test etienne basic functions
-    TODO: replace values of x by maximum likelihood estimations
     '''
     if kind == 'short':
-        etienne_lnl = -10217.052
-        time_max = '10 sec'
+        etienne_lnl  = 144.581
+        wanted_theta = 78.954
+        wanted_m     = 0.03677
+        time_max = '15 sec'
     elif kind == 'full':
-        etienne_lnl = -10087.610
-        time_max = '100 sec'
+        etienne_lnl = 270.467
+        wanted_theta = 48.184
+        wanted_m     = 0.06471
+        time_max = '150 sec'
     print ' Testing Etienne algorithm with BCI %s dataset' % kind
     t0 = time()
-    x = [78.9545, 161.016]
-    lnl = abd._etienne_likelihood (x, verbose=False)
-    print '  -> Etienne lnL computed : %.3f' % lnl
-    if round (lnl, 3) != etienne_lnl:
-        exit('\n test failed in etienne test\n')
+    abd.etienne_optimal_params ()
+    print '  -> Optimal value of theta: %.3f' % abd.params['etienne']['theta']
+    if round (abd.params ['etienne']['theta'], 3) != wanted_theta:
+        stderr.write ('\n test failed in ewens test (theta should have been %s)\n' %\
+              wanted_theta)
+    print '  -> Optimal value of m: %.5f' % abd.params['etienne']['m']
+    if round (abd.params ['etienne']['m'], 5) != wanted_m:
+        stderr.write ('\n test failed in etienne test (m should have been %s)\n' %\
+              wanted_m)
+    print '  -> Etienne lnL computed : %.3f' % abd.params ['etienne']['lnL']
+    if round (abd.params ['etienne']['lnL'], 3) != etienne_lnl:
+        stderr.write ('\n test failed in etienne test\n')
     print '\n  Elapsed time (should be < %s): %s sec\n' % (time_max, time() - t0)
 
 
 def main():
     """
     main function
+    kind = 'short'
+    infile = 'bci_short.txt'
     """
     try:
         kind = argv[1]
@@ -79,19 +90,43 @@ def main():
 
     if kind == 'short':
         # reload abundance with shorter dataset
-        infile = 'bci_short.txt'
+        abd = Abundance ('bci_short.txt')
     elif kind == 'full':
-        infile = 'bci.txt'
+        abd = Abundance ('bci.txt')
     else:
         exit()
 
     print '\nstarting tests...\n\n'
     print '************************************************************\n'
-    abd = test_ewens (kind, infile)
+    print '  Dataset with J: %s, S: %s, H: %s\n' % (abd.J, abd.S, abd.shannon)
+    print '************************************************************\n'
+    test_ewens (kind, abd)
     print '************************************************************\n'
     test_etienne (kind, abd)
     print '************************************************************\n'
-
+    print ' Testing load/dump data...',
+    abd.dump_params('test_%s.pik' % kind)
+    abd.load_params('test_%s.pik' % kind)
+    # and again to test update
+    abd.dump_params('test_%s.pik' % kind)
+    print 'ok\n'
+    print '************************************************************\n'
+    print 'LRT between Ewens and Etienne model (1 df): ',
+    print abd.lrt('ewens', 'etienne')
+    print '************************************************************\n'
+    t0 = time()
+    gens = 300
+    print 'Neutrality test p-value (under Ewens model):',
+    print abd.test_neutrality(model='ewens', gens=gens)
+    print '%s generations computed in %ss' % (gens, time()-t0)
+    t0 = time()
+    print 'Neutrality test p-value (under Etienne model):',
+    print abd.test_neutrality(model='etienne', gens=gens)
+    print '%s generations computed in %ss' % (gens, time()-t0)
+    print '************************************************************\n'
+    print '\n\nAll test OK!\n'
+    
+        
 
 if __name__ == "__main__":
     exit(main())

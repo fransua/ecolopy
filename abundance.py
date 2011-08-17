@@ -15,6 +15,8 @@ from scipy.stats    import chisqprob
 from scipy.optimize import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
 from gmpy2          import mpfr, log, exp, lngamma
 from cPickle        import dump, load
+from os.path        import isfile
+from sys            import stdout
 
 from utils          import lpoch, table, factorial_div, mul_polyn
 from utils          import lngamma, gamma, pre_get_stirlings, stirling
@@ -32,21 +34,21 @@ class Abundance (object):
         self.J         = mpfr(sum (data))
         self.S         = mpfr(len (data))
         self.J_tot     = J_tot if J_tot else self.J * 3
-        self.shanon    = self._shannon_entropy ()
+        self.shannon   = self._shannon_entropy ()
         self.params    = {}
         self.factor    = None
-        self.K         = None
 
-    def _lrt_ewens_etienne(self):
+    def lrt (self, model_1, model_2):
         '''
         NOT WORKING
         ***********
         likelihood-ratio-test between two neutral models
         returns p-value of rejection of alternative model
         '''
-        chisqprob(2 * (self.ewens_likelihood() - 0), df=1)
+        chisqprob(2 * (float (self.params[model_1]['lnL']) - \
+                       float (self.params[model_2]['lnL'])), df=1)
 
-    def ewens_likelihood (self):
+    def ewens_likelihood (self, theta):
         '''
         get likelihood value of Ewens according to parthy/tetame
         returns likelihood
@@ -58,56 +60,56 @@ class Abundance (object):
             factor -= log (max (1, self.abund[spe]))
         for spe in xrange (max (self.abund)):
             factor -= lngamma (phi[spe] + 1)
-        self.ewens_lnl = mpfr(lpoch (self.theta,
-                               self.J)) - log (self.theta) * \
-                               self.S - factor
+        lnl = mpfr(lpoch (theta, self.J)) - log (theta) * self.S - factor
         self.factor    = factor
-        return self.ewens_lnl
+        return lnl
 
-    def ewens_optimal_theta (self):
+    def ewens_optimal_params (self):
         '''
-        optimize theta using theta likelihood function
+        optimize theta using theta likelihood function, acording to Ewens
+        model.
         '''
-        theta_like = lambda x: -self._ewens_theta_likelihood (x)
-        self.params['theta_ewens'] = golden (theta_like, 
+        self.params['ewens'] = tmp = {}
+        theta_like   = lambda x: -self._ewens_theta_likelihood (x)
+        tmp['theta'] = golden (theta_like, 
                                              brack=[.01/self.J, self.J])
-        self.params['m_ewens'] = self.params['theta_ewens'] / self.J / mpfr(2)
-        self.params['I_ewens'] = self.params['m_ewens'] * (self.J - 1) / \
-                                 (1 - self.params['m_ewens'])
-        self.params['lnL_ewens']
+        tmp['m']     = tmp['theta'] / self.J / mpfr(2)
+        tmp['I']     = tmp['m'] * (self.J - 1) / (1 - tmp['m'])
+        tmp['lnL']   = self.ewens_likelihood (tmp['theta'])
 
-    def _etienne_optimal_params (self, method='fmin'):
+    def etienne_optimal_params (self, method='fmin'):
         '''
         optimize theta and I using etienne likelihood function
         using scipy package, values that are closest to the one proposed
         by tetame, are raised by fmin function:
           * fmin    : theta = 48.1838; I = 1088.19 ; lnL = -10091.166; t = 316s
         but lower likelihoods are found using other algorithms:
-         -> bounds = [(1, self.S), (0, self.J_tot)]
+         -> bounds = [(1, self.S), (1e-50, 1 - 1e-50)]
           * slsqp   : theta = 143.43 ; I = 82.41   ; lnL = -10088.943; t = 227s
           * l_bfgs_b: theta = 140.11 ; I = 84.37   ; lnL = -10088.941; t = 343s
           * tnc     : theta = 52.62  ; I = 729.34  ; lnL = -10090.912; t = 297s
-         -> bounds = [(1, self.S), (0, 2 * self.J_tot)]
-          * slsqp   : theta = 129.92 ; I = 92.18   ; lnL = -10088.902; t = 107s
-          * l_bfgs_b: theta = 133.88 ; I = 89.47   ; lnL = -10088.919; t = 246s
-          * tnc     : theta = 34.51  ; I = 10241.17; lnL = -10085.534; t = 429s
-         -> no bounds
-          * slsqp   : theta = 82.46  ; I = 190.73  ; lnL = -10088.589; t = 86s
-          * l_bfgs_b: theta = 144.87 ; I = 82.02   ; lnL = -10088.942; t = 220s
-          * tnc     : theta = 688.55 ; I = 38.43   ; lnL = -10083.546; t = 429s
         '''
         bounds = [(1, self.S), (1e-50, 1-1e-50)]
-        starting_vals = self.params ['theta_ewens'], self.params['m_ewens']
-        args_like = lambda x, y: -self._etienne_likelihood (x, y)
+        if 'ewens' in self.params:
+            start = self.params ['ewens']['theta'], self.params['ewens']['m']
+        else:
+            start = self.S/2, 0.5
         if   method == 'fmin':
-            theta, m = fmin (args_like, starting_vals)
+            theta, m = fmin (self.etienne_likelihood, start,
+                             full_output=False)
         elif method == 'slsqp':
-            theta, m  = fmin_slsqp (args_like, starting_vals,
+            theta, m  = fmin_slsqp (self.etienne_likelihood, start,
                                     bounds=bounds)
         elif method == 'l_bfgs_b':
-            theta, m  = fmin_l_bfgs_b (args_like, starting_vals,
+            theta, m  = fmin_l_bfgs_b (self.etienne_likelihood, start,
                                        bounds=bounds, approx_grad=True)[0]
-        return theta, m
+        elif method == 'tnc':
+            theta, m  = fmin_tnc (self.etienne_likelihood, start,
+                                  bounds=bounds, approx_grad=True)[0]
+        self.params ['etienne']['theta'] = theta
+        self.params ['etienne']['m']     = m
+        self.params ['etienne']['I']     = m * (self.J - 1) / (1 - m)
+        self.params ['etienne']['lnL']   = self.etienne_likelihood ([theta, m])
 
     def _ewens_theta_likelihood (self, theta):
         '''
@@ -121,12 +123,12 @@ class Abundance (object):
         '''
         computes shannon entropy
         '''
-        H = mpfr(0.)
+        shannon = mpfr(0.)
         for spe in self.abund:
-            H -= spe * log (spe)
-        return (H + self.J * log(self.J)) / self.J
+            shannon -= spe * log (spe)
+        return (shannon + self.J * log(self.J)) / self.J
 
-    def test_neutrality (self, model='Ewens', gens=100):
+    def test_neutrality (self, model='ewens', gens=100):
         '''
         test for neutrality comparing shanon entropy
         returns p_value
@@ -135,15 +137,15 @@ class Abundance (object):
             '''
             same as self.shannon entropy
             '''
-            H = mpfr(0.)
+            shannon = mpfr(0.)
             for spe in data:
-                H -= spe * log (spe)
-            return (H + J * log(J)) / J
+                shannon -= spe * log (spe)
+            return (shannon + J * log(J)) / J
         pval = 0
-        theta = self.params['theta_' + model.lower()]
+        theta = self.params[model]['theta']
         for _ in xrange (gens):
-            pval += local_shannon (self.rand_neutral(theta), 
-                                   self.J) < self.shanon
+            pval += local_shannon (self.rand_neutral (theta),
+                                   self.J) < self.shannon
         return float (pval)/gens
     
     def rand_neutral (self, theta):
@@ -154,7 +156,7 @@ class Abundance (object):
         theta = 9.99
         '''
         theta = float (theta)
-        out = [0] * self.J
+        out = [0] * int (self.J)
         out [0] = spp = 1
         for ind in xrange (1, self.J):
             if random () < theta/(theta + ind):
@@ -174,7 +176,7 @@ class Abundance (object):
         return abundances
 
 
-    def _etienne_likelihood(self, x, verbose=True):
+    def etienne_likelihood(self, x, verbose=True):
         '''
         logikelihood function where
           x[0] = theta
@@ -186,40 +188,40 @@ class Abundance (object):
         returns log likelihood of given theta and I
         '''
         if not self.factor: # define it
-            self.ewens_likelihood()
-        if not self.K:
+            self.ewens_optimal_params()
+        if not 'etienne' in self.params:
             if verbose:
                 print "\nGetting K(D,A) according to Etienne 2005 formula:"
             self._get_kda (verbose=verbose)
+        kda = self.params ['etienne']['KDA']
         theta = x[0]
         I = float(x[1])/(1 - x[1]) * (self.J - 1)
         log_I    = log (I)
         thetaS   = theta + self.S
-        if not self.factor: # define it
-            self.ewens_likelihood()
         poch1 = exp (self.factor + log (theta) * self.S - lpoch (I, self.J) + \
                      log_I * self.S + lngamma(theta))
         gam_thetaS = gamma (thetaS)
         lik = mpfr(0.0)
         for A in xrange (self.J - self.S):
-            lik += poch1 * exp (self.K [A] + A * log_I) / gam_thetaS
+            lik += poch1 * exp (kda [A] + A * log_I) / gam_thetaS
             gam_thetaS *= thetaS + A
         return -log (lik)
 
-    def dump_kda (self, outfile):
+
+    def dump_params (self, outfile):
         '''
-        save kda with pickle
+        save params with pickle
         '''
-        if not self.K:
-            self._get_kda (verbose=False)
-        dump (self.K, open (outfile, 'w'))
+        if isfile (outfile):
+            self.load_params (outfile)
+        dump (self.params, open (outfile, 'w'))
 
 
-    def load_kda (self, infile):
+    def load_params (self, infile):
         '''
-        load kda with pickle from infile
+        load params with pickle from infile
         '''
-        self.K = load (open (infile))
+        self.params.update (load (open (infile)))
 
 
     def _get_kda (self, verbose=True):
@@ -233,7 +235,9 @@ class Abundance (object):
         pre_get_stirlings (max (specabund[0]))
         for i in xrange (sdiff):
             if verbose:
-                print "  Computing species %s out of %s" % (i+1, sdiff)
+                stdout.write ("\r  Computing species %s out of %s" % (i+1,
+                                                                      sdiff))
+                stdout.flush ()
             polyn1 = []
             for k in xrange (1, specabund[0][i] + 1):
                 coeff = stirling (specabund[0][i], k) * \
@@ -248,6 +252,8 @@ class Abundance (object):
             # polyn = polyn * polyn1
             polyn = mul_polyn (polyn, polyn1)
         kda = []
+        stdout.write ('\n')
         for i in polyn:
             kda.append (log (i))
-        self.K = kda
+        self.params.setdefault ('etienne', {})
+        self.params['etienne']['KDA'] = kda
