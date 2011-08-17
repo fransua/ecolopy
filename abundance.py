@@ -162,30 +162,10 @@ class Abundance (object):
                                    self.J) < self.shannon
         return float (pval)/gens
     
-    def rand_neutral_simple (self, theta):
-        '''
-        J should be the number of individuals in the dataset, and theta,
-        the optimal theta of the dataset accod
-        J = 376
-        theta = 9.99
-        '''
-        theta = float (theta)
-        out = [0] * int (self.J)
-        out [0] = spp = 1
-        for ind in xrange (1, self.J):
-            if random () < theta/(theta + ind):
-                spp += 1
-                out [ind] = spp
-            else:
-                out [ind] = out [int (random () * ind)]
-        return table (out, spp)
 
     def rand_neutral (self, theta, immig):
         '''
-        J should be the number of individuals in the dataset, and theta,
-        the optimal theta of the dataset accod
-        J = 376
-        theta = 9.99
+        generates random distribution according to theta and I
         '''
         theta = float (theta)
         immig = float (immig)
