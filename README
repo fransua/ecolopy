@@ -15,4 +15,5 @@ NZMATH: http://tnt.math.se.tmu.ac.jp/nzmath/
 SCIPY: easy_install scipy
        for optimization of log likelihood
 
-
+test usage:
+python test_all.py full

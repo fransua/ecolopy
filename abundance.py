@@ -8,7 +8,7 @@
 __author__  = "Francois-Jose Serra"
 __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
-__version__ = "0.0"
+__version__ = "0.1"
 
 from random         import random
 from scipy.stats    import chisqprob
@@ -25,18 +25,31 @@ class Abundance (object):
     '''
     Compute theta m I ect... for a given data sample
      * J_tot is the size of the metacommunity, if not defined = J * 3
+    Values of theta, m, I etc will be stored in params dict, under key
+    corresponding to model computed.
     '''
-    def __init__ (self, data, J_tot=None):
+    def __init__ (self, data, j_tot=None):
         if type (data) != list:
             self.data_path = data
             data = self._parse_infile ()
         self.abund     = [mpfr(x) for x in sorted (data [:])]
         self.J         = mpfr(sum (data))
         self.S         = mpfr(len (data))
-        self.J_tot     = J_tot if J_tot else self.J * 3
+        self.j_tot     = j_tot if j_tot else self.J * 3
         self.shannon   = self._shannon_entropy ()
         self.params    = {}
-        self.factor    = None
+
+    def __repr__(self):
+        """
+        for print
+        """
+        return '''Abundance (object)
+    Number of individues (J)  : %d
+    Number of species (S)     : %d
+    Shannon entropy (shannon) : %.4f
+    Metacommunity size (j_tot): %d
+    ''' % (self.J, self.S, self.shannon, self.j_tot)
+
 
     def lrt (self, model_1, model_2):
         '''
@@ -45,8 +58,8 @@ class Abundance (object):
         likelihood-ratio-test between two neutral models
         returns p-value of rejection of alternative model
         '''
-        chisqprob(2 * (float (self.params[model_1]['lnL']) - \
-                       float (self.params[model_2]['lnL'])), df=1)
+        return chisqprob(2 * (float (self.params[model_1]['lnL']) - \
+                              float (self.params[model_2]['lnL'])), df=1)
 
     def ewens_likelihood (self, theta):
         '''
@@ -61,7 +74,7 @@ class Abundance (object):
         for spe in xrange (max (self.abund)):
             factor -= lngamma (phi[spe] + 1)
         lnl = mpfr(lpoch (theta, self.J)) - log (theta) * self.S - factor
-        self.factor    = factor
+        self.params ['factor'] = factor
         return lnl
 
     def ewens_optimal_params (self):
@@ -95,21 +108,21 @@ class Abundance (object):
         else:
             start = self.S/2, 0.5
         if   method == 'fmin':
-            theta, m = fmin (self.etienne_likelihood, start,
+            theta, mut = fmin (self.etienne_likelihood, start,
                              full_output=False)
         elif method == 'slsqp':
-            theta, m  = fmin_slsqp (self.etienne_likelihood, start,
+            theta, mut  = fmin_slsqp (self.etienne_likelihood, start,
                                     bounds=bounds)
         elif method == 'l_bfgs_b':
-            theta, m  = fmin_l_bfgs_b (self.etienne_likelihood, start,
+            theta, mut = fmin_l_bfgs_b (self.etienne_likelihood, start,
                                        bounds=bounds, approx_grad=True)[0]
         elif method == 'tnc':
-            theta, m  = fmin_tnc (self.etienne_likelihood, start,
+            theta, mut = fmin_tnc (self.etienne_likelihood, start,
                                   bounds=bounds, approx_grad=True)[0]
-        self.params ['etienne']['theta'] = theta
-        self.params ['etienne']['m']     = m
-        self.params ['etienne']['I']     = m * (self.J - 1) / (1 - m)
-        self.params ['etienne']['lnL']   = self.etienne_likelihood ([theta, m])
+        self.params['etienne']['theta'] = theta
+        self.params['etienne']['m']     = mut
+        self.params['etienne']['I']     = mut * (self.J - 1) / (1 - mut)
+        self.params['etienne']['lnL']   = self.etienne_likelihood ([theta, mut])
 
     def _ewens_theta_likelihood (self, theta):
         '''
@@ -133,22 +146,23 @@ class Abundance (object):
         test for neutrality comparing shanon entropy
         returns p_value
         '''
-        def local_shannon (data, J):
+        def local_shannon (data, inds):
             '''
             same as self.shannon entropy
             '''
             shannon = mpfr(0.)
             for spe in data:
                 shannon -= spe * log (spe)
-            return (shannon + J * log(J)) / J
+            return (shannon + inds * log (inds)) / inds
         pval = 0
         theta = self.params[model]['theta']
+        immig = self.params[model]['I']
         for _ in xrange (gens):
-            pval += local_shannon (self.rand_neutral (theta),
+            pval += local_shannon (self.rand_neutral (theta, immig),
                                    self.J) < self.shannon
         return float (pval)/gens
     
-    def rand_neutral (self, theta):
+    def rand_neutral_simple (self, theta):
         '''
         J should be the number of individuals in the dataset, and theta,
         the optimal theta of the dataset accod
@@ -166,6 +180,32 @@ class Abundance (object):
                 out [ind] = out [int (random () * ind)]
         return table (out, spp)
 
+    def rand_neutral (self, theta, immig):
+        '''
+        J should be the number of individuals in the dataset, and theta,
+        the optimal theta of the dataset accod
+        J = 376
+        theta = 9.99
+        '''
+        theta = float (theta)
+        immig = float (immig)
+        mcnum   = [0] * int (self.J)
+        locnum  = [0] * int (self.J)
+        mcnum[0] = 1
+        new = nxt = 0
+        for ind in xrange (1, self.J):
+            if random () < immig / (immig + ind - 1):
+                locnum [ind] = locnum [int (random () * (ind - 1))]
+            else:
+                new += 1
+                if random () < theta / (theta + new - 1):
+                    nxt += 1
+                    mcnum [new] = nxt
+                else:
+                    mcnum [new] = mcnum [int (random () * (new - 1))]
+                locnum [ind] = mcnum[new]
+        return table (locnum, new)
+
     def _parse_infile (self):
         '''
         parse infile and return list of abundances
@@ -176,35 +216,36 @@ class Abundance (object):
         return abundances
 
 
-    def etienne_likelihood(self, x, verbose=True):
+    def etienne_likelihood(self, params, verbose=True):
         '''
         logikelihood function where
-          x[0] = theta
-          x[1] = I
-          K[A] = log (K(D,A))
-          K[A] = K(D,A) in Etienne paper
+          params[0] = theta
+          params[1] = I
+          K[A]      = log (K(D,A))
+          K[A]      = K(D,A) in Etienne paper
         cf Etienne, 2005
         x = [48.1838, 1088.19]
         returns log likelihood of given theta and I
         '''
-        if not self.factor: # define it
+        if not 'factor' in self.params: # define it
             self.ewens_optimal_params()
         if not 'etienne' in self.params:
             if verbose:
                 print "\nGetting K(D,A) according to Etienne 2005 formula:"
             self._get_kda (verbose=verbose)
-        kda = self.params ['etienne']['KDA']
-        theta = x[0]
-        I = float(x[1])/(1 - x[1]) * (self.J - 1)
-        log_I    = log (I)
-        thetaS   = theta + self.S
-        poch1 = exp (self.factor + log (theta) * self.S - lpoch (I, self.J) + \
-                     log_I * self.S + lngamma(theta))
-        gam_thetaS = gamma (thetaS)
+        kda       = self.params ['etienne']['KDA']
+        theta     = params[0]
+        immig     = float(params[1])/(1 - params[1]) * (self.J - 1)
+        log_immig = log (immig)
+        theta_s   = theta + self.S
+        poch1 = exp (self.params['factor'] + log (theta) * self.S - \
+                     lpoch (immig, self.J) + \
+                     log_immig * self.S + lngamma(theta))
+        gam_theta_s = gamma (theta_s)
         lik = mpfr(0.0)
-        for A in xrange (self.J - self.S):
-            lik += poch1 * exp (kda [A] + A * log_I) / gam_thetaS
-            gam_thetaS *= thetaS + A
+        for abd in xrange (self.J - self.S):
+            lik += poch1 * exp (kda [abd] + abd * log_immig) / gam_theta_s
+            gam_theta_s *= theta_s + abd
         return -log (lik)
 
 

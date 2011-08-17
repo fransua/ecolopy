@@ -21,8 +21,8 @@ def test_ewens (kind, abd):
     t0 = time ()
     print ' Testing Ewens algorithm with BCI %s dataset' % kind
     if kind == 'full':
-        wanted_theta = 32.214
-        wanted_lnl   = 282.14
+        wanted_theta = 34.962
+        wanted_lnl   = 318.849
         time_max = 0.05
     elif kind == 'short':
         wanted_theta = 33.302
@@ -51,9 +51,9 @@ def test_etienne (kind, abd):
         wanted_m     = 0.03677
         time_max = '15 sec'
     elif kind == 'full':
-        etienne_lnl = 270.467
-        wanted_theta = 48.184
-        wanted_m     = 0.06471
+        etienne_lnl = 308.725
+        wanted_theta = 47.674
+        wanted_m     = 0.09342
         time_max = '150 sec'
     print ' Testing Etienne algorithm with BCI %s dataset' % kind
     t0 = time()
@@ -92,11 +92,12 @@ def main():
         # reload abundance with shorter dataset
         abd = Abundance ('bci_short.txt')
     elif kind == 'full':
-        abd = Abundance ('bci.txt')
+        abd = Abundance ('bci_full.txt')
     else:
         exit()
 
-    print '\nstarting tests...\n\n'
+    print '\nstarting tests...\nwith %s BCI dataset:' % kind
+    print abd
     print '************************************************************\n'
     print '  Dataset with J: %s, S: %s, H: %s\n' % (abd.J, abd.S, abd.shannon)
     print '************************************************************\n'
@@ -112,20 +113,21 @@ def main():
     print 'ok\n'
     print '************************************************************\n'
     print 'LRT between Ewens and Etienne model (1 df): ',
-    print abd.lrt('ewens', 'etienne')
+    print abd.lrt('ewens', 'etienne'), '\n'
     print '************************************************************\n'
     t0 = time()
-    gens = 300
+    gens = 1000
     print 'Neutrality test p-value (under Ewens model):',
     print abd.test_neutrality(model='ewens', gens=gens)
+    print 'should be arround: %s' % (0.9 if kind=='full' else 1.0)
     print '%s generations computed in %ss' % (gens, time()-t0)
     t0 = time()
     print 'Neutrality test p-value (under Etienne model):',
     print abd.test_neutrality(model='etienne', gens=gens)
+    print 'should be arround: %s' % (0.1 if kind=='full' else 0.01)
     print '%s generations computed in %ss' % (gens, time()-t0)
     print '************************************************************\n'
     print '\n\nAll test OK!\n'
-    
         
 
 if __name__ == "__main__":
