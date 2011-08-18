@@ -73,6 +73,21 @@ def test_etienne (kind, abd):
     print '\n  Elapsed time (should be < %s): %s sec\n' % (time_max, time() - t0)
 
 
+def test_random_neutral (abd):
+    '''
+    '''
+    thetas = []
+    immigs = []
+    for _ in xrange (100):
+        print _
+        new = Abundance (abd.rand_neutral (50,1000))
+        new.etienne_optimal_params()
+        thetas.append (new.params['etienne']['theta'])
+        immigs.append (new.params['etienne']['I'])
+    print mean (thetas), '50'
+    print mean (immigs), '1000'
+
+
 def main():
     """
     main function
@@ -96,21 +111,6 @@ def main():
         abd = Abundance ('bci_full.txt')
     else:
         exit()
-
-    def test_random_neutral (abd):
-        '''
-        '''
-        thetas = []
-        immigs = []
-        for _ in xrange (100):
-            print _
-            new = Abundance (abd.rand_neutral (50,1000))
-            new.etienne_optimal_params()
-            thetas.append (new.params['etienne']['theta'])
-            immigs.append (new.params['etienne']['I'])
-        print mean (thetas), '50'
-        print mean (immigs), '1000'
-
 
     print '\nstarting tests...\nwith %s BCI dataset:' % kind
     print abd
@@ -145,6 +145,7 @@ def main():
     print 'should be arround: %s' % (0.1 if kind=='full' else 0.01)
     print '%s generations computed in %ss' % (gens, time()-t0)
     print '************************************************************\n'
+    abd._kda = None
     test_random_neutral(abd)
     print '\n\nAll test OK!\n'
 

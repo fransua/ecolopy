@@ -24,6 +24,7 @@ def lpoch (z, m):
     '''
     return lngamma(z+m) - lngamma(z)
 
+
 def shannon_entropy(abund, inds):
     '''
     computes Shannon entropy (H) for a given abundance table
@@ -33,6 +34,7 @@ def shannon_entropy(abund, inds):
     for spe in abund:
         shannon -= spe * log (spe)
     return (shannon + inds * log (inds)) / inds
+
 
 def table (out, spp=None):
     '''
@@ -46,6 +48,7 @@ def table (out, spp=None):
         counts[ind] += mpfr(1)
     return [counts[x] for x in sorted (counts)]
 
+
 def factorial_div (one, two):
     '''
     computes a!/b!
@@ -56,6 +59,7 @@ def factorial_div (one, two):
         return reduce (mul, xrange(two, one))
     else:
         return mpfr (1.)
+
 
 def mul_polyn(polyn_a, polyn_b):
     '''
@@ -86,6 +90,7 @@ def mul_polyn(polyn_a, polyn_b):
         return _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b)
     return _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)
 
+
 def _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b):
     '''
     fast polynomial multiplication when polynomes are nearly equal
@@ -109,6 +114,7 @@ def _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b):
         new.append (sum (mult_one (polyn_a[i-len_a3 : len_a1],
                               polyn_b[len_a    : i-len_a :-1], len_a2-i, diff)))
     return new    
+
 
 def _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b):
     '''
