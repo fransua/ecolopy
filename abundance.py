@@ -190,7 +190,6 @@ class Abundance (object):
         immig = float (immig)
         mcnum   = [0] * int (self.J)
         locnum  = [0] * int (self.J)
-        abund   = [0] * int (self.J)
         mcnum[0] = 1
         new = nxt = 0
         for ind in xrange (self.J):
@@ -204,8 +203,7 @@ class Abundance (object):
                 else:
                     mcnum[new - 1] = mcnum[int (random () * (new - 1))]
                 locnum[ind] = mcnum[new - 1]
-            abund[locnum[ind]] += 1
-        return table (abund, new)
+        return table (locnum, new)
 
 
     def _parse_infile (self):
