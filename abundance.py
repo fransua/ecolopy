@@ -18,8 +18,8 @@ from cPickle        import dump, load
 from os.path        import isfile
 from sys            import stdout
 
-from utils          import lpoch, table, factorial_div, mul_polyn
-from utils          import lngamma, gamma, pre_get_stirlings, stirling
+from utils          import table, factorial_div, mul_polyn, shannon_entropy
+from utils          import lpoch, lngamma, gamma, pre_get_stirlings, stirling
 
 class Abundance (object):
     '''
@@ -28,6 +28,7 @@ class Abundance (object):
     Values of theta, m, I etc will be stored in params dict, under key
     corresponding to model computed.
     '''
+
     def __init__ (self, data, j_tot=None):
         if type (data) != list:
             self.data_path = data
@@ -36,8 +37,10 @@ class Abundance (object):
         self.J         = mpfr(sum (data))
         self.S         = mpfr(len (data))
         self.j_tot     = j_tot if j_tot else self.J * 3
-        self.shannon   = self._shannon_entropy ()
+        self.shannon   = shannon_entropy (self.abund, self.J)
         self.params    = {}
+        self._kda      = None
+
 
     def __repr__(self):
         """
@@ -61,6 +64,7 @@ class Abundance (object):
         return chisqprob(2 * (float (self.params[model_1]['lnL']) - \
                               float (self.params[model_2]['lnL'])), df=1)
 
+
     def ewens_likelihood (self, theta):
         '''
         get likelihood value of Ewens according to parthy/tetame
@@ -77,6 +81,7 @@ class Abundance (object):
         self.params ['factor'] = factor
         return lnl
 
+
     def ewens_optimal_params (self):
         '''
         optimize theta using theta likelihood function, acording to Ewens
@@ -89,6 +94,7 @@ class Abundance (object):
         tmp['m']     = tmp['theta'] / self.J / mpfr(2)
         tmp['I']     = tmp['m'] * (self.J - 1) / (1 - tmp['m'])
         tmp['lnL']   = self.ewens_likelihood (tmp['theta'])
+
 
     def etienne_optimal_params (self, method='fmin'):
         '''
@@ -124,6 +130,7 @@ class Abundance (object):
         self.params['etienne']['I']     = mut * (self.J - 1) / (1 - mut)
         self.params['etienne']['lnL']   = self.etienne_likelihood ([theta, mut])
 
+
     def _ewens_theta_likelihood (self, theta):
         '''
         returns the likelihood of theta for a given dataset
@@ -132,38 +139,50 @@ class Abundance (object):
             return mpfr ('-inf')
         return self.S * log (theta) + lngamma (theta) - lngamma (theta + self.J)
 
-    def _shannon_entropy (self):
-        '''
-        computes shannon entropy
-        '''
-        shannon = mpfr(0.)
-        for spe in self.abund:
-            shannon -= spe * log (spe)
-        return (shannon + self.J * log(self.J)) / self.J
 
     def test_neutrality (self, model='ewens', gens=100):
         '''
         test for neutrality comparing shanon entropy
         returns p_value
         '''
-        def local_shannon (data, inds):
-            '''
-            same as self.shannon entropy
-            '''
-            shannon = mpfr(0.)
-            for spe in data:
-                shannon -= spe * log (spe)
-            return (shannon + inds * log (inds)) / inds
         pval = 0
         theta = self.params[model]['theta']
         immig = self.params[model]['I']
         for _ in xrange (gens):
-            pval += local_shannon (self.rand_neutral (theta, immig),
-                                   self.J) < self.shannon
+            pval += shannon_entropy (self.rand_neutral (theta, immig,
+                                                        model=model),
+                                     self.J) < self.shannon
         return float (pval)/gens
     
 
-    def rand_neutral (self, theta, immig):
+    def rand_neutral (self, theta, immig, model='etienne'):
+        '''
+        Depending on model, generates random neutral abundance
+        with theta and I
+        '''
+        if model == 'ewens':
+            return self._rand_neutral_ewens (theta)
+        elif model == 'etienne':
+            return self._rand_neutral_etienne (theta, immig)
+
+
+    def _rand_neutral_ewens (self, theta):
+        '''
+        generates random distribution according only to theta
+        '''
+        theta = float (theta)
+        out = [0] * int (self.J)
+        out [0] = spp = 1
+        for ind in xrange (self.J):
+            if random () < theta/(theta + ind):
+                spp += 1
+                out[ind] = spp
+            else:
+                out[ind] = out [int (random () * ind)]
+        return table (out, spp)
+
+
+    def _rand_neutral_etienne (self, theta, immig):
         '''
         generates random distribution according to theta and I
         '''
@@ -173,18 +192,19 @@ class Abundance (object):
         locnum  = [0] * int (self.J)
         mcnum[0] = 1
         new = nxt = 0
-        for ind in xrange (1, self.J):
-            if random () < immig / (immig + ind - 1):
-                locnum [ind] = locnum [int (random () * (ind - 1))]
+        for ind in xrange (self.J):
+            if random () > immig / (ind + immig):
+                locnum [ind] = locnum [int (random () * ind)]
             else:
                 new += 1
-                if random () < theta / (theta + new - 1):
+                if random () <= theta / (theta + new - 1):
                     nxt += 1
-                    mcnum [new] = nxt
+                    mcnum[new - 1] = nxt
                 else:
-                    mcnum [new] = mcnum [int (random () * (new - 1))]
-                locnum [ind] = mcnum[new]
+                    mcnum[new - 1] = mcnum[int (random () * (new - 1))]
+                locnum[ind] = mcnum[new - 1]
         return table (locnum, new)
+
 
     def _parse_infile (self):
         '''
@@ -213,7 +233,7 @@ class Abundance (object):
             if verbose:
                 print "\nGetting K(D,A) according to Etienne 2005 formula:"
             self._get_kda (verbose=verbose)
-        kda       = self.params ['etienne']['KDA']
+        kda       = self._kda
         theta     = params[0]
         immig     = float(params[1])/(1 - params[1]) * (self.J - 1)
         log_immig = log (immig)
@@ -231,18 +251,22 @@ class Abundance (object):
 
     def dump_params (self, outfile):
         '''
-        save params with pickle
+        save params and kda with pickle
         '''
         if isfile (outfile):
             self.load_params (outfile)
+        self.params['KDA'] = self._kda[:]
         dump (self.params, open (outfile, 'w'))
+        del (self.params['KDA'])
 
 
     def load_params (self, infile):
         '''
-        load params with pickle from infile
+        load params and kda with pickle from infile
         '''
         self.params.update (load (open (infile)))
+        self._kda = self.params['KDA']
+        del (self.params['KDA'])
 
 
     def _get_kda (self, verbose=True):
@@ -277,4 +301,4 @@ class Abundance (object):
         for i in polyn:
             kda.append (log (i))
         self.params.setdefault ('etienne', {})
-        self.params['etienne']['KDA'] = kda
+        self._kda = kda

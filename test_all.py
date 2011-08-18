@@ -13,6 +13,7 @@ __version__ = "0.0"
 from abundance import Abundance
 from time import time
 from sys import argv, stderr
+from numpy import mean
 
 def test_ewens (kind, abd):
     '''
@@ -96,6 +97,21 @@ def main():
     else:
         exit()
 
+    def test_random_neutral (abd):
+        '''
+        '''
+        thetas = []
+        immigs = []
+        for _ in xrange (100):
+            print _
+            new = Abundance (abd.rand_neutral (50,1000))
+            new.etienne_optimal_params()
+            thetas.append (new.params['etienne']['theta'])
+            immigs.append (new.params['etienne']['I'])
+        print mean (thetas), '50'
+        print mean (immigs), '1000'
+
+
     print '\nstarting tests...\nwith %s BCI dataset:' % kind
     print abd
     print '************************************************************\n'
@@ -111,12 +127,14 @@ def main():
     # and again to test update
     abd.dump_params('test_%s.pik' % kind)
     print 'ok\n'
+    print abd.params['ewens']['theta'], abd.params['ewens']['I']
+    print abd.params['etienne']['theta'], abd.params['etienne']['I']
     print '************************************************************\n'
     print 'LRT between Ewens and Etienne model (1 df): ',
     print abd.lrt('ewens', 'etienne'), '\n'
     print '************************************************************\n'
     t0 = time()
-    gens = 1000
+    gens = 500
     print 'Neutrality test p-value (under Ewens model):',
     print abd.test_neutrality(model='ewens', gens=gens)
     print 'should be arround: %s' % (0.9 if kind=='full' else 1.0)
@@ -127,8 +145,9 @@ def main():
     print 'should be arround: %s' % (0.1 if kind=='full' else 0.01)
     print '%s generations computed in %ss' % (gens, time()-t0)
     print '************************************************************\n'
+    test_random_neutral(abd)
     print '\n\nAll test OK!\n'
-        
+
 
 if __name__ == "__main__":
     exit(main())

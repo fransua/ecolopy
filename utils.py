@@ -24,6 +24,16 @@ def lpoch (z, m):
     '''
     return lngamma(z+m) - lngamma(z)
 
+def shannon_entropy(abund, inds):
+    '''
+    computes Shannon entropy (H) for a given abundance table
+    and number of individues.
+    '''
+    shannon = mpfr(0.)
+    for spe in abund:
+        shannon -= spe * log (spe)
+    return (shannon + inds * log (inds)) / inds
+
 def table (out, spp=None):
     '''
     data to contingency table
