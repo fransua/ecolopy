@@ -10,7 +10,6 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.1"
 
-from random         import random
 from scipy.stats    import chisqprob
 from scipy.optimize import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
 from gmpy2          import mpfr, log, exp, lngamma
@@ -20,6 +19,7 @@ from sys            import stdout
 
 from utils          import table, factorial_div, mul_polyn, shannon_entropy
 from utils          import lpoch, lngamma, gamma, pre_get_stirlings, stirling
+from random_neutral import rand_neutral_etienne, rand_neutral_ewens
 
 class Abundance (object):
     '''
@@ -56,8 +56,6 @@ class Abundance (object):
 
     def lrt (self, model_1, model_2):
         '''
-        NOT WORKING
-        ***********
         likelihood-ratio-test between two neutral models
         returns p-value of rejection of alternative model
         '''
@@ -161,49 +159,9 @@ class Abundance (object):
         with theta and I
         '''
         if model == 'ewens':
-            return self._rand_neutral_ewens (theta)
+            return rand_neutral_ewens (self.J, theta)
         elif model == 'etienne':
-            return self._rand_neutral_etienne (theta, immig)
-
-
-    def _rand_neutral_ewens (self, theta):
-        '''
-        generates random distribution according only to theta
-        '''
-        theta = float (theta)
-        out = [0] * int (self.J)
-        out [0] = spp = 1
-        for ind in xrange (self.J):
-            if random () < theta/(theta + ind):
-                spp += 1
-                out[ind] = spp
-            else:
-                out[ind] = out [int (random () * ind)]
-        return table (out, spp)
-
-
-    def _rand_neutral_etienne (self, theta, immig):
-        '''
-        generates random distribution according to theta and I
-        '''
-        theta = float (theta)
-        immig = float (immig)
-        mcnum   = [0] * int (self.J)
-        locnum  = [0] * int (self.J)
-        mcnum[0] = 1
-        new = nxt = 0
-        for ind in xrange (self.J):
-            if random () > immig / (ind + immig):
-                locnum [ind] = locnum [int (random () * ind)]
-            else:
-                new += 1
-                if random () <= theta / (theta + new - 1):
-                    nxt += 1
-                    mcnum[new - 1] = nxt
-                else:
-                    mcnum[new - 1] = mcnum[int (random () * (new - 1))]
-                locnum[ind] = mcnum[new - 1]
-        return table (locnum, new)
+            return rand_neutral_etienne (self.J, theta, immig)
 
 
     def _parse_infile (self):
@@ -303,3 +261,5 @@ class Abundance (object):
             kda.append (log (i))
         self.params.setdefault ('etienne', {})
         self._kda = kda
+
+
