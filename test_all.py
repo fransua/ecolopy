@@ -58,19 +58,21 @@ def test_etienne (kind, abd):
         time_max = '150 sec'
     print ' Testing Etienne algorithm with BCI %s dataset' % kind
     t0 = time()
-    abd.etienne_optimal_params ()
-    print '  -> Optimal value of theta: %.3f' % abd.params['etienne']['theta']
-    if round (abd.params ['etienne']['theta'], 3) != wanted_theta:
-        stderr.write ('\n test failed in ewens test (theta should have been %s)\n' %\
-              wanted_theta)
-    print '  -> Optimal value of m: %.5f' % abd.params['etienne']['m']
-    if round (abd.params ['etienne']['m'], 5) != wanted_m:
-        stderr.write ('\n test failed in etienne test (m should have been %s)\n' %\
-              wanted_m)
-    print '  -> Etienne lnL computed : %.3f' % abd.params ['etienne']['lnL']
-    if round (abd.params ['etienne']['lnL'], 3) != etienne_lnl:
-        stderr.write ('\n test failed in etienne test\n')
-    print '\n  Elapsed time (should be < %s): %s sec\n' % (time_max, time() - t0)
+    for test in ['fmin', 'slsqp', 'l_bfgs_b', 'tnc']:
+        print test
+        abd.etienne_optimal_params (method=test)
+        print '  -> Optimal value of theta: %.3f' % abd.params['etienne']['theta']
+        if round (abd.params ['etienne']['theta'], 3) != wanted_theta:
+            stderr.write ('\n test failed in ewens test (theta should have been %s)\n' %\
+                  wanted_theta)
+        print '  -> Optimal value of m: %.5f' % abd.params['etienne']['m']
+        if round (abd.params ['etienne']['m'], 5) != wanted_m:
+            stderr.write ('\n test failed in etienne test (m should have been %s)\n' %\
+                  wanted_m)
+        print '  -> Etienne lnL computed : %.3f' % abd.params ['etienne']['lnL']
+        if round (abd.params ['etienne']['lnL'], 3) != etienne_lnl:
+            stderr.write ('\n test failed in etienne test\n')
+        print '\n  Elapsed time (should be < %s): %s sec\n' % (time_max, time() - t0)
 
 
 def test_random_neutral (abd):
@@ -146,7 +148,7 @@ def main():
     print '%s generations computed in %ss' % (gens, time()-t0)
     print '************************************************************\n'
     abd._kda = None
-    test_random_neutral(abd)
+    #test_random_neutral(abd)
     print '\n\nAll test OK!\n'
 
 

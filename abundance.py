@@ -51,7 +51,9 @@ class Abundance (object):
     Number of species (S)     : %d
     Shannon entropy (shannon) : %.4f
     Metacommunity size (j_tot): %d
-    ''' % (self.J, self.S, self.shannon, self.j_tot)
+    Models computed           : %s
+    ''' % (self.J, self.S, self.shannon, self.j_tot,
+           ', '.join (self.params.keys()))
 
 
     def lrt (self, model_1, model_2):
@@ -94,7 +96,7 @@ class Abundance (object):
         tmp['lnL']   = self.ewens_likelihood (tmp['theta'])
 
 
-    def etienne_optimal_params (self, method='fmin'):
+    def etienne_optimal_params (self, method='slsqp'):
         '''
         optimize theta and I using etienne likelihood function
         using scipy package, values that are closest to the one proposed
@@ -106,17 +108,20 @@ class Abundance (object):
           * l_bfgs_b: theta = 140.11 ; I = 84.37   ; lnL = -10088.941; t = 343s
           * tnc     : theta = 52.62  ; I = 729.34  ; lnL = -10090.912; t = 297s
         '''
+        # define bounds
         bounds = [(1, self.S), (1e-50, 1-1e-50)]
+        # define starting values
         if 'ewens' in self.params:
             start = self.params ['ewens']['theta'], self.params['ewens']['m']
         else:
             start = self.S/2, 0.5
+        # function minimization
         if   method == 'fmin':
             theta, mut = fmin (self.etienne_likelihood, start,
-                             full_output=False)
+                               full_output=False, disp=0)
         elif method == 'slsqp':
             theta, mut  = fmin_slsqp (self.etienne_likelihood, start,
-                                    bounds=bounds)
+                                      bounds=bounds,iprint=9)
         elif method == 'l_bfgs_b':
             theta, mut = fmin_l_bfgs_b (self.etienne_likelihood, start,
                                        bounds=bounds, approx_grad=True)[0]
@@ -195,6 +200,7 @@ class Abundance (object):
         theta     = params[0]
         immig     = float(params[1])/(1 - params[1]) * (self.J - 1)
         log_immig = log (immig)
+        print '  ', theta, immig
         theta_s   = theta + self.S
         poch1 = exp (self.params['factor'] + log (theta) * self.S - \
                      lpoch (immig, self.J) + \
