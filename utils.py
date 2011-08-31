@@ -10,8 +10,7 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.0"
 
-from nzmath.combinatorial import stirling1
-from gmpy2 import log, mul, mpfr, gamma, div, lngamma
+from gmpy2 import log, mul, mpfr, mpz, div, lngamma
 
 global STIRLINGS
 STIRLINGS = {}
@@ -131,20 +130,17 @@ def _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b):
 def pre_get_stirlings(max_nm):
     '''
     takes advantage of recurrence function:
-    s(n,m) = s(n-1, m-1) - (n-1) * s(n-1,m)
+      s(n, m) = s(n-1, m-1) - (n-1) * s(n-1, m)
+    and as  s(whatever, 0) = 0 :
+      s(n+1, 1) = -n * s(n, 1)
     '''
-    for one in xrange (1, max_nm+1):
-        STIRLINGS [one, 1] = stirling1 (one, 1)
-    for one in xrange (2, max_nm+1):
-        for two in xrange (2, max_nm+1):
-            if two > one:
-                continue
-            if two == one:
-                STIRLINGS[one, two] = STIRLINGS [one-1, two-1] - 0
-            else:
-                STIRLINGS[one, two] = STIRLINGS [one-1, two-1] - \
-                                          mul ((one-1), STIRLINGS [one-1,
-                                                                       two])
+    STIRLINGS [1, 1] = mpfr(1)
+    for one in xrange (1, max_nm):
+        STIRLINGS [one+1, 1] = -one * STIRLINGS [one, 1]
+        for two in xrange (2, one+1):
+            STIRLINGS[one+1, two] = STIRLINGS[one, two-1] - one \
+                                    * STIRLINGS[one, two]
+        STIRLINGS[one+1, one+1] = STIRLINGS [one, one]
 
 def stirling (one, two):
     '''

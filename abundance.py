@@ -12,14 +12,14 @@ __version__ = "0.1"
 
 from scipy.stats    import chisqprob, lognorm
 from scipy.optimize import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
-from gmpy2          import mpfr, log, exp, lngamma
+from gmpy2          import mpfr, mpz, log, exp, lngamma, gamma
 from cPickle        import dump, load
 from os.path        import isfile
 from sys            import stdout
-from numpy          import mean, std, ravel
+from numpy          import mean, std
 
 from utils          import table, factorial_div, mul_polyn, shannon_entropy
-from utils          import lpoch, lngamma, gamma, pre_get_stirlings, stirling
+from utils          import lpoch, pre_get_stirlings, stirling
 from random_neutral import rand_neutral_etienne, rand_neutral_ewens
 from random_neutral import rand_lognormal
 
@@ -35,9 +35,9 @@ class Abundance (object):
         if type (data) != list:
             self.data_path = data
             data = self._parse_infile ()
-        self.abund     = [mpfr(x) for x in sorted (data [:])]
-        self.J         = mpfr(sum (data))
-        self.S         = mpfr(len (data))
+        self.abund     = [mpz(x) for x in sorted (data [:])]
+        self.J         = mpz(sum (data))
+        self.S         = mpz(len (data))
         self.j_tot     = j_tot if j_tot else self.J * 3
         self.shannon   = shannon_entropy (self.abund, self.J)
         self.params    = {}
@@ -102,7 +102,7 @@ class Abundance (object):
         theta_like   = lambda x: -self._ewens_theta_likelihood (x)
         tmp['theta'] = golden (theta_like, 
                                              brack=[.01/self.J, self.J])
-        tmp['m']     = tmp['theta'] / self.J / mpfr(2)
+        tmp['m']     = tmp['theta'] / self.J / mpz(2)
         tmp['I']     = tmp['m'] * (self.J - 1) / (1 - tmp['m'])
         tmp['lnL']   = self.ewens_likelihood (tmp['theta'])
 
