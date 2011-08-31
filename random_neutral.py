@@ -13,7 +13,8 @@ __version__ = "0.0"
 
 from random import random
 from utils  import table
-
+from numpy  import exp
+from scipy.stats import lognorm
 
 def rand_neutral_etienne (inds, theta, immig):
     '''
@@ -55,8 +56,13 @@ def rand_neutral_ewens (inds, theta):
     return table (out, spp)
 
 
-def rand_lognormal (inds, mu, sd):
+def rand_lognormal (species, sd, mu):
     '''
+    generates random lognormal distribution
     '''
-    pass
+    return [int (i+1) for i in lognorm.rvs (sd, scale=exp(mu),
+                                            size=int (species))]
+
+
+
 

@@ -14,6 +14,8 @@ from abundance import Abundance
 from time import time
 from sys import argv, stderr
 from numpy import mean
+from random_neutral import *
+from utils import *
 
 def test_ewens (kind, abd):
     '''
@@ -82,7 +84,7 @@ def test_random_neutral (abd):
     immigs = []
     for _ in xrange (100):
         print _
-        new = Abundance (abd.rand_neutral (50,1000))
+        new = Abundance (abd.rand_neutral (50,1000, model='lognorm'))
         new.etienne_optimal_params()
         thetas.append (new.params['etienne']['theta'])
         immigs.append (new.params['etienne']['I'])
@@ -144,11 +146,20 @@ def main():
     t0 = time()
     print 'Neutrality test p-value (under Etienne model):',
     print abd.test_neutrality(model='etienne', gens=gens)
+    print 'Lognormality test p-value (under Etienne model):',
+    print abd.test_neutrality(model='lognorm', gens=gens)
+    print 'lognorm lnL', abd.lognorm_likelihood()
+    print 'ewens   lnL',abd.params['ewens']['lnL']
+    print 'etienne lnL',abd.params['etienne']['lnL']
+    print abd.params['factor']
+    print lpoch (abd.params['etienne']['theta'], abd.J)
+    print abd.params['factor'] - lpoch (abd.params['ewens']['theta'], abd.J) + abd.params['ewens']['lnL']
+    print abd.params['factor'] - lpoch (abd.params['etienne']['theta'], abd.J) + abd.params['etienne']['lnL']
     print 'should be arround: %s' % (0.1 if kind=='full' else 0.01)
     print '%s generations computed in %ss' % (gens, time()-t0)
     print '************************************************************\n'
     abd._kda = None
-    #test_random_neutral(abd)
+    test_random_neutral(abd)
     print '\n\nAll test OK!\n'
 
 

@@ -10,16 +10,18 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.1"
 
-from scipy.stats    import chisqprob
+from scipy.stats    import chisqprob, lognorm
 from scipy.optimize import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
 from gmpy2          import mpfr, log, exp, lngamma
 from cPickle        import dump, load
 from os.path        import isfile
 from sys            import stdout
+from numpy          import mean, std, ravel
 
 from utils          import table, factorial_div, mul_polyn, shannon_entropy
 from utils          import lpoch, lngamma, gamma, pre_get_stirlings, stirling
 from random_neutral import rand_neutral_etienne, rand_neutral_ewens
+from random_neutral import rand_lognormal
 
 class Abundance (object):
     '''
@@ -77,10 +79,19 @@ class Abundance (object):
             factor -= log (max (1, self.abund[spe]))
         for spe in xrange (max (self.abund)):
             factor -= lngamma (phi[spe] + 1)
-        lnl = mpfr(lpoch (theta, self.J)) - log (theta) * self.S - factor
+        lnl = mpfr (lpoch (theta, self.J)) - log (theta) * self.S - factor
         self.params ['factor'] = factor
         return lnl
 
+    def lognorm_likelihood (self, mu=None, sd=None):
+        '''
+        returns -log-likelihood of fitting to log-normal distribution
+        '''
+        data = [int (x) for x in self.abund]
+        sd = std ([float (log (x)) for x in data]) if sd == None else sd
+        if mu== None: mu = mean ([float (log (x)) for x in data])
+        return -sum ([log (x) for x in lognorm.pdf (data, sd,
+                                                    scale=float (exp (mu)))])
 
     def ewens_optimal_params (self):
         '''
@@ -149,8 +160,14 @@ class Abundance (object):
         returns p_value
         '''
         pval = 0
-        theta = self.params[model]['theta']
-        immig = self.params[model]['I']
+        if model == 'lognorm':
+            logabund = [float (log (x)) for x in self.abund]
+            theta = mean (logabund)
+            immig = std  (logabund)
+            print theta, immig
+        else:
+            theta = self.params[model]['theta']
+            immig = self.params[model]['I']
         for _ in xrange (gens):
             pval += shannon_entropy (self.rand_neutral (theta, immig,
                                                         model=model),
@@ -167,6 +184,8 @@ class Abundance (object):
             return rand_neutral_ewens (self.J, theta)
         elif model == 'etienne':
             return rand_neutral_etienne (self.J, theta, immig)
+        elif model == 'lognorm':
+            return rand_lognormal (self.S, immig, theta)
 
 
     def _parse_infile (self):
@@ -200,7 +219,6 @@ class Abundance (object):
         theta     = params[0]
         immig     = float(params[1])/(1 - params[1]) * (self.J - 1)
         log_immig = log (immig)
-        print '  ', theta, immig
         theta_s   = theta + self.S
         poch1 = exp (self.params['factor'] + log (theta) * self.S - \
                      lpoch (immig, self.J) + \
