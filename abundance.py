@@ -33,16 +33,20 @@ class Abundance (object):
     '''
 
     def __init__ (self, data, j_tot=None):
+        """
+        vamos
+        """
+        self.params    = {}
         if type (data) != list:
             self.data_path = data
             data = self._parse_infile ()
-        self.abund     = [mpfr(x) for x in sorted (data [:])]
-        self.J         = mpfr(sum (data))
-        self.S         = mpfr(len (data))
+        if not data is None:
+            self.abund     = [mpfr(x) for x in sorted (data [:])]
+            self._kda      = None
+        self.J         = mpfr(sum (self.abund))
+        self.S         = mpfr(len (self.abund))
         self.j_tot     = j_tot if j_tot else self.J * 3
         self.shannon   = shannon_entropy (self.abund, self.J)
-        self.params    = {}
-        self._kda      = None
 
 
     def __repr__(self):
@@ -59,13 +63,14 @@ class Abundance (object):
            ', '.join (self.params.keys()))
 
 
-    def lrt (self, model_1, model_2):
+    def lrt (self, model_1, model_2, df=1):
         '''
         likelihood-ratio-test between two neutral models
         returns p-value of rejection of alternative model
+        eg: usually ewens, etienne. And if pval < 0.05 than use etienne
         '''
         return chisqprob(2 * (float (self.params[model_1]['lnL']) - \
-                              float (self.params[model_2]['lnL'])), df=1)
+                              float (self.params[model_2]['lnL'])), df=df)
 
 
     def ewens_likelihood (self, theta):
@@ -121,7 +126,8 @@ class Abundance (object):
           * tnc     : theta = 52.62  ; I = 729.34  ; lnL = -10090.912; t = 297s
         '''
         # define bounds
-        bounds = [(1, self.S), (1e-50, 1-1e-50)]
+        bounds = [(1, self.S), (1e-49, 1-1e-49)]
+        all_ok  = True
         # define starting values
         if 'ewens' in self.params:
             start = self.params ['ewens']['theta'], self.params['ewens']['m']
@@ -132,18 +138,32 @@ class Abundance (object):
             theta, mut = fmin (self.etienne_likelihood, start,
                                full_output=False, disp=0)
         elif method == 'slsqp':
-            theta, mut  = fmin_slsqp (self.etienne_likelihood, start,
-                                      bounds=bounds,iprint=9)
+            a, _, _, err, _ = fmin_slsqp (self.etienne_likelihood,
+                                          start, iter=1000,
+                                          bounds=bounds, disp=0,
+                                          full_output=True)
+            theta, mut = a
+            if err != 0:
+                all_ok = False
         elif method == 'l_bfgs_b':
-            theta, mut = fmin_l_bfgs_b (self.etienne_likelihood, start,
-                                       bounds=bounds, approx_grad=True)[0]
+            a, _, err = fmin_l_bfgs_b (self.etienne_likelihood, start,
+                                                maxfun=1000, disp=0,
+                                                bounds=bounds, approx_grad=True)
+            theta, mut = a
+            if err['warnflag'] != 0:
+                all_ok = False
         elif method == 'tnc':
-            theta, mut = fmin_tnc (self.etienne_likelihood, start,
-                                  bounds=bounds, approx_grad=True)[0]
+            a, _, err = fmin_tnc (self.etienne_likelihood,
+                                           start, disp=0, maxfun=1000,
+                                           bounds=bounds, approx_grad=True)
+            theta, mut = a
+            if err != 1:
+                all_ok = False
         self.params['etienne']['theta'] = theta
         self.params['etienne']['m']     = mut
         self.params['etienne']['I']     = mut * (self.J - 1) / (1 - mut)
         self.params['etienne']['lnL']   = self.etienne_likelihood ([theta, mut])
+        return all_ok
 
 
     def _ewens_theta_likelihood (self, theta):
@@ -194,7 +214,11 @@ class Abundance (object):
         parse infile and return list of abundances
         '''
         abundances = []
-        for line in open (self.data_path):
+        lines = open (self.data_path).readlines()
+        if lines[0].strip() == '(dp1':
+            self.load_params(self.data_path)
+            return None
+        for line in lines:
             abundances.append (int (line.strip()))
         return abundances
 
@@ -218,7 +242,7 @@ class Abundance (object):
             self._get_kda (verbose=verbose)
         kda       = self._kda
         theta     = params[0]
-        immig     = float(params[1])/(1 - params[1]) * (self.J - 1)
+        immig     = float (params[1]) / (1 - params[1]) * (self.J - 1)
         log_immig = log (immig)
         theta_s   = theta + self.S
         poch1 = exp (self.params['factor'] + log (theta) * self.S - \
@@ -238,19 +262,27 @@ class Abundance (object):
         '''
         if isfile (outfile):
             self.load_params (outfile)
-        self.params['KDA'] = self._kda[:]
+        self.params['KDA']   = self._kda[:]
+        self.params['ABUND'] = self.abund[:]
         dump (self.params, open (outfile, 'w'))
         del (self.params['KDA'])
-
+        del (self.params['ABUND'])
 
     def load_params (self, infile):
         '''
         load params and kda with pickle from infile
+        WARNING: do not overright values of params.
         '''
-        self.params.update (load (open (infile)))
+        old_params = load (open (infile))
+        old_params.update(self.params)
+        self.params = old_params
+        self.abund = self.params['ABUND']
+        del (self.params['ABUND'])
         if 'KDA' in self.params:
-            self._kda = self.params['KDA']
+            self._kda  = self.params['KDA']
             del (self.params['KDA'])
+        else:
+            self._kda = None
 
 
     def _get_kda (self, verbose=True):
@@ -287,7 +319,8 @@ class Abundance (object):
             # polyn = polyn * polyn1
             polyn = mul_polyn (polyn, polyn1)
         kda = []
-        stdout.write ('\n')
+        if verbose:
+            stdout.write ('\n')
         for i in polyn:
             kda.append (log (i))
         self.params.setdefault ('etienne', {})

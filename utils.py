@@ -151,7 +151,8 @@ def pre_get_stirlings(max_nm, needed, verbose=True):
         if one-1 in needed: continue
         for j in xrange (1, one):
             del (STIRLINGS[one-1,j])
-    stdout.write('\n')
+    if verbose:
+        stdout.write('\n')
 
 def stirling (one, two):
     '''
