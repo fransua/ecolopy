@@ -23,6 +23,7 @@ from utils          import lpoch, pre_get_stirlings, stirling
 from random_neutral import rand_neutral_etienne, rand_neutral_ewens
 from random_neutral import rand_lognormal
 
+
 class Abundance (object):
     '''
     Compute theta m I ect... for a given data sample
@@ -260,7 +261,9 @@ class Abundance (object):
         sdiff     = len (specabund [1])
         polyn     = []
         # compute all stirling numbers taking advantage of recurrence function
-        pre_get_stirlings (max (specabund[0]))
+        if verbose:
+            stdout.write('  Getting some stirling numbers...')
+        pre_get_stirlings (max (specabund[0]), verbose=verbose)
         for i in xrange (sdiff):
             if verbose:
                 stdout.write ("\r  Computing species %s out of %s" % (i+1,

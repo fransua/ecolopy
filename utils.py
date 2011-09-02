@@ -10,7 +10,7 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.0"
 
-from gmpy2 import log, mul, mpfr, mpz, div, lngamma
+from gmpy2 import log, mul, mpfr, div, lngamma
 
 global STIRLINGS
 STIRLINGS = {}
@@ -134,7 +134,7 @@ def pre_get_stirlings(max_nm):
     and as  s(whatever, 0) = 0 :
       s(n+1, 1) = -n * s(n, 1)
     '''
-    STIRLINGS [1, 1] = mpfr(1)
+    STIRLINGS [1, 1] = mpfr (1)
     for one in xrange (1, max_nm):
         STIRLINGS [one+1, 1] = -one * STIRLINGS [one, 1]
         for two in xrange (2, one+1):
