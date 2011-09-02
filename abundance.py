@@ -12,7 +12,7 @@ __version__ = "0.1"
 
 from scipy.stats    import chisqprob, lognorm
 from scipy.optimize import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
-from gmpy2          import mpfr, mpz, log, exp, lngamma, gamma
+from gmpy2          import mpfr, log, exp, lngamma, gamma
 from cPickle        import dump, load
 from os.path        import isfile
 from sys            import stdout
@@ -36,9 +36,9 @@ class Abundance (object):
         if type (data) != list:
             self.data_path = data
             data = self._parse_infile ()
-        self.abund     = [mpz(x) for x in sorted (data [:])]
-        self.J         = mpz(sum (data))
-        self.S         = mpz(len (data))
+        self.abund     = [mpfr(x) for x in sorted (data [:])]
+        self.J         = mpfr(sum (data))
+        self.S         = mpfr(len (data))
         self.j_tot     = j_tot if j_tot else self.J * 3
         self.shannon   = shannon_entropy (self.abund, self.J)
         self.params    = {}
@@ -103,12 +103,12 @@ class Abundance (object):
         theta_like   = lambda x: -self._ewens_theta_likelihood (x)
         tmp['theta'] = golden (theta_like, 
                                              brack=[.01/self.J, self.J])
-        tmp['m']     = tmp['theta'] / self.J / mpz(2)
+        tmp['m']     = tmp['theta'] / self.J / mpfr(2)
         tmp['I']     = tmp['m'] * (self.J - 1) / (1 - tmp['m'])
         tmp['lnL']   = self.ewens_likelihood (tmp['theta'])
 
 
-    def etienne_optimal_params (self, method='slsqp'):
+    def etienne_optimal_params (self, method='fmin'):
         '''
         optimize theta and I using etienne likelihood function
         using scipy package, values that are closest to the one proposed
@@ -261,13 +261,17 @@ class Abundance (object):
         sdiff     = len (specabund [1])
         polyn     = []
         # compute all stirling numbers taking advantage of recurrence function
+        needed = {0: True}
+        for i in xrange (sdiff):
+            for k in xrange (1, specabund[0][i] + 1):
+                needed [int (specabund[0][i])] = True
         if verbose:
-            stdout.write('  Getting some stirling numbers...')
-        pre_get_stirlings (max (specabund[0]), verbose=verbose)
+            stdout.write('  Getting some stirling numbers...\n')
+        pre_get_stirlings (max (specabund[0]), needed, verbose=verbose)
         for i in xrange (sdiff):
             if verbose:
-                stdout.write ("\r  Computing species %s out of %s" % (i+1,
-                                                                      sdiff))
+                stdout.write ("\r  Computing K(D,A) at species %s out of %s" \
+                              % (i+1, sdiff))
                 stdout.flush ()
             polyn1 = []
             for k in xrange (1, specabund[0][i] + 1):
@@ -288,5 +292,6 @@ class Abundance (object):
             kda.append (log (i))
         self.params.setdefault ('etienne', {})
         self._kda = kda
+
 
 
