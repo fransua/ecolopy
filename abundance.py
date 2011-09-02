@@ -12,14 +12,15 @@ __version__ = "0.1"
 
 from scipy.stats    import chisqprob, lognorm
 from scipy.optimize import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
-from gmpy2          import mpfr, log, exp, lngamma
+from gmpy2          import mpfr, log, exp, lngamma, gamma
 from cPickle        import dump, load
 from os.path        import isfile
 from sys            import stdout
 from numpy          import mean, std, ravel
 
 from utils          import table, factorial_div, mul_polyn, shannon_entropy
-from utils          import lpoch, lngamma, gamma, pre_get_stirlings, stirling
+from utils          import lpoch, lngamma, pre_get_stirlings, stirling
+from utils          import del_stirling
 from random_neutral import rand_neutral_etienne, rand_neutral_ewens
 from random_neutral import rand_lognormal
 
@@ -107,7 +108,7 @@ class Abundance (object):
         tmp['lnL']   = self.ewens_likelihood (tmp['theta'])
 
 
-    def etienne_optimal_params (self, method='slsqp'):
+    def etienne_optimal_params (self, method='fmin'):
         '''
         optimize theta and I using etienne likelihood function
         using scipy package, values that are closest to the one proposed
@@ -260,7 +261,13 @@ class Abundance (object):
         sdiff     = len (specabund [1])
         polyn     = []
         # compute all stirling numbers taking advantage of recurrence function
-        pre_get_stirlings (max (specabund[0]))
+        needed = {0: True}
+        for i in xrange (sdiff):
+            for k in xrange (1, specabund[0][i] + 1):
+                needed [int (specabund[0][i])] = True
+        if verbose:
+            stdout.write('  Getting some stirling numbers...\n')
+        pre_get_stirlings (max (specabund[0]), needed)
         for i in xrange (sdiff):
             if verbose:
                 stdout.write ("\r  Computing species %s out of %s" % (i+1,
@@ -268,7 +275,7 @@ class Abundance (object):
                 stdout.flush ()
             polyn1 = []
             for k in xrange (1, specabund[0][i] + 1):
-                coeff = stirling (specabund[0][i], k) * \
+                coeff = stirling (int (specabund[0][i]), k) * \
                         factorial_div (k, specabund[0][i])
                 polyn1.append (coeff)
             if not polyn1:
@@ -285,5 +292,6 @@ class Abundance (object):
             kda.append (log (i))
         self.params.setdefault ('etienne', {})
         self._kda = kda
+        #del_stirling()
 
 

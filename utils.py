@@ -10,8 +10,10 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.0"
 
-from nzmath.combinatorial import stirling1
-from gmpy2 import log, mul, mpfr, gamma, div, lngamma
+from   nzmath.combinatorial import stirling1
+from   gmpy2 import log, mul, mpfr, gamma, div, lngamma, context
+from sys import stdout
+
 
 global STIRLINGS
 STIRLINGS = {}
@@ -128,23 +130,29 @@ def _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b):
             new [i + j] += pai * polyn_b[j]
     return new
 
-def pre_get_stirlings(max_nm):
+
+def pre_get_stirlings(max_nm, needed, verbose=True):
     '''
     takes advantage of recurrence function:
-    s(n,m) = s(n-1, m-1) - (n-1) * s(n-1,m)
+      s(n, m) = s(n-1, m-1) - (n-1) * s(n-1, m)
+    and as  s(whatever, 0) = 0 :
+      s(n+1, 1) = -n * s(n, 1)
+    keep only needed stirling numbers (necessary for large communities)
     '''
-    for one in xrange (1, max_nm+1):
-        STIRLINGS [one, 1] = stirling1 (one, 1)
-    for one in xrange (2, max_nm+1):
-        for two in xrange (2, max_nm+1):
-            if two > one:
-                continue
-            if two == one:
-                STIRLINGS[one, two] = STIRLINGS [one-1, two-1] - 0
-            else:
-                STIRLINGS[one, two] = STIRLINGS [one-1, two-1] - \
-                                          mul ((one-1), STIRLINGS [one-1,
-                                                                       two])
+    STIRLINGS [1, 1] = mpfr (1)
+    for one in xrange (1, max_nm):
+        if verbose and not one % 1000:
+            stdout.write('\r    %s of %s, size: %s' % (one, max_nm,
+                                                  STIRLINGS.__sizeof__()))
+            stdout.flush()
+        STIRLINGS [one+1, 1] = -one * STIRLINGS [one, 1]
+        for two in xrange (2, one+1):
+            STIRLINGS[one+1, two] = STIRLINGS[one, two-1] - one * STIRLINGS[one, two]
+        STIRLINGS[one+1, one+1] = STIRLINGS[one, one]
+        if one-1 in needed: continue
+        for j in xrange (1, one):
+            del (STIRLINGS[one-1,j])
+    stdout.write('\n')
 
 def stirling (one, two):
     '''
@@ -159,5 +167,9 @@ def stirling (one, two):
     return STIRLINGS [one, two]
 
 
-
+def del_stirling ():
+    '''
+    zzz
+    '''
+    del (STIRLINGS)
 
