@@ -62,7 +62,11 @@ def test_etienne (kind, abd):
     t0 = time()
     for test in ['fmin', 'slsqp', 'l_bfgs_b', 'tnc']:
         print test
-        abd.etienne_optimal_params (method=test)
+        try:
+            abd.etienne_optimal_params (method=test)
+        except Exception as err:
+            print err
+            continue
         print '  -> Optimal value of theta: %.3f' % abd.params['etienne']['theta']
         if round (abd.params ['etienne']['theta'], 3) != wanted_theta:
             stderr.write ('\n test failed in ewens test (theta should have been %s)\n' %\
@@ -84,7 +88,7 @@ def test_random_neutral (abd):
     immigs = []
     for _ in xrange (100):
         print _
-        new = Abundance (abd.rand_neutral (50,1000, model='lognorm'))
+        new = Abundance (abd.rand_neutral (5.0,1.5, model='lognorm'))
         new.etienne_optimal_params()
         thetas.append (new.params['etienne']['theta'])
         immigs.append (new.params['etienne']['I'])
@@ -147,6 +151,7 @@ def main():
     print 'Neutrality test p-value (under Etienne model):',
     print abd.test_neutrality(model='etienne', gens=gens)
     print 'Lognormality test p-value (under Etienne model):',
+    abd.lognorm_optimal_params()
     print abd.test_neutrality(model='lognorm', gens=gens)
     print 'lognorm lnL', abd.lognorm_likelihood()
     print 'ewens   lnL',abd.params['ewens']['lnL']

@@ -8,7 +8,7 @@ some utils for abundance, essentially for computation of K(D,A)
 __author__  = "Francois-Jose Serra"
 __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
-__version__ = "0.0"
+__version__ = "0.12"
 
 from gmpy2 import log, mul, mpfr, div, lngamma
 from sys import stdout

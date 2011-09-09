@@ -8,7 +8,7 @@
 __author__  = "Francois-Jose Serra"
 __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
-__version__ = "0.1"
+__version__ = "0.12"
 
 from scipy.stats    import chisqprob, lognorm
 from scipy.optimize import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
@@ -49,7 +49,7 @@ class Abundance (object):
         self.shannon   = shannon_entropy (self.abund, self.J)
 
 
-    def __repr__(self):
+    def __str__(self):
         """
         for print
         """
@@ -89,15 +89,39 @@ class Abundance (object):
         self.params ['factor'] = factor
         return lnl
 
-    def lognorm_likelihood (self, mu=None, sd=None):
+
+    def lognorm_likelihood (self, params=None):
         '''
         returns -log-likelihood of fitting to log-normal distribution
+        mu = parmas[0]
+        sd = parmas[1]
         '''
         data = [int (x) for x in self.abund]
-        sd = std ([float (log (x)) for x in data]) if sd == None else sd
-        if mu== None: mu = mean ([float (log (x)) for x in data])
+        if params == None:
+            sd = std ([float (log (x)) for x in data])
+        else:
+            sd = params[1]
+        if params== None:
+            mu = mean ([float (log (x)) for x in data])
+        else:
+            mu = params[0]
         return -sum ([log (x) for x in lognorm.pdf (data, sd,
                                                     scale=float (exp (mu)))])
+
+
+    def lognorm_optimal_params (self):
+        '''
+        get optimal params for lognormal distribution according to abundance
+        '''
+        self.params['lognorm'] = tmp = {}
+        data = self.abund
+        start = (mean ([float (log (x)) for x in data]),
+                 std ([float (log (x)) for x in data]))
+        mu, sd = fmin (self.lognorm_likelihood, start,
+                       full_output=False, disp=0)
+        tmp['mu']  = mu
+        tmp['sd']  = sd
+        tmp['lnL'] = self.lognorm_likelihood ((mu, sd))
 
     def ewens_optimal_params (self):
         '''
@@ -163,7 +187,8 @@ class Abundance (object):
         self.params['etienne']['m']     = mut
         self.params['etienne']['I']     = mut * (self.J - 1) / (1 - mut)
         self.params['etienne']['lnL']   = self.etienne_likelihood ([theta, mut])
-        return all_ok
+        if not all_ok:
+            raise Exception ('Optimization failed')
 
 
     def _ewens_theta_likelihood (self, theta):
@@ -178,14 +203,16 @@ class Abundance (object):
     def test_neutrality (self, model='ewens', gens=100):
         '''
         test for neutrality comparing shanon entropy
+        if (Hobs > Hrand_neut) then eveness of observed data is
+        higher then neutral
+        
         returns p_value
         '''
         pval = 0
         if model == 'lognorm':
             logabund = [float (log (x)) for x in self.abund]
-            theta = mean (logabund)
-            immig = std  (logabund)
-            print theta, immig
+            theta = self.params[model]['mu']
+            immig = self.params[model]['sd']
         else:
             theta = self.params[model]['theta']
             immig = self.params[model]['I']
@@ -196,11 +223,18 @@ class Abundance (object):
         return float (pval)/gens
     
 
-    def rand_neutral (self, theta, immig, model='etienne'):
+    def rand_neutral (self, theta=None, immig=None, model='etienne'):
         '''
         Depending on model, generates random neutral abundance
         with theta and I
         '''
+        if theta is None and immig is None:
+            if not model in self.params:
+                return '' # error
+            theta = self.params[model]['theta']
+            immig = self.params[model]['I']
+        elif theta is None or immig is None:
+            return '' # error
         if model == 'ewens':
             return rand_neutral_ewens (self.J, theta)
         elif model == 'etienne':
