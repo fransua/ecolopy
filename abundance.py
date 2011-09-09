@@ -200,13 +200,14 @@ class Abundance (object):
         return self.S * log (theta) + lngamma (theta) - lngamma (theta + self.J)
 
 
-    def test_neutrality (self, model='ewens', gens=100):
+    def test_neutrality (self, model='ewens', gens=100, give_h=False):
         '''
         test for neutrality comparing shanon entropy
         if (Hobs > Hrand_neut) then eveness of observed data is
         higher then neutral
         
-        returns p_value
+        returns p_value anf if give_h also returns shannon entropy of
+        all random neutral abundances generated
         '''
         pval = 0
         if model == 'lognorm':
@@ -216,10 +217,14 @@ class Abundance (object):
         else:
             theta = self.params[model]['theta']
             immig = self.params[model]['I']
+        neut_h = []
         for _ in xrange (gens):
-            pval += shannon_entropy (self.rand_neutral (theta, immig,
-                                                        model=model),
-                                     self.J) < self.shannon
+            neut_h.append (shannon_entropy (self.rand_neutral (theta, immig,
+                                                               model=model),
+                                            self.J))
+            pval += neut_h[-1] < self.shannon
+        if give_h:
+            return float (pval)/gens, neut_h
         return float (pval)/gens
     
 
@@ -290,11 +295,13 @@ class Abundance (object):
         return -log (lik)
 
 
-    def dump_params (self, outfile):
+    def dump_params (self, outfile, force=False):
         '''
         save params and kda with pickle
+        force option is for writing pickle with no consideration
+        if existing
         '''
-        if isfile (outfile):
+        if isfile (outfile) and not force:
             self.load_params (outfile)
         self.params['KDA']   = self._kda[:]
         self.params['ABUND'] = self.abund[:]
