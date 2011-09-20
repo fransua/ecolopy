@@ -303,7 +303,10 @@ class Abundance (object):
         '''
         if isfile (outfile) and not force:
             self.load_params (outfile)
-        self.params['KDA']   = self._kda[:]
+        try:
+            self.params['KDA']   = self._kda[:]
+        except TypeError:
+            self.params['KDA'] = None
         self.params['ABUND'] = self.abund[:]
         dump (self.params, open (outfile, 'w'))
         del (self.params['KDA'])
