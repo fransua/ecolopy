@@ -14,14 +14,16 @@ from abundance import Abundance
 from time import time
 from sys import argv, stderr
 from numpy import mean
+from ecological_model import EcologicalModel
 from random_neutral import *
 from utils import *
 
-def test_ewens (kind, abd):
+def test_ewens (kind, abd, test_failed):
     '''
     test estimation of theta by max likelihood with ewens formula
     '''
     t0 = time ()
+    test_ok=True
     print ' Testing Ewens algorithm with BCI %s dataset' % kind
     if kind == 'full':
         wanted_theta = 34.962
@@ -32,19 +34,27 @@ def test_ewens (kind, abd):
         wanted_lnl   = 162.742
         time_max = 0.05
     abd.ewens_optimal_params()
-    print '  -> Optimal value of theta: %.3f' % abd.params['ewens']['theta']
-    if round (abd.params ['ewens']['theta'], 3) != wanted_theta:
+    abd.set_current_model ('ewens')
+    model = abd.get_model ('ewens')
+    print '  -> Optimal value of theta: %.3f' % abd.theta
+    if round (abd.theta, 3) != wanted_theta:
         stderr.write ('\n test failed in ewens test (theta should have been %s)\n' %\
               wanted_theta)
+        test_ok=False
 
-    print '  -> likelihood of theta: %.3f' % abd.params ['ewens']['lnL']
-    if round (abd.params ['ewens']['lnL'], 3) != wanted_lnl:
+    print '  -> likelihood of theta: %.3f' % model.lnL
+    if round (model.lnL, 3) != wanted_lnl:
         stderr.write ('\n test failed in ewens test (theta should have been %s)\n' %\
               wanted_lnl)
+        test_ok=False
    
     print '\n  Elapsed time (should be < %s): %s sec\n' % (time_max, time() - t0)
+    if not test_ok:
+        test_failed.append ('etienne optimization')
+    return test_failed
 
-def test_etienne (kind, abd):
+
+def test_etienne (kind, abd, test_failed):
     '''
     test etienne basic functions
     '''
@@ -59,26 +69,43 @@ def test_etienne (kind, abd):
         wanted_m     = 0.09342
         time_max = '150 sec'
     print ' Testing Etienne algorithm with BCI %s dataset' % kind
-    t0 = time()
+    models = []
+    test_ok = True
+    print '  Testing different optimization strategies: '
     for test in ['fmin', 'slsqp', 'l_bfgs_b', 'tnc']:
-        print test
+        t0 = time()
+        print '    ' + test
         try:
             abd.etienne_optimal_params (method=test)
         except Exception as err:
             print err
             continue
-        print '  -> Optimal value of theta: %.3f' % abd.params['etienne']['theta']
-        if round (abd.params ['etienne']['theta'], 3) != wanted_theta:
-            stderr.write ('\n test failed in ewens test (theta should have been %s)\n' %\
-                  wanted_theta)
-        print '  -> Optimal value of m: %.5f' % abd.params['etienne']['m']
-        if round (abd.params ['etienne']['m'], 5) != wanted_m:
-            stderr.write ('\n test failed in etienne test (m should have been %s)\n' %\
-                  wanted_m)
-        print '  -> Etienne lnL computed : %.3f' % abd.params ['etienne']['lnL']
-        if round (abd.params ['etienne']['lnL'], 3) != etienne_lnl:
-            stderr.write ('\n test failed in etienne test\n')
-        print '\n  Elapsed time (should be < %s): %s sec\n' % (time_max, time() - t0)
+        model = abd.get_model('etienne')
+        print '    -> Optimal value of theta: %.3f' % model.theta
+        print '    -> Optimal value of m: %.5f' % model.m
+        print '    -> Etienne lnL computed : %f' % model.lnL
+        print '\n      Elapsed time (should be < %s): %s sec\n' % (time_max, time() - t0)
+        models.append (model)
+    model = min (models, key=lambda x: x.lnL)
+    print '\nlikelihood of better optimization:', model.lnL
+    print '  -> Optimal value of theta: %.3f' % model.theta
+    if round (model.theta, 3) != wanted_theta:
+        stderr.write ('\n test failed in ewens test (theta should have been %s)\n' %\
+              wanted_theta)
+        test_ok = False
+    print '  -> Optimal value of m: %.5f' % model.m
+    if round (model.m, 5) != wanted_m:
+        stderr.write ('\n test failed in etienne test (m should have been %s)\n' %\
+              wanted_m)
+        test_ok = False
+    print '  -> Etienne lnL computed : %f' % model.lnL
+    if round (model.lnL, 3) != etienne_lnl:
+        stderr.write ('\n test failed in etienne test\n')
+        test_ok = False
+    abd.set_model (min (models, key=lambda x: x.lnL))
+    if not test_ok:
+        test_failed.append ('etienne optimization')
+    return test_failed
 
 
 def test_random_neutral (abd):
@@ -86,12 +113,14 @@ def test_random_neutral (abd):
     '''
     thetas = []
     immigs = []
+    model = EcologicalModel ('lognorm', theta=0.5, I=1.5)
     for _ in xrange (100):
         print _
-        new = Abundance (abd.rand_neutral (5.0,1.5, model='lognorm'))
+        new = Abundance (model.rand_neutral (abd.J))
         new.etienne_optimal_params()
-        thetas.append (new.params['etienne']['theta'])
-        immigs.append (new.params['etienne']['I'])
+        new.set_current_model ('etienne')
+        thetas.append (new.theta)
+        immigs.append (new.I)
     print mean (thetas), '50'
     print mean (immigs), '1000'
 
@@ -119,27 +148,33 @@ def main():
         abd = Abundance ('bci_full.txt')
     else:
         exit()
-
+    test_failed = []
     print '\nstarting tests...\nwith %s BCI dataset:' % kind
     print abd
     print '************************************************************\n'
     print '  Dataset with J: %s, S: %s, H: %s\n' % (abd.J, abd.S, abd.shannon)
     print '************************************************************\n'
-    test_ewens (kind, abd)
+    test_failed = test_ewens (kind, abd, test_failed)
     print '************************************************************\n'
-    test_etienne (kind, abd)
+    test_failed = test_etienne (kind, abd, test_failed)
     print '************************************************************\n'
     print ' Testing load/dump data...',
-    abd.dump_params('test_%s.pik' % kind)
-    abd.load_params('test_%s.pik' % kind)
+    abd.dump_abundance('test_%s.pik' % kind)
+    abd.load_abundance('test_%s.pik' % kind)
     # and again to test update
-    abd.dump_params('test_%s.pik' % kind)
+    abd.dump_abundance('test_%s.pik' % kind)
     print 'ok\n'
-    print abd.params['ewens']['theta'], abd.params['ewens']['I']
-    print abd.params['etienne']['theta'], abd.params['etienne']['I']
+    abd.set_current_model('ewens')
+    print abd.theta, abd.I
+    abd.set_current_model('etienne')
+    print abd.theta, abd.I
     print '************************************************************\n'
     print 'LRT between Ewens and Etienne model (1 df): ',
-    print abd.lrt('ewens', 'etienne'), '\n'
+    pv = abd.lrt('ewens', 'etienne')
+    print pv, '\n'
+    print 'set this model as current model:'
+    abd.set_current_model('ewens' if pv > 0.05 else 'etienne')
+    print abd
     print '************************************************************\n'
     t0 = time()
     gens = 500
@@ -154,18 +189,19 @@ def main():
     abd.lognorm_optimal_params()
     print abd.test_neutrality(model='lognorm', gens=gens)
     print 'lognorm lnL', abd.lognorm_likelihood()
-    print 'ewens   lnL',abd.params['ewens']['lnL']
-    print 'etienne lnL',abd.params['etienne']['lnL']
-    print abd.params['factor']
-    print lpoch (abd.params['etienne']['theta'], abd.J)
-    print abd.params['factor'] - lpoch (abd.params['ewens']['theta'], abd.J) + abd.params['ewens']['lnL']
-    print abd.params['factor'] - lpoch (abd.params['etienne']['theta'], abd.J) + abd.params['etienne']['lnL']
+    ewens = abd.get_model('ewens')
+    print 'ewens   lnL',ewens.lnL
+    etienne = abd.get_model('ewens')
+    print 'etienne lnL',etienne.lnL
     print 'should be arround: %s' % (0.1 if kind=='full' else 0.01)
     print '%s generations computed in %ss' % (gens, time()-t0)
     print '************************************************************\n'
     abd._kda = None
-    test_random_neutral(abd)
-    print '\n\nAll test OK!\n'
+    #test_random_neutral(abd)
+    if not test_failed:
+        print '\n\nAll test OK!\n'
+    else:
+        print '\n\nFFFFailed in:', test_failed
 
 
 if __name__ == "__main__":
