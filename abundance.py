@@ -34,7 +34,10 @@ class Abundance (object):
 
     def __init__ (self, data, j_tot=None):
         """
-        vamos
+        creation of Abundance object, data can be one of:
+          * python list, each element being a species count
+          * text file containing one species count per line
+          * pickle file containing abundance object
         """
         self.params    = {}
         if type (data) != list:
@@ -123,6 +126,7 @@ class Abundance (object):
         tmp['sd']  = sd
         tmp['lnL'] = self.lognorm_likelihood ((mu, sd))
 
+
     def ewens_optimal_params (self):
         '''
         optimize theta using theta likelihood function, acording to Ewens
@@ -210,7 +214,6 @@ class Abundance (object):
         '''
         pval = 0
         if model == 'lognorm':
-            logabund = [float (log (x)) for x in self.abund]
             theta = self.params[model]['mu']
             immig = self.params[model]['sd']
         else:
