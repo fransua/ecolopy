@@ -1,0 +1,46 @@
+Metadata-Version: 1.1
+Name: ecolopy
+Version: ecolopy
+Summary: A python Environment for ecological system exploration.
+Home-page: http://ww.google.com
+Author: Francois-Jose Serra
+Author-email: serra.francois@gmail.com
+License: GPLv3
+Download-URL: http://ww.google.com
+Description: ###  README --- ecology/
+        
+        ## Copyright 2011 Francois Serra
+        ##
+        ## Keywords: install
+        
+        PREREQUISITE
+        GMPY2: apt-get install python2.7-dev libmpfr-dev libgmp3-dev
+               http://code.google.com/p/gmpy/downloads/list
+               for huge numbers.
+        
+        NZMATH: http://tnt.math.se.tmu.ac.jp/nzmath/
+                for computation of stirling numbers
+        
+        SCIPY: easy_install scipy
+               for optimization of log likelihood
+        
+        test usage:
+        python test_all.py full
+        su python setup.py install
+        
+Keywords: bioinformatics ecology neutral abundance
+Platform: OS Independent
+Classifier: Development Status :: 6 - Mature
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Other Audience
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Natural Language :: English
+Classifier: Operating System :: MacOS
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Provides: ecolopy
