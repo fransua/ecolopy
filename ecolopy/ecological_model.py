@@ -11,7 +11,9 @@ __licence__ = "GPLv3"
 __version__ = "0.13"
 
 
-from random_neutral import *
+from random_neutral import rand_neutral_ewens
+from random_neutral import rand_neutral_etienne
+from random_neutral import rand_lognormal
 
 class EcologicalModel(object):
     """

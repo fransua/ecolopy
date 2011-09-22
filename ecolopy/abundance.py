@@ -18,9 +18,9 @@ from os.path          import isfile
 from sys              import stdout
 from numpy            import mean, std
                       
-from utils            import table, factorial_div, mul_polyn, shannon_entropy
-from utils            import lpoch, pre_get_stirlings, stirling
-from ecological_model import EcologicalModel
+from utils    import table, factorial_div, mul_polyn, shannon_entropy
+from utils    import lpoch, pre_get_stirlings, stirling
+from ecolopy.ecological_model import EcologicalModel
 
 class Abundance (object):
     '''
@@ -60,7 +60,7 @@ class Abundance (object):
         for print
         """
         return '''Abundance (object)
-    Number of individues (J)  : %d
+    Number of individuals (J) : %d
     Number of species (S)     : %d
     Shannon entropy (shannon) : %.4f
     Metacommunity size (j_tot): %d
@@ -346,6 +346,24 @@ class Abundance (object):
             self._kda = None
 
 
+    def generate_random_neutral_distribution (self, model=None, J=None):
+        """
+        return distribution of abundance, according to a given model
+        and a given community size.
+        if none of them are given, values of current Abundance are used.
+        """
+        if not model:
+            try:
+                model = self.__current_model
+            except:
+                return None
+        else:
+            model = self.get_model(model)
+        if not J:
+            J = self.J
+        return model.rand_neutral (J)
+
+    
     def _get_kda (self, verbose=True):
         '''
         compute K(D,A) according to etienne formula

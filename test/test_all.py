@@ -143,9 +143,9 @@ def main():
 
     if kind == 'short':
         # reload abundance with shorter dataset
-        abd = Abundance ('bci_short.txt')
+        abd = Abundance ('../dataset_trial/bci_short.txt')
     elif kind == 'full':
-        abd = Abundance ('bci_full.txt')
+        abd = Abundance ('../dataset_trial/bci_full.txt')
     else:
         exit()
     test_failed = []

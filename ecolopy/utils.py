@@ -13,9 +13,23 @@ __version__ = "0.12"
 from gmpy2 import log, mul, mpfr, div, lngamma
 from sys import stdout
 
-
 global STIRLINGS
 STIRLINGS = {}
+
+
+def generate_random_neutral_abundance (model_name, size, **kwargs):
+    '''
+    model_name: model name (ewens, etienne, lognorm)
+    size of the community (J)
+    other args should be of kind theta, I, m
+    eg:
+      import ecolopy
+      ecolopy.generate_random_neutral_abundance('ewens', 100, theta=12, I=12)
+    '''
+    # import inside because otherwise strange never-ending import...
+    from ecolopy.ecological_model import EcologicalModel
+    model = EcologicalModel (model_name, **kwargs)
+    return model.rand_neutral(size)
 
 
 def lpoch (z, m):

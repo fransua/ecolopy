@@ -12,3 +12,5 @@ __version__ = "0.0"
 
 
 from abundance import Abundance
+from ecological_model import EcologicalModel
+from utils import generate_random_neutral_abundance
