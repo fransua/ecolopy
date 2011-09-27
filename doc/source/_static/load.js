@@ -1,0 +1,1 @@
+/usr/share/jsmath/easy/load.js
