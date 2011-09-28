@@ -211,18 +211,19 @@ A simple way to find the best optimization would be:
 Generate contour image of likelihood
 ------------------------------------
 
-In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood (:ref:`my-figure`)
+In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood (Figure :num:`figure <my-figure>`)
 
 ::
 
   from ecolopy.utils import draw_contour_likelihood
+  # this can take 2 or 3 hours to compute
   draw_contour_likelihood(abd, theta_range=[20,100], m_range=[0.05, 0.8], num_dots=100)
 
 .. _my-figure:
 
 .. figure:: ../ex_figures/contour_lnl.png
 
-   Figure 1
+  Contour graph representing log likelihood values of BCI dataset fitting Etienne model with different values of theta and m.
 
 
 
