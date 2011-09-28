@@ -1,13 +1,11 @@
 EcoloPy's Reference Guide
 =========================
 
-Current modules:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    
    reference_abundance
    reference_models
    reference_utils
    reference_randoms
-
