@@ -17,6 +17,12 @@ from random_neutral import rand_lognormal
 
 class EcologicalModel(object):
     """
+    Class representing Ecological models
+
+    :arguments name: name of the class, can be either ewens, etienne or lognorm
+
+    :returns: EcologicalModel object
+    
     """
     def __init__(self, name, **kwargs):
         self.name  = name
@@ -28,6 +34,12 @@ class EcologicalModel(object):
 
     def rand_neutral (self, inds):
         """
+        Generate distribution of abundance according to EcologicalModel parameters and to community size
+
+        :arguments inds: community size (J)
+
+        :returns: distribution of abundance as list
+        
         """
         if self.name == 'ewens':
             return rand_neutral_ewens (inds, self.theta)

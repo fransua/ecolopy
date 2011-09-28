@@ -6,5 +6,3 @@ EcologicalModel Class
 .. autoclass:: ecolopy.EcologicalModel
    :members:
    :no-undoc-members:
-
-.. autoclass:: ecolopy.EcologicalModel

@@ -6,5 +6,3 @@ Abundance Class
 .. autoclass:: ecolopy.Abundance
    :members:
    :no-undoc-members:
-
-.. autoclass:: ecolopy.Abundance

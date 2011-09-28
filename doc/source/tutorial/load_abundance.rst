@@ -16,6 +16,10 @@ Abundance is a class, and derived objects represent simply a distribution of
 species abundance , with associated function in order to calculate descriptive
 statistics or to fit it to evolutionary models.
 
+
+Load Abundance
+--------------
+
 The data needed to create this object consists on a list of values corresponding
 to the abundance of each species. We can either give to Abundance a python list
 of values:
@@ -94,6 +98,10 @@ With:
 * m: given by the model
 
 
+Fit to ecological model
+***********************
+
+
 Once our distribution of abundances loaded into an Abundance object, we can try
 to fit it into an ecological model like Ewens model that assumes that:
 
@@ -132,6 +140,9 @@ to load this model as our current model, just type:
   #      m                         : 0.00081470508933989701
 
 
+Generate random distribution
+============================
+
 EcoloPy package use GMP library in order to deal with huge number, usually we
 want to get 'normal' numbers in order to compute mean standard deviation...
 using common python packages.
@@ -141,11 +152,21 @@ floats:
 ::
 
   abd.generate_random_neutral_distribution()
-  # [mpfr('17.0'), mpfr('867.0'), mpfr('397.0'), mpfr('184.0'), mpfr('71.0'), mpfr('916.0'), mpfr('265.0'), mpfr('427.0'), mpfr('405.0'), mpfr('394.0'), mpfr('134.0'), mpfr('338.0'), mpfr('908.0'), mpfr('417.0'), mpfr('26.0'), mpfr('253.0'), mpfr('742.0'), mpfr('277.0'), mpfr('142.0'), mpfr('279.0'), mpfr('565.0'), mpfr('627.0'), mpfr('164.0'), mpfr('503.0'), mpfr('319.0'), mpfr('1088.0'), mpfr('117.0'), mpfr('76.0'), mpfr('248.0'), mpfr('466.0'), mpfr('68.0'), mpfr('63.0'), mpfr('146.0'), mpfr('811.0'), mpfr('195.0'), mpfr('608.0'), mpfr('116.0'), mpfr('284.0'), mpfr('2.0'), mpfr('44.0'), mpfr('35.0'), mpfr('47.0'), mpfr('254.0'), mpfr('128.0'), mpfr('355.0'), mpfr('114.0'), mpfr('22.0'), mpfr('131.0'), mpfr('181.0'), mpfr('574.0'), mpfr('200.0'), mpfr('92.0'), mpfr('53.0'), mpfr('162.0'), mpfr('51.0'), mpfr('7.0'), mpfr('311.0'), mpfr('10.0'), mpfr('27.0'), mpfr('133.0'), mpfr('314.0'), mpfr('132.0'), mpfr('523.0'), mpfr('403.0'), mpfr('302.0'), mpfr('4.0'), mpfr('181.0'), mpfr('113.0'), mpfr('65.0'), mpfr('21.0'), mpfr('92.0'), mpfr('112.0'), mpfr('30.0'), mpfr('4.0'), mpfr('45.0'), mpfr('13.0'), mpfr('44.0'), mpfr('6.0'), mpfr('43.0'), mpfr('29.0'), mpfr('20.0'), mpfr('27.0'), mpfr('82.0'), mpfr('161.0'), mpfr('123.0'), mpfr('83.0'), mpfr('3.0'), mpfr('48.0'), mpfr('14.0'), mpfr('52.0'), mpfr('36.0'), mpfr('20.0'), mpfr('9.0'), mpfr('35.0'), mpfr('24.0'), mpfr('18.0'), mpfr('58.0'), mpfr('39.0'), mpfr('16.0'), mpfr('39.0'), mpfr('47.0'), mpfr('9.0'), mpfr('1.0'), mpfr('31.0'), mpfr('66.0'), mpfr('95.0'), mpfr('38.0'), mpfr('31.0'), mpfr('23.0'), mpfr('10.0'), mpfr('24.0'), mpfr('5.0'), mpfr('8.0'), mpfr('10.0'), mpfr('62.0'), mpfr('47.0'), mpfr('19.0'), mpfr('24.0'), mpfr('27.0'), mpfr('3.0'), mpfr('17.0'), mpfr('5.0'), mpfr('38.0'), mpfr('44.0'), mpfr('14.0'), mpfr('7.0'), mpfr('27.0'), mpfr('1.0'), mpfr('23.0'), mpfr('6.0'), mpfr('2.0'), mpfr('11.0'), mpfr('2.0'), mpfr('42.0'), mpfr('2.0'), mpfr('10.0'), mpfr('1.0'), mpfr('38.0'), mpfr('2.0'), mpfr('1.0'), mpfr('26.0'), mpfr('1.0'), mpfr('7.0'), mpfr('18.0'), mpfr('10.0'), mpfr('14.0'), mpfr('13.0'), mpfr('36.0'), mpfr('5.0'), mpfr('6.0'), mpfr('5.0'), mpfr('2.0'), mpfr('5.0'), mpfr('2.0'), mpfr('6.0'), mpfr('11.0'), mpfr('4.0'), mpfr('5.0'), mpfr('1.0'), mpfr('15.0'), mpfr('6.0'), mpfr('1.0'), mpfr('5.0'), mpfr('4.0'), mpfr('3.0'), mpfr('4.0'), mpfr('1.0'), mpfr('9.0'), mpfr('1.0'), mpfr('11.0'), mpfr('4.0'), mpfr('1.0'), mpfr('4.0'), mpfr('1.0'), mpfr('2.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('7.0'), mpfr('3.0'), mpfr('1.0'), mpfr('15.0'), mpfr('4.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('2.0'), mpfr('2.0'), mpfr('3.0'), mpfr('4.0'), mpfr('2.0'), mpfr('3.0'), mpfr('1.0'), mpfr('1.0'), mpfr('3.0'), mpfr('1.0'), mpfr('1.0'), mpfr('3.0'), mpfr('1.0'), mpfr('2.0'), mpfr('1.0'), mpfr('2.0'), mpfr('2.0'), mpfr('2.0'), mpfr('1.0'), mpfr('4.0'), mpfr('1.0'), mpfr('2.0'), mpfr('2.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0')]
+  # [mpfr('17.0'), mpfr('867.0'), mpfr('397.0'), mpfr('184.0'), mpfr('71.0'), 
+  # ...
+  # ...
+  # mpfr('2.0'), mpfr('2.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0')]
 
   # or in order to get floats:
   [int (i)for i in abd.generate_random_neutral_distribution()]
-  # [273, 263, 461, 754, 1140, 163, 67, 113, 1014, 407, 1496, 1395, 405, 534, 1435, 260, 255, 162, 456, 97, 199, 350, 141, 1348, 180, 165, 105, 724, 2, 161, 21, 137, 82, 3, 104, 342, 12, 50, 254, 307, 299, 1, 156, 18, 4, 29, 39, 103, 470, 122, 6, 22, 128, 40, 79, 8, 87, 493, 46, 58, 153, 78, 96, 64, 81, 179, 191, 16, 16, 6, 183, 34, 71, 36, 18, 39, 101, 74, 39, 87, 149, 12, 85, 106, 22, 40, 18, 15, 59, 38, 31, 51, 17, 74, 27, 20, 68, 18, 6, 29, 33, 8, 5, 12, 2, 111, 2, 2, 41, 6, 1, 6, 2, 41, 2, 16, 19, 7, 2, 43, 24, 17, 3, 2, 30, 30, 13, 19, 21, 21, 47, 7, 6, 36, 2, 30, 4, 17, 9, 10, 14, 2, 3, 37, 1, 9, 6, 6, 24, 1, 7, 4, 3, 1, 2, 3, 1, 2, 4, 1, 1, 2, 9, 4, 4, 8, 4, 6, 2, 1, 1, 3, 3, 2, 2, 4, 1, 1, 2, 4, 3, 2, 1, 2, 1, 3, 1, 1, 1, 1, 1, 4, 4, 1, 2, 2, 2, 2, 4, 1, 2, 2, 2, 3, 2, 1, 1, 3, 1, 1, 1, 1, 1, 1]
+  # [273, 263, 461, 754, 1140, 163, 67, 113, 1014, 407, 1496, 1395, 405, 534, 1435, 260, 
+  # ...
+  # ...
+  # 3, 2, 1, 1, 3, 1, 1, 1, 1, 1, 1]
+
+
+Model parameters
+================
 
 Now we have fit our abundance to Ewens model, a summary of corresponding
 parameters are available through the print function, but each of them can also
@@ -199,12 +220,27 @@ Now we can run an other model like the one proposed by Etienne (2005), just type
   #     m                         : 0.0934245377983
 
 
+Searching for best model
+========================
+
 we have run now one new model, Abundance object are able to decide though LRT
 which has a better likelihood (this is done with chi square test with one degree
 of freedom, corresponding to the estimation of parameter m):
 
 ::
+
   abd.lrt ('ewens', 'etienne')
   # 6.80784682569e-06
 
+Saving/Loading Abundance object
+*******************************
+
+Once done EcoloPy allow user to save Abundance object and EcologicalModels object into cPikle with dum_abundance and load_abundance functions.
+
+::
+
+  # save it
+  abd.dump_abundance('stored_bci.pik')
+  # (re)load it
+  abd = Abundance ('stored_bci.pik')
 

@@ -24,18 +24,33 @@ from ecolopy.ecological_model import EcologicalModel
 
 class Abundance (object):
     '''
-    Compute theta m I ect... for a given data sample
-     * J_tot is the size of the metacommunity, if not defined = J * 3
-    Values of theta, m, I etc will be stored in params dict, under key
-    corresponding to model computed.
+    Main abundance class.
+
+    :argument data: containing species count, can be given in one of those format:
+    
+       * python list, each element being a species count
+       * text file containing one species count per line
+       * pickle file containing abundance object
+
+    :argument j_tot: is the size of the metacommunity, if not defined j_tot = J * 3
+
+    :returns: an abundance object
+
+    ** Examples: **
+    ::
+
+      # python list
+      abd = Abundance([1, 1, 2, 3, 4, 8, 12])
+      # text file
+      abd = Abundance("bci.txt", j_tot=256987)
+      # finally a saved Abundance object
+      abd = Abundance("abundance_bci_first_try.pik")
+    
     '''
 
     def __init__ (self, data, j_tot=None):
         """
-        creation of Abundance object, data can be one of:
-          * python list, each element being a species count
-          * text file containing one species count per line
-          * pickle file containing abundance object
+        creation of Abundance object
         """
         if type (data) != list:
             self.data_path = data
@@ -78,7 +93,12 @@ class Abundance (object):
     def lrt (self, model_1, model_2, df=1):
         '''
         likelihood-ratio-test between two neutral models
-        returns p-value of rejection of alternative model
+
+        :argument model_1: string representing simplest model, usually Ewens
+        :argument model_2: string representing most complex model, usually Etienne
+        
+        :returns: p-value of rejection of alternative model
+        
         eg: usually ewens, etienne. And if pval < 0.05 than use etienne
         '''
         return chisqprob(2 * (float (self.get_model(model_1).lnL) - \
@@ -88,6 +108,9 @@ class Abundance (object):
     def iter_models (self):
         """
         iterate over pre computed models
+
+        :returns: model object
+        
         """
         for model in self.__models.values():
             yield model
@@ -95,14 +118,21 @@ class Abundance (object):
 
     def set_model (self, model):
         """
-        add one model computed externally
+        add one model computed externally to the computed models of current Abundance object
+
+        :arguments model: model object
+        
         """
         self.__models[model.name] = model
 
 
     def get_model (self, name):
         """
-        return one of the computed models
+        
+        :arguments name: name of a computed model
+
+        :returns: a EcologicalModel object corresponding to one of the computed models
+        
         """
         if name in self.__models:
             return self.__models[name]
@@ -112,7 +142,11 @@ class Abundance (object):
     def ewens_likelihood (self, theta):
         '''
         get likelihood value of Ewens according to parthy/tetame
-        returns likelihood
+
+        :arguments theta: value of theta
+        
+        :returns: likelihood
+        
         '''
         factor = lngamma (self.J + 1)
         phi = table (self.abund)
@@ -129,8 +163,13 @@ class Abundance (object):
     def lognorm_likelihood (self, params=None):
         '''
         returns -log-likelihood of fitting to log-normal distribution
-        mu = parmas[0]
-        sd = parmas[1]
+
+        :arguments params: a list of 2 parameters:
+          * mu = parmas[0]
+          * sd = parmas[1]
+
+        :returns: log likelihood given the parameters
+        
         '''
         data = [int (x) for x in self.abund]
         if params == None:
@@ -147,14 +186,14 @@ class Abundance (object):
 
     def etienne_likelihood(self, params):
         '''
-        logikelihood function where
-          params[0] = theta
-          params[1] = I
-          K[A]      = log (K(D,A))
-          K[A]      = K(D,A) in Etienne paper
-        cf Etienne, 2005
-        x = [48.1838, 1088.19]
-        returns log likelihood of given theta and I
+        logikelihood function
+
+        :arguments params: a list of 2 parameters:
+          * theta = parmas[0]
+          * I     = parmas[1]
+          
+        :returns: log likelihood of given theta and I
+        
         '''
         if not self.__factor: # define it
             self.ewens_optimal_params()
@@ -176,7 +215,7 @@ class Abundance (object):
 
     def ewens_optimal_params (self):
         '''
-        optimize theta using theta likelihood function, acording to Ewens
+        Main function to optimize theta using theta likelihood function, acording to Ewens
         model.
         '''
         theta_like   = lambda x: -self._ewens_theta_likelihood (x)
@@ -191,7 +230,7 @@ class Abundance (object):
 
     def lognorm_optimal_params (self):
         '''
-        get optimal params for lognormal distribution according to abundance
+        Main function to get optimal params for lognormal distribution according to abundance
         '''
         data = self.abund
         start = (mean ([float (log (x)) for x in data]),
@@ -208,10 +247,12 @@ class Abundance (object):
 
     def etienne_optimal_params (self, method='fmin', verbose=True):
         '''
-        optimize theta and I using etienne likelihood function
+        Main function to optimize theta and I using etienne likelihood function
         using scipy package, values that are closest to the one proposed
-        by tetame, are raised by fmin function:
-          * fmin    : theta = 48.1838; I = 1088.19 ; lnL = -10091.166
+        by tetame, are raised by fmin function.
+
+        :arguments method: optimization strategy, can be one of fmin, slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)
+        
         '''
         # define bounds
         bounds = [(1, self.S), (1e-49, 1-1e-49)]
@@ -261,6 +302,12 @@ class Abundance (object):
 
 
     def set_current_model (self, name):
+        """
+        set on model as default/current model.
+
+        :arguments name: model name of precomputed model
+        
+        """
         self.__current_model = self.get_model(name)
         for key in ['theta', 'I', 'm']:
             self.__dict__[key] = self.__current_model.__dict__[key]
@@ -268,6 +315,7 @@ class Abundance (object):
     def _ewens_theta_likelihood (self, theta):
         '''
         returns the likelihood of theta for a given dataset
+        
         '''
         if theta < 0:
             return mpfr ('-inf')
@@ -279,9 +327,16 @@ class Abundance (object):
         test for neutrality comparing shanon entropy
         if (Hobs > Hrand_neut) then eveness of observed data is
         higher then neutral
+
+        :arguments model: model name otherwise, current model is used
+
+        :arguments gens: number of random neutral distributions to generate
+
+        :arguments give_h: also return list of shannon entropies
         
-        returns p_value anf if give_h also returns shannon entropy of
+        :returns: p_value anf if give_h also returns shannon entropy of
         all random neutral abundances generated
+        
         '''
         pval = 0
         model = self.get_model (model)
@@ -317,6 +372,9 @@ class Abundance (object):
         save params and kda with pickle
         force option is for writing pickle with no consideration
         if existing
+
+        :arguments outfile: path of the outfile
+        
         '''
         if isfile (outfile) and not force:
             self.load_abundance (outfile)
@@ -333,6 +391,9 @@ class Abundance (object):
         '''
         load params and kda with pickle from infile
         WARNING: do not overright values of params.
+
+        :arguments infile: path of the outfile
+
         '''
         old_params = load (open (infile))
         old_params.update(self.__models)
@@ -351,6 +412,13 @@ class Abundance (object):
         return distribution of abundance, according to a given model
         and a given community size.
         if none of them are given, values of current Abundance are used.
+
+        :arguments model: model name (default current model)
+
+        :arguments J: size of wanted community (default size of the community of current abundance)
+
+        :returns: random neutral distribution of abundances
+        
         """
         if not model:
             try:

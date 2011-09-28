@@ -19,12 +19,17 @@ STIRLINGS = {}
 
 def generate_random_neutral_abundance (model_name, size, **kwargs):
     '''
-    model_name: model name (ewens, etienne, lognorm)
-    size of the community (J)
+    :arguments model_name: model name (ewens, etienne, lognorm)
+    
+    :arguments size: size of the community (J)
+
+    :returns: random neutral distribution of abundance
+    
     other args should be of kind theta, I, m
     eg:
       import ecolopy
       ecolopy.generate_random_neutral_abundance('ewens', 100, theta=12, I=12)
+
     '''
     # import inside because otherwise strange never-ending import...
     from ecolopy.ecological_model import EcologicalModel
@@ -44,6 +49,11 @@ def shannon_entropy(abund, inds):
     '''
     computes Shannon entropy (H) for a given abundance table
     and number of individues.
+
+    :arguments abund: distribution of abundances as list
+
+    :returns: shannon entropy
+    
     '''
     shannon = mpfr(0.)
     for spe in abund:

@@ -14,5 +14,3 @@ Contents:
 
    reference/index
 
-:genindex:
-:modindex:
