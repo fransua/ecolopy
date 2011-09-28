@@ -19,6 +19,13 @@ from scipy.stats import lognorm
 def rand_neutral_etienne (inds, theta, immig):
     '''
     generates random distribution according to J, theta and I
+
+    :arguments inds: number of individues in community (J)
+    :arguments theta: corresponding to the model
+    :arguments immig: immigration rate (I)
+
+    :returns: distribution of abundance (list)
+    
     '''
     theta = float (theta)
     immig = float (immig)
@@ -43,6 +50,12 @@ def rand_neutral_etienne (inds, theta, immig):
 def rand_neutral_ewens (inds, theta):
     '''
     generates random distribution according to J and theta
+    
+    :arguments inds: number of individues in community (J)
+    :arguments theta: corresponding to the model
+
+    :returns: distribution of abundance (list)
+    
     '''
     theta = float (theta)
     out = [0] * int (inds)
@@ -56,12 +69,19 @@ def rand_neutral_ewens (inds, theta):
     return table (out, spp)
 
 
-def rand_lognormal (species, sd, mu):
+def rand_lognormal (inds, sd, mu):
     '''
     generates random lognormal distribution
+    
+    :arguments inds: number of individues in community (J)
+    :arguments sd: usually standard deviation of the distribution of abundaces
+    :arguments mu: usually mean of the distribution of abundaces
+
+    :returns: distribution of abundance (list)
+    
     '''
     return [int (i+1) for i in lognorm.rvs (sd, scale=exp(mu),
-                                            size=int (species))]
+                                            size=int (inds))]
 
 
 

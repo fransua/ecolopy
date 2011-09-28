@@ -310,7 +310,11 @@ class Abundance (object):
         """
         self.__current_model = self.get_model(name)
         for key in ['theta', 'I', 'm']:
-            self.__dict__[key] = self.__current_model.__dict__[key]
+            try:
+                self.__dict__[key] = self.__current_model.__dict__[key]
+            except KeyError:
+                self.__dict__[key] = None
+                
 
     def _ewens_theta_likelihood (self, theta):
         '''

@@ -9,4 +9,5 @@ Current modules:
    reference_abundance
    reference_models
    reference_utils
+   reference_randoms
 

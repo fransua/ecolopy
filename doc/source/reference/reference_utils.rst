@@ -1,5 +1,5 @@
-Some utils
-===========
+Some utilities
+==============
 
 .. currentmodule:: ecolopy.utils
 
