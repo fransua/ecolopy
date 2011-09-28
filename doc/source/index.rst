@@ -10,6 +10,8 @@ Contents:
    
    intro
 
+   install   
+
    tutorial/index
 
    reference/index

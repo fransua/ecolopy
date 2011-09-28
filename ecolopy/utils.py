@@ -12,6 +12,12 @@ __version__ = "0.12"
 
 from gmpy2 import log, mul, mpfr, div, lngamma
 from sys import stdout
+try:
+    from matplotlib import colors, ticker, pyplot
+except ImportError:
+    print 'matplotlib not found'
+
+import numpy as np
 
 global STIRLINGS
 STIRLINGS = {}
@@ -19,9 +25,9 @@ STIRLINGS = {}
 
 def generate_random_neutral_abundance (model_name, size, **kwargs):
     '''
-    :arguments model_name: model name (ewens, etienne, lognorm)
+    :argument model_name: model name (ewens, etienne, lognorm)
     
-    :arguments size: size of the community (J)
+    :argument size: size of the community (J)
 
     :returns: random neutral distribution of abundance
     
@@ -50,7 +56,7 @@ def shannon_entropy(abund, inds):
     computes Shannon entropy (H) for a given abundance table
     and number of individues.
 
-    :arguments abund: distribution of abundances as list
+    :argument abund: distribution of abundances as list
 
     :returns: shannon entropy
     
@@ -191,3 +197,45 @@ def stirling (one, two):
     return STIRLINGS [one, two]
 
 
+def draw_contour_likelihood (abd, model=None, theta_range=None, m_range=None, num_dots=100):
+    """
+    draw contour plot of the log likelihood of a given abundance to fit Etienne model
+
+    :argument abd: Abundance object
+    :argument None model: model name, if None current model is used
+    :argument None theta_range: minimum and maximum value of theta as list. If None, goes from 1 to number of species (S)
+    :argument None m_range:  minimum and maximum value of m as list. If None, goes from 0 to 1
+    :argument 1000 num_dots: Number of dots to paint
+
+    """
+
+    if not theta_range:
+        theta_range = [1, abd.S]
+    if not m_range:
+        m_range = [1e-16, 1-1e-16]
+    if not model:
+        model = get_current_model_name()
+    
+    x = np.linspace(theta_range[0], theta_range[1], num_dots)
+    y = np.linspace(m_range[0], m_range[1], num_dots)
+
+    z = np.zeros ((num_dots, num_dots))
+    for k, i in enumerate(x):
+        print k, 'of', num_dots
+        for l, j in enumerate (y):
+            lnl = -abd.etienne_likelihood ([i, j])
+            z[l][k] = lnl
+
+    diff = z.max()-z.min()
+
+    bests = z.max() - 20 if diff > 20 else z.min()
+    
+    levels = np.array (list (np.arange (z.min(), bests, diff/100)) + list (np.arange (bests, z.max(), 20./100)))
+    pyplot.contourf (x, y, z, levels)
+    pyplot.colorbar (format='%.3f')
+    pyplot.title ("Log likelihood of abundance under Etienne model")
+    pyplot.xlabel ("theta")
+    pyplot.ylabel ("m")
+    pyplot.axis (theta_range + m_range)
+    pyplot.show()
+    

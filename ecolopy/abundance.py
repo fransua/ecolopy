@@ -32,7 +32,7 @@ class Abundance (object):
        * text file containing one species count per line
        * pickle file containing abundance object
 
-    :argument j_tot: is the size of the metacommunity, if not defined j_tot = J * 3
+    :argument None j_tot: is the size of the metacommunity, if not defined j_tot = J * 3
 
     :returns: an abundance object
 
@@ -65,6 +65,7 @@ class Abundance (object):
         self.theta     = None
         self.m         = None
         self.I         = None
+        self.lnL       = None
         self.__models  = {}
         self.__current_model = None
         self.__factor  = None
@@ -84,10 +85,11 @@ class Abundance (object):
     Theta                     : %s
     I                         : %s
     m                         : %s
+    lnL                       : %s
     ''' % (self.J, self.S, self.shannon, self.j_tot,
            ', '.join (self.__models.keys()),
            self.__current_model.name if self.__current_model else None,
-           self.theta, self.I, self.m)
+           self.theta, self.I, self.m, self.lnL)
 
 
     def lrt (self, model_1, model_2, df=1):
@@ -96,6 +98,7 @@ class Abundance (object):
 
         :argument model_1: string representing simplest model, usually Ewens
         :argument model_2: string representing most complex model, usually Etienne
+        :argument 1 df: number of degrees of freedom (1 when comparing Etienne and Ewens)
         
         :returns: p-value of rejection of alternative model
         
@@ -104,6 +107,14 @@ class Abundance (object):
         return chisqprob(2 * (float (self.get_model(model_1).lnL) - \
                               float (self.get_model(model_2).lnL)), df=df)
 
+
+    def get_current_model_name (self):
+        """
+
+        :returns: current model name
+        
+        """
+        return self.__current_model.name
 
     def iter_models (self):
         """
@@ -120,7 +131,7 @@ class Abundance (object):
         """
         add one model computed externally to the computed models of current Abundance object
 
-        :arguments model: model object
+        :argument model: model object
         
         """
         self.__models[model.name] = model
@@ -129,7 +140,7 @@ class Abundance (object):
     def get_model (self, name):
         """
         
-        :arguments name: name of a computed model
+        :argument name: name of a computed model
 
         :returns: a EcologicalModel object corresponding to one of the computed models
         
@@ -143,7 +154,7 @@ class Abundance (object):
         '''
         get likelihood value of Ewens according to parthy/tetame
 
-        :arguments theta: value of theta
+        :argument theta: value of theta
         
         :returns: likelihood
         
@@ -164,7 +175,7 @@ class Abundance (object):
         '''
         returns -log-likelihood of fitting to log-normal distribution
 
-        :arguments params: a list of 2 parameters:
+        :argument None params: a list of 2 parameters:
           * mu = parmas[0]
           * sd = parmas[1]
 
@@ -188,7 +199,7 @@ class Abundance (object):
         '''
         logikelihood function
 
-        :arguments params: a list of 2 parameters:
+        :argument params: a list of 2 parameters:
           * theta = parmas[0]
           * I     = parmas[1]
           
@@ -251,7 +262,7 @@ class Abundance (object):
         using scipy package, values that are closest to the one proposed
         by tetame, are raised by fmin function.
 
-        :arguments method: optimization strategy, can be one of fmin, slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)
+        :argument fmin method: optimization strategy, can be one of fmin, slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)
         
         '''
         # define bounds
@@ -305,11 +316,11 @@ class Abundance (object):
         """
         set on model as default/current model.
 
-        :arguments name: model name of precomputed model
+        :argument name: model name of precomputed model
         
         """
         self.__current_model = self.get_model(name)
-        for key in ['theta', 'I', 'm']:
+        for key in ['theta', 'I', 'm', 'lnL']:
             try:
                 self.__dict__[key] = self.__current_model.__dict__[key]
             except KeyError:
@@ -332,11 +343,11 @@ class Abundance (object):
         if (Hobs > Hrand_neut) then eveness of observed data is
         higher then neutral
 
-        :arguments model: model name otherwise, current model is used
+        :argument ewens model: model name otherwise, current model is used
 
-        :arguments gens: number of random neutral distributions to generate
+        :argument 100 gens: number of random neutral distributions to generate
 
-        :arguments give_h: also return list of shannon entropies
+        :argument False give_h: also return list of shannon entropies
         
         :returns: p_value anf if give_h also returns shannon entropy of
         all random neutral abundances generated
@@ -377,7 +388,8 @@ class Abundance (object):
         force option is for writing pickle with no consideration
         if existing
 
-        :arguments outfile: path of the outfile
+        :argument outfile: path of the outfile
+        :argument False force: overwrite existing outfile
         
         '''
         if isfile (outfile) and not force:
@@ -396,7 +408,7 @@ class Abundance (object):
         load params and kda with pickle from infile
         WARNING: do not overright values of params.
 
-        :arguments infile: path of the outfile
+        :argument infile: path of the outfile
 
         '''
         old_params = load (open (infile))
@@ -417,9 +429,9 @@ class Abundance (object):
         and a given community size.
         if none of them are given, values of current Abundance are used.
 
-        :arguments model: model name (default current model)
+        :argument None model: model name (default current model)
 
-        :arguments J: size of wanted community (default size of the community of current abundance)
+        :argument None J: size of wanted community (default size of the community of current abundance)
 
         :returns: random neutral distribution of abundances
         

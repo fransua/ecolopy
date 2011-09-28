@@ -20,9 +20,9 @@ def rand_neutral_etienne (inds, theta, immig):
     '''
     generates random distribution according to J, theta and I
 
-    :arguments inds: number of individues in community (J)
-    :arguments theta: corresponding to the model
-    :arguments immig: immigration rate (I)
+    :argument inds: number of individues in community (J)
+    :argument theta: corresponding to the model
+    :argument immig: immigration rate (I)
 
     :returns: distribution of abundance (list)
     
@@ -51,8 +51,8 @@ def rand_neutral_ewens (inds, theta):
     '''
     generates random distribution according to J and theta
     
-    :arguments inds: number of individues in community (J)
-    :arguments theta: corresponding to the model
+    :argument inds: number of individues in community (J)
+    :argument theta: corresponding to the model
 
     :returns: distribution of abundance (list)
     
@@ -73,9 +73,9 @@ def rand_lognormal (inds, sd, mu):
     '''
     generates random lognormal distribution
     
-    :arguments inds: number of individues in community (J)
-    :arguments sd: usually standard deviation of the distribution of abundaces
-    :arguments mu: usually mean of the distribution of abundaces
+    :argument inds: number of individues in community (J)
+    :argument sd: usually standard deviation of the distribution of abundaces
+    :argument mu: usually mean of the distribution of abundaces
 
     :returns: distribution of abundance (list)
     

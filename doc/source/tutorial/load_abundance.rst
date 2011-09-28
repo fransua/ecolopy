@@ -8,7 +8,7 @@ Just after counting species abundances in an ecosystem
 .. contents::
 
 Load Abundance
-==========
+==============
 
 Abundance is a class, and derived objects represent simply a distribution of
 species abundance , with associated function in order to calculate descriptive
@@ -66,6 +66,7 @@ command:
   #      Theta                     : None
   #      I                         : None
   #      m                         : None
+  #      lnL                       : None
 
 With:
 
@@ -79,7 +80,8 @@ With:
   \begin{eqnarray}
     H(X) = \sum_{0\le i\le n} p(x_i) * log (p(x_i))
   \end{eqnarray}
-    X being the number of individuals for each species and n the number of species
+
+X being the number of individuals for each species and n the number of species.
 
 * Metacommunity size: correspond to 3 times the community size if not defined by user, we could have write to fix it at a given value instead of default:
 
@@ -138,6 +140,7 @@ to load this model as our current model, just type:
   #      Theta                     : 34.962254203932339
   #      I                         : 17.494565308269266
   #      m                         : 0.00081470508933989701
+  #      lnL                       : 318.84864864917472
 
 
 Etienne model
@@ -165,6 +168,62 @@ Now we can run an other model like the one proposed by Etienne (2005), just type
   #     Theta                     : 47.6743190606
   #     I                         : 2211.0866293821641
   #     m                         : 0.0934245377983
+  #     lnL                       : 308.72540670815931
+
+Best optimization strategy for Etienne model
+--------------------------------------------
+
+etienne_optimal_params function allows to define the optimization strategy to use (see scipy.optimize documentation).
+The fmin optimization strategy is the one usually used, it is fast, but do not allow to set bounds for 
+the values of parameters to optimize, sometimes ending with values of theta almost infinite. 
+
+To circumvent this problem, other optimization strategies are available, it is recommended to use several of them.
+A simple way to find the best optimization would be:
+
+::
+
+  tmp = {}
+  for met in ['fmin', 'slsqp', 'l_bfgs_b', 'tnc']:
+      try:
+          abd.etienne_optimal_params(method=opt)
+          model = abd.get_model('etienne')
+          tmp[met] ={}
+          tmp[met]['theta'] = model.theta
+          tmp[met]['I']     = model.I
+          tmp[met]['m']     = model.m
+          tmp[met]['lnL']   = model.lnL
+      except:
+          # in case optimization fails, EcoloPy raises an exception
+          pass
+
+  # in case optimization by fmin failed to found correct values for theta and m:
+  if not (1 <= tmp['fmin']['theta'] < abd.S and \
+          1e-50 <= tmp['fmin']['m'] < 1-1e-50):
+      del (tmp['fmin'])
+
+  # find the model with the higher likelihood:
+  met = min (tmp, key=lambda x: tmp[x]['lnL'])
+
+  # load it as 'etienne' model
+  abd.set_model (met)
+
+
+Generate contour image of likelihood
+------------------------------------
+
+In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood (:ref:`my-figure`)
+
+::
+
+  from ecolopy.utils import draw_contour_likelihood
+  draw_contour_likelihood(abd, theta_range=[20,100], m_range=[0.05, 0.8], num_dots=100)
+
+.. _my-figure:
+
+.. figure:: ../ex_figures/contour_lnl.png
+
+   Figure 1
+
 
 
 Lognormal model
@@ -188,7 +247,9 @@ In ecolopy is also implemented log normal model:
   #     Theta                     : 3.14269458985
   #     I                         : 1.78719175872
   #     m                         : None
+  #     lnL                       : 1157.0126987455762
 
+*Note: Likelihood of log normal model is not comparable to the one of Etienne or Ewens models.*
 
 Comparing Models
 ****************
@@ -208,8 +269,10 @@ be reach like this:
   # 0.00081470508933989701
   abd.I
   # 17.494565308269266
+  abd.lnL
+  # 318.84864864917472
 
-To get the likelihood, we can use using the model Object linked to our abundance:
+or you can get any attribute thruogh the model objet linked to our abundance:
 ::
 
   model = abd.get_model('ewens')
@@ -246,11 +309,7 @@ By default EcoloPy will use the parameters of the current model but this can be 
   # mpfr('2.0'), mpfr('2.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0')]
 
 
-Note: EcoloPy package use GMP library in order to deal with huge number, usually we
-want to get 'normal' numbers in order to compute mean standard deviation...
-using common python packages.
-Those numbers are quite ugly but easy convert those into standard integers or
-floats:
+*Note: EcoloPy package use GMP library in order to deal with huge number, usually we want to get 'normal' numbers in order to compute mean standard deviation... using common python packages. Those numbers are quite ugly but easy convert those into standard integers or floats:*
 
 ::
 
@@ -266,7 +325,6 @@ floats:
   # ...
   # ...
   # 3, 2, 1, 1, 3, 1, 1, 1, 1, 1, 1]
-
 
 
 Saving/Loading Abundance object

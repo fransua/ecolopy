@@ -19,7 +19,7 @@ class EcologicalModel(object):
     """
     Class representing Ecological models
 
-    :arguments name: name of the class, can be either ewens, etienne or lognorm
+    :argument name: name of the class, can be either ewens, etienne or lognorm
 
     :returns: EcologicalModel object
     
@@ -36,7 +36,7 @@ class EcologicalModel(object):
         """
         Generate distribution of abundance according to EcologicalModel parameters and to community size
 
-        :arguments inds: community size (J)
+        :argument inds: community size (J)
 
         :returns: distribution of abundance as list
         
