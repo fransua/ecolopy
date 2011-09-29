@@ -170,6 +170,7 @@ Now we can run an other model like the one proposed by Etienne (2005), just type
   #     m                         : 0.0934245377983
   #     lnL                       : 308.72540670815931
 
+
 Best optimization strategy for Etienne model
 --------------------------------------------
 
@@ -211,7 +212,8 @@ A simple way to find the best optimization would be:
 Generate contour image of likelihood
 ------------------------------------
 
-In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood (Figure :num:`figure <my-figure>`)
+In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood (:num:`Figure #my-figure`)
+
 
 ::
 
@@ -219,11 +221,13 @@ In the case of Etienne model EcoloPy allow user to draw contour frame of likelih
   # this can take 2 or 3 hours to compute
   draw_contour_likelihood(abd, theta_range=[20,100], m_range=[0.05, 0.8], num_dots=100)
 
+
 .. _my-figure:
 
 .. figure:: ../ex_figures/contour_lnl.png
 
   Contour graph representing log likelihood values of BCI dataset fitting Etienne model with different values of theta and m.
+
 
 
 
@@ -295,6 +299,7 @@ This function will compute a chi square test for 2 times the difference in likel
   # 6.80784682569e-06
 
 
+
 Generate random distribution
 ****************************
 
@@ -326,6 +331,44 @@ By default EcoloPy will use the parameters of the current model but this can be 
   # ...
   # ...
   # 3, 2, 1, 1, 3, 1, 1, 1, 1, 1, 1]
+
+
+Testing for neutrality
+**********************
+
+Getting significance of deviation from neutrality
+=================================================
+
+In order to test if our distribution of abundance is neutral, Ecolopy implements a test based on comparing the distribution of values of Shannon entropies compared to the observed one.
+
+::
+
+  # call test_neutrality funtion with the give_h option, making it to return the list of simulated entropies
+  pval, neut_h = abd.test_neutrality(model='etienne', gens=10000, give_h=True)
+  print pval
+  # 0.1492
+
+Then we can conclude that our dataset (BCI) do not deviates significantly from neutrality.
+
+Plotting distribution of simulations:
+====================================
+
+We can also draw the distribution of simulated entropies and visually compare them to the observed value (:num:`Figure #shannon-hist`).
+
+::
+
+  # using previously generated neut_h
+  draw_shanon_distrib(neut_h, abd.shannon)
+
+
+.. _shannon-hist:
+
+.. figure:: ../ex_figures/shannon_hist.png
+
+  Histogram of distribution of shannon entropy values after 10.000 simulation under neutral model Etienne. 
+  Red vertical bar represents the observed value of entropy for our dataset, and the orange shade, 
+  the corresponding deviation inferred from simulation.
+
 
 
 Saving/Loading Abundance object

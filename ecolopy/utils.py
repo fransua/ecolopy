@@ -238,4 +238,24 @@ def draw_contour_likelihood (abd, model=None, theta_range=None, m_range=None, nu
     pyplot.ylabel ("m")
     pyplot.axis (theta_range + m_range)
     pyplot.show()
+
+
+def draw_shanon_distrib(neut_h, obs_h):
+    '''
+    draws distribution of shanon values for random neutral
+
+    :argument neut_h: list of shannon entropies corresponding to simulation under neutral model
+    :argument obs_h: shannon entropy of observed distribution of abundance
     
+    '''
+    neut_h = np.array ([float (x) for x in neut_h])
+    obs_h = float (obs_h)
+    pyplot.hist(neut_h, 40, color='green', histtype='bar', fill=False)
+    pyplot.axvline(float(obs_h), 0, color='r', linestyle='dashed')
+    pyplot.axvspan (float(obs_h) - neut_h.std(), float(obs_h) + neut_h.std(),
+                 facecolor='orange', alpha=0.3)
+    pyplot.xlabel('Shannon entropy (H)')
+    pyplot.ylabel('Number of observations over %s simulations' % (len (neut_h)))
+    pyplot.title("Histogram of entropies from %s simutations compared to \nobserved entropy (red), deviation computed from simulation" % (len (neut_h)))
+    pyplot.show()
+
