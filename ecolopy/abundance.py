@@ -36,7 +36,7 @@ class Abundance (object):
 
     :returns: an abundance object
 
-    ** Examples: **
+    **Examples:**
     ::
 
       # python list

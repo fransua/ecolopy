@@ -351,14 +351,14 @@ In order to test if our distribution of abundance is neutral, Ecolopy implements
 Then we can conclude that our dataset (BCI) do not deviates significantly from neutrality.
 
 Plotting distribution of simulations:
-====================================
+=====================================
 
 We can also draw the distribution of simulated entropies and visually compare them to the observed value (:num:`Figure #shannon-hist`).
 
 ::
 
   # using previously generated neut_h
-  draw_shanon_distrib(neut_h, abd.shannon)
+  draw_shannon_distrib(neut_h, abd.shannon)
 
 
 .. _shannon-hist:

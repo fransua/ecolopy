@@ -5,6 +5,7 @@
 ## Keywords: install
 
 PREREQUISITE
+------------
 GMPY2: apt-get install python2.7-dev libmpfr-dev libgmp3-dev
        http://code.google.com/p/gmpy/downloads/list
        for huge numbers.
@@ -12,5 +13,20 @@ GMPY2: apt-get install python2.7-dev libmpfr-dev libgmp3-dev
 SCIPY: easy_install scipy
        for optimization of log likelihood
 
+NUMPY: easy_install numpy
+
+MATPLOTLIB: easy_install matplotlib
+            not compulsory, only to draw graphs
+
+INSTALL:
+--------
+sudo python setup.py install
+
 test usage:
 python test_all.py full
+
+
+TODO:
+-----
+FIX: lognormal generation of random un der lognormal model.
+RESTRICT: contour draw to etienne model.

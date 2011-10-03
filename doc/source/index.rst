@@ -3,8 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+UNTB+ (EcoloPy)
+***************
+
+**a Python package to test for Unified Neutral Theory of Biodiversity and biogeography in Large dataset.**
+
+source available for download here:
+https://gitorious.org/ecology/ecology
+
 Contents:
-**********
+---------
 
 .. toctree::
    

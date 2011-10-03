@@ -214,7 +214,7 @@ def draw_contour_likelihood (abd, model=None, theta_range=None, m_range=None, nu
     if not m_range:
         m_range = [1e-16, 1-1e-16]
     if not model:
-        model = get_current_model_name()
+        model = abd.get_current_model_name()
     
     x = np.linspace(theta_range[0], theta_range[1], num_dots)
     y = np.linspace(m_range[0], m_range[1], num_dots)
@@ -240,7 +240,7 @@ def draw_contour_likelihood (abd, model=None, theta_range=None, m_range=None, nu
     pyplot.show()
 
 
-def draw_shanon_distrib(neut_h, obs_h):
+def draw_shannon_distrib(neut_h, obs_h):
     '''
     draws distribution of shanon values for random neutral
 
