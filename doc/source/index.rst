@@ -11,8 +11,12 @@ UNTB+ (EcoloPy)
 source available for download here:
 https://gitorious.org/ecology/ecology
 
-Contents:
----------
+PDF version of this tutorial can be downloaded here:
+http://bioinfo.cipf.es/fransua/html/EcoloPy.pdf
+
+-------------------
+
+**Contents:**
 
 .. toctree::
    
@@ -20,7 +24,8 @@ Contents:
 
    install   
 
-   tutorial/index
+   tutorial/load_abundance
 
    reference/index
 
+ 

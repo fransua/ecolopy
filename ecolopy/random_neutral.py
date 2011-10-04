@@ -13,7 +13,7 @@ __version__ = "0.13"
 
 from random import random
 from utils  import table
-from numpy  import exp
+from math  import exp
 from scipy.stats import lognorm
 
 def rand_neutral_etienne (inds, theta, immig):
@@ -80,8 +80,8 @@ def rand_lognormal (inds, sd, mu):
     :returns: distribution of abundance (list)
     
     '''
-    return [int (i+1) for i in lognorm.rvs (sd, scale=exp(mu),
-                                            size=int (inds))]
+    return table ([int (i+1) for i in lognorm.rvs (sd, scale=exp(mu),
+                                                   size=int (inds))])
 
 
 

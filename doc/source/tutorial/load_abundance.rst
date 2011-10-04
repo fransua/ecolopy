@@ -2,13 +2,17 @@
 .. moduleauthor:: Francois Serra
 .. currentmodule:: ecolopy
 
-Just after counting species abundances in an ecosystem
-******************************************************
+Tutorial
+********
 
 .. contents::
 
+Just after counting species abundances in an ecosystem
+======================================================
+
+
 Load Abundance
-==============
+--------------
 
 Abundance is a class, and derived objects represent simply a distribution of
 species abundance , with associated function in order to calculate descriptive
@@ -98,12 +102,12 @@ X being the number of individuals for each species and n the number of species.
 
 
 Fit to ecological model
-***********************
+=======================
 
 Once our distribution of abundances loaded into an Abundance object, EcoloPy proposes a set of of ecological models that we can try to fit to our data.
 
 Ewens model
-===========
+-----------
 
 This model assumes that:
 
@@ -144,7 +148,7 @@ to load this model as our current model, just type:
 
 
 Etienne model
-=============
+^^^^^^^^^^^^^
 
 Now we can run an other model like the one proposed by Etienne (2005), just type
 
@@ -172,7 +176,7 @@ Now we can run an other model like the one proposed by Etienne (2005), just type
 
 
 Best optimization strategy for Etienne model
---------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 etienne_optimal_params function allows to define the optimization strategy to use (see scipy.optimize documentation).
 The fmin optimization strategy is the one usually used, it is fast, but do not allow to set bounds for 
@@ -210,9 +214,15 @@ A simple way to find the best optimization would be:
 
 
 Generate contour image of likelihood
-------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood (:num:`Figure #my-figure`)
+.. _contour-fig:
+
+.. figure:: ../ex_figures/contour_lnl.png
+
+  Contour graph representing log likelihood values of BCI dataset fitting Etienne model with different values of theta and m.
+
+In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood (:num:`Figure #contour-fig`)
 
 
 ::
@@ -222,17 +232,9 @@ In the case of Etienne model EcoloPy allow user to draw contour frame of likelih
   draw_contour_likelihood(abd, theta_range=[20,100], m_range=[0.05, 0.8], num_dots=100)
 
 
-.. _my-figure:
-
-.. figure:: ../ex_figures/contour_lnl.png
-
-  Contour graph representing log likelihood values of BCI dataset fitting Etienne model with different values of theta and m.
-
-
-
 
 Lognormal model
-===============
+---------------
 
 In ecolopy is also implemented log normal model:
 
@@ -257,10 +259,10 @@ In ecolopy is also implemented log normal model:
 *Note: Likelihood of log normal model is not comparable to the one of Etienne or Ewens models.*
 
 Comparing Models
-****************
+================
 
 Browsing parameters
-===================
+-------------------
 
 Now we have fit our abundance to some models, a summary of corresponding
 parameters are available through the print function, but each of them can also
@@ -288,7 +290,7 @@ All those values coorespond to the current model (in this case ewens).
 
 
 Searching for best model
-========================
+------------------------
 
 We have run now several models, within which the nested models ewens and etienne, for those we can run a likelihood ratio test using the lrt function.
 This function will compute a chi square test for 2 times the difference in likelihoods, with one degree of freedom (corresponding to the estimation of parameter m):
@@ -301,7 +303,7 @@ This function will compute a chi square test for 2 times the difference in likel
 
 
 Generate random distribution
-****************************
+============================
 
 In order to compare our distribution of abundance to the expected one according to a specific model, we can generate random neutral distributions.
 By default EcoloPy will use the parameters of the current model but this can be change passing to the function the name of the wanted model:
@@ -334,10 +336,10 @@ By default EcoloPy will use the parameters of the current model but this can be 
 
 
 Testing for neutrality
-**********************
+======================
 
 Getting significance of deviation from neutrality
-=================================================
+-------------------------------------------------
 
 In order to test if our distribution of abundance is neutral, Ecolopy implements a test based on comparing the distribution of values of Shannon entropies compared to the observed one.
 
@@ -351,7 +353,7 @@ In order to test if our distribution of abundance is neutral, Ecolopy implements
 Then we can conclude that our dataset (BCI) do not deviates significantly from neutrality.
 
 Plotting distribution of simulations:
-=====================================
+-------------------------------------
 
 We can also draw the distribution of simulated entropies and visually compare them to the observed value (:num:`Figure #shannon-hist`).
 
@@ -372,7 +374,7 @@ We can also draw the distribution of simulated entropies and visually compare th
 
 
 Saving/Loading Abundance object
-*******************************
+===============================
 
 Once done EcoloPy allow user to save Abundance object and EcologicalModels object into cPikle with dum_abundance and load_abundance functions.
 

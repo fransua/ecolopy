@@ -20,9 +20,7 @@ class EcologicalModel(object):
     Class representing Ecological models
 
     :argument name: name of the class, can be either ewens, etienne or lognorm
-
     :returns: EcologicalModel object
-    
     """
     def __init__(self, name, **kwargs):
         self.name  = name
@@ -37,9 +35,7 @@ class EcologicalModel(object):
         Generate distribution of abundance according to EcologicalModel parameters and to community size
 
         :argument inds: community size (J)
-
         :returns: distribution of abundance as list
-        
         """
         if self.name == 'ewens':
             return rand_neutral_ewens (inds, self.theta)

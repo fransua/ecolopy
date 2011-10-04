@@ -10,10 +10,30 @@ GNU/Linux
 
 EcoloPy requires python>=2.7 as well as several dependencies:
 
-* **python-numpy** to compute means and standard deviations.
 * **python-scipy** for optimization, and statistical tests.
-* **python-matplotlib** only needed for graphs
 * **gmpy2** in order to deal with huge numbers necessary to compute K(D,A) in Etienne model
+
+---------------------------------------------------------
+
+Only needed for drawing graph:
+
+* **python-matplotlib**
+* **python-numpy**
+
+Install Python libraries:
+-------------------------
+
+**Required:**
+::
+
+  apt-get install python-scipy
+
+Accessory:
+
+::
+
+  apt-get install python-matplotlib python-scipy
+
 
 Install GMPY2
 -------------

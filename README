@@ -28,5 +28,3 @@ python test_all.py full
 
 TODO:
 -----
-FIX: lognormal generation of random un der lognormal model.
-RESTRICT: contour draw to etienne model.

@@ -16,10 +16,9 @@ from gmpy2            import mpfr, log, exp, lngamma, gamma
 from cPickle          import dump, load
 from os.path          import isfile
 from sys              import stdout
-from numpy            import mean, std
                       
 from utils    import table, factorial_div, mul_polyn, shannon_entropy
-from utils    import lpoch, pre_get_stirlings, stirling
+from utils    import lpoch, pre_get_stirlings, stirling, mean, std
 from ecolopy.ecological_model import EcologicalModel
 
 class Abundance (object):
@@ -139,11 +138,8 @@ class Abundance (object):
 
     def get_model (self, name):
         """
-        
         :argument name: name of a computed model
-
         :returns: a EcologicalModel object corresponding to one of the computed models
-        
         """
         if name in self.__models:
             return self.__models[name]
@@ -153,11 +149,9 @@ class Abundance (object):
     def ewens_likelihood (self, theta):
         '''
         get likelihood value of Ewens according to parthy/tetame
-
+        
         :argument theta: value of theta
-        
         :returns: likelihood
-        
         '''
         factor = lngamma (self.J + 1)
         phi = table (self.abund)
@@ -176,9 +170,9 @@ class Abundance (object):
         returns -log-likelihood of fitting to log-normal distribution
 
         :argument None params: a list of 2 parameters:
+        
           * mu = parmas[0]
           * sd = parmas[1]
-
         :returns: log likelihood given the parameters
         
         '''
@@ -198,11 +192,11 @@ class Abundance (object):
     def etienne_likelihood(self, params):
         '''
         logikelihood function
-
+        
         :argument params: a list of 2 parameters:
+        
           * theta = parmas[0]
           * I     = parmas[1]
-          
         :returns: log likelihood of given theta and I
         
         '''
@@ -344,11 +338,8 @@ class Abundance (object):
         higher then neutral
 
         :argument ewens model: model name otherwise, current model is used
-
         :argument 100 gens: number of random neutral distributions to generate
-
         :argument False give_h: also return list of shannon entropies
-        
         :returns: p_value anf if give_h also returns shannon entropy of
         all random neutral abundances generated
         
@@ -430,9 +421,7 @@ class Abundance (object):
         if none of them are given, values of current Abundance are used.
 
         :argument None model: model name (default current model)
-
         :argument None J: size of wanted community (default size of the community of current abundance)
-
         :returns: random neutral distribution of abundances
         
         """
@@ -443,6 +432,9 @@ class Abundance (object):
                 return None
         else:
             model = self.get_model(model)
+        if model is None:
+            raise Exception ('Need first to optimize this model,\n       ' + \
+                             '    Unable to generate random distribution.')
         if not J:
             J = self.J
         return model.rand_neutral (J)
