@@ -275,6 +275,8 @@ def mean (x):
     """
     return float (sum(x))/len (x)
 
+
+
 def std (x):
     """
     :argument x: list of values
