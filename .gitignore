@@ -7,3 +7,5 @@ build
 *.pik
 build
 doc/build
+*.egg-info
+dist

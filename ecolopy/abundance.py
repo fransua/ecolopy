@@ -165,28 +165,26 @@ class Abundance (object):
         return lnl
 
 
-    def lognorm_likelihood (self, params=None):
-        '''
-        returns -log-likelihood of fitting to log-normal distribution
-
-        :argument None params: a list of 2 parameters:
-        
-          * mu = parmas[0]
-          * sd = parmas[1]
-        :returns: log likelihood given the parameters
-        
-        '''
-        data = [int (x) for x in self.abund]
-        if params == None:
-            sd = std ([float (log (x)) for x in data])
-        else:
-            sd = params[1]
-        if params== None:
-            mu = mean ([float (log (x)) for x in data])
-        else:
-            mu = params[0]
-        return -sum ([log (x) for x in lognorm.pdf (data, sd,
-                                                    scale=float (exp (mu)))])
+    ### NO LONGER USED
+    ## def lognorm_likelihood (self, params=None):
+    ##     '''
+    ##     returns -log-likelihood of fitting to log-normal distribution
+    ## 
+    ##     :argument None params: a list of 2 parameters:
+    ##     
+    ##       * mu = parmas[0]
+    ##       * sd = parmas[1]
+    ##     :returns: log likelihood given the parameters
+    ##     
+    ##     '''
+    ##     data = [int (x) for x in self.abund]
+    ##     if params == None:
+    ##         log_data = [float (log (x)) for x in data]
+    ##         mu, sd = mean (log_data), std (log_data)
+    ##     else:
+    ##         mu, sd = params
+    ##     return -sum ([log (x) for x in lognorm.pdf (data, sd,
+    ##                                                 scale=float (exp (mu)))])
 
 
     def etienne_likelihood(self, params):
@@ -237,17 +235,16 @@ class Abundance (object):
         '''
         Main function to get optimal params for lognormal distribution according to abundance
         '''
-        data = self.abund
-        start = (mean ([float (log (x)) for x in data]),
-                 std ([float (log (x)) for x in data]))
-        mu, sd = fmin (self.lognorm_likelihood, start,
-                       full_output=False, disp=0)
-        mu  = mu
-        sd  = sd
-        lnL = self.lognorm_likelihood ((mu, sd))
-        self.__models['lognorm'] = EcologicalModel ('lognorm', theta=mu, I=sd,
-                                                    lnL=lnL)
-        
+        ## USED BEFORE WITH LOGNORM_LIKELIHOOD
+        ## data = self.abund
+        ## start = (mean ([float (log (x)) for x in data]),
+        ##          std ([float (log (x)) for x in data]))
+        ## mu, sd = fmin (self.lognorm_likelihood, start,
+        ##                full_output=False, disp=0)
+        ## lnL   = self.lognorm_likelihood ((mu, sd))
+        shape, loc, scale = lognorm.fit([float (x) for x in self.abund])
+        self.__models['lognorm'] = EcologicalModel ('lognorm', theta=shape,
+                                                    I=loc, m=scale, lnL=None)
 
 
     def etienne_optimal_params (self, method='fmin', verbose=True):
@@ -342,16 +339,18 @@ class Abundance (object):
         :argument False give_h: also return list of shannon entropies
         :returns: p_value anf if give_h also returns shannon entropy of
         all random neutral abundances generated
-        
         '''
+        fast_shannon = lambda abund: sum ([-spe * log(spe) for spe in abund])
         pval = 0
+        inds = self.S if model is 'lognorm' else self.J
         model = self.get_model (model)
         if not model:
             return None
         neut_h = []
         for _ in xrange (gens):
-            neut_h.append (shannon_entropy (model.rand_neutral (self.J),
-                                            self.J))
+            tmp = model.rand_neutral (inds)
+            l_tmp = sum (tmp)
+            neut_h.append ((fast_shannon (tmp) + l_tmp*log(l_tmp))/l_tmp)
             pval += neut_h[-1] < self.shannon
         if give_h:
             return float (pval)/gens, neut_h
@@ -436,7 +435,7 @@ class Abundance (object):
             raise Exception ('Need first to optimize this model,\n       ' + \
                              '    Unable to generate random distribution.')
         if not J:
-            J = self.J
+            J = self.S if model.name is 'lognorm' else self.J
         return model.rand_neutral (J)
 
     
@@ -448,13 +447,13 @@ class Abundance (object):
         sdiff     = len (specabund [1])
         polyn     = []
         # compute all stirling numbers taking advantage of recurrence function
-        needed = {0: True}
+        stirlings = {0: [0]}
         for i in xrange (sdiff):
             for k in xrange (1, specabund[0][i] + 1):
-                needed [int (specabund[0][i])] = True
+                stirlings.setdefault (int (specabund[0][i]), []).append (k)
         if verbose:
-            stdout.write('  Getting some stirling numbers...\n')
-        pre_get_stirlings (max (specabund[0]), needed, verbose=verbose)
+            stdout.write ('  Getting some stirling numbers...\n')
+        pre_get_stirlings (stirlings, verbose=verbose)
         for i in xrange (sdiff):
             if verbose:
                 stdout.write ("\r  Computing K(D,A) at species %s out of %s" \

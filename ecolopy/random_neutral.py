@@ -69,20 +69,15 @@ def rand_neutral_ewens (inds, theta):
     return table (out, spp)
 
 
-def rand_lognormal (inds, sd, mu):
+def rand_lognormal (inds, shape, loc, scale):
     '''
     generates random lognormal distribution
     
     :argument inds: number of individues in community (J)
     :argument sd: usually standard deviation of the distribution of abundaces
     :argument mu: usually mean of the distribution of abundaces
-
     :returns: distribution of abundance (list)
-    
     '''
-    return table ([int (i+1) for i in lognorm.rvs (sd, scale=exp(mu),
-                                                   size=int (inds))])
-
-
-
-
+    return [int (i+1) for i in lognorm.rvs (shape, scale=scale, loc=loc,
+                                            size=int (inds))]
+    ## return table ([int (i) for i in norm.rvs(mu, sd, size=inds)])

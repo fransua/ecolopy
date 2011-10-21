@@ -25,7 +25,7 @@ STIRLINGS = {}
 def generate_random_neutral_abundance (model_name, size, **kwargs):
     '''
     :argument model_name: model name (ewens, etienne, lognorm)
-    :argument size: size of the community (J)
+    :argument size: size of the community (J), if lognormal distribution size should be equal to number of species (S)
     :returns: random neutral distribution of abundance
     other args should be of kind theta, I, m
     
@@ -57,14 +57,9 @@ def shannon_entropy(abund, inds):
     and number of individues.
 
     :argument abund: distribution of abundances as list
-
     :returns: shannon entropy
-    
     '''
-    shannon = mpfr(0.)
-    for spe in abund:
-        shannon -= spe * log (spe)
-    return (shannon + inds * log (inds)) / inds
+    return (sum ([-spe * log(spe) for spe in abund]) + inds * log (inds)) / inds
 
 
 def table (out, spp=None):
@@ -72,9 +67,10 @@ def table (out, spp=None):
     data to contingency table
     any kind of data
     '''
+    setout = set (out)
     if spp == None:
-        spp = int (max (out))
-    counts = dict (zip (set (out), [mpfr(0.)]*spp))
+        spp = len (setout)
+    counts = dict (zip (setout, [mpfr(0.)]*spp))
     for ind in out:
         counts[ind] += mpfr(1)
     return [counts[x] for x in sorted (counts)]
@@ -184,6 +180,7 @@ def pre_get_stirlings(max_nm, needed, verbose=True):
     if verbose:
         stdout.write('\n')
 
+
 def stirling (one, two):
     '''
     returns log unsingned stirling number, taking advantage of the fact that
@@ -207,7 +204,6 @@ def draw_contour_likelihood (abd, model=None, theta_range=None, m_range=None, nu
     :argument None m_range:  minimum and maximum value of m as list. If None, goes from 0 to 1
     :argument 100 num_dots: Number of dots to paint
     """
-
     if not theta_range:
         theta_range = [1, int (abd.S)]
     if not m_range:
@@ -258,7 +254,7 @@ def draw_shannon_distrib(neut_h, obs_h):
     '''
     neut_h = np.array ([float (x) for x in neut_h])
     obs_h = float (obs_h)
-    pyplot.hist(neut_h, 40, color='green', histtype='bar', fill=False)
+    pyplot.hist(neut_h, 40, color='green', histtype='bar', fill=True)
     pyplot.axvline(float(obs_h), 0, color='r', linestyle='dashed')
     pyplot.axvspan (float(obs_h) - neut_h.std(), float(obs_h) + neut_h.std(),
                     facecolor='orange', alpha=0.3)
