@@ -188,10 +188,10 @@ def main():
     print 'Lognormality test p-value (under Etienne model):',
     abd.lognorm_optimal_params()
     print abd.test_neutrality(model='lognorm', gens=gens)
-    print 'lognorm lnL', abd.lognorm_likelihood()
+    ## print 'lognorm lnL', abd.lognorm_likelihood()
     ewens = abd.get_model('ewens')
     print 'ewens   lnL',ewens.lnL
-    etienne = abd.get_model('ewens')
+    etienne = abd.get_model('etienne')
     print 'etienne lnL',etienne.lnL
     print 'should be arround: %s' % (0.1 if kind=='full' else 0.01)
     print '%s generations computed in %ss' % (gens, time()-t0)

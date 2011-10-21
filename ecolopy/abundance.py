@@ -447,13 +447,13 @@ class Abundance (object):
         sdiff     = len (specabund [1])
         polyn     = []
         # compute all stirling numbers taking advantage of recurrence function
-        stirlings = {0: [0]}
+        needed = {0: True}
         for i in xrange (sdiff):
             for k in xrange (1, specabund[0][i] + 1):
-                stirlings.setdefault (int (specabund[0][i]), []).append (k)
+                needed [int (specabund[0][i])] = True
         if verbose:
-            stdout.write ('  Getting some stirling numbers...\n')
-        pre_get_stirlings (stirlings, verbose=verbose)
+            stdout.write('  Getting some stirling numbers...\n')
+        pre_get_stirlings (max (specabund[0]), needed, verbose=verbose)
         for i in xrange (sdiff):
             if verbose:
                 stdout.write ("\r  Computing K(D,A) at species %s out of %s" \
