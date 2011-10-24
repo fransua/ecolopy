@@ -10,7 +10,7 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.12"
 
-from gmpy2 import log, mul, mpfr, div, lngamma
+from gmpy2 import log, mul, mpfr, div, lngamma, gamma, exp
 from sys import stdout
 try:
     from matplotlib import pyplot
@@ -66,6 +66,9 @@ def table (out, spp=None):
     '''
     data to contingency table
     any kind of data
+
+    :argument out: species abundance
+    :returns: list of counts of individues by species
     '''
     setout = set (out)
     if spp == None:
@@ -90,11 +93,28 @@ def factorial_div (one, two):
 
 def mul_polyn(polyn_a, polyn_b):
     '''
-    returns product of 2 polynomes
+    computes the product of 2 polynomes, depending of the differences in length
+    of the two polynomes, this function will call one of:
+      * _mul_uneq_polyn: when length of polyn_a is >= length of polyn_b, will iterate over coeefficient.
+      * _mul_simil_polyn: in case both polynomes have equal length, will iterate over indices.
+
     to test multiplication of pylnomes try equality of the two functions:
             _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b)
                                 ==
             _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)
+
+    **Example:**
+    ::
+
+      from ecolopy.utils import mul_polyn
+      # (2 + 3^x + 5x^2)  * (x)
+      mul_polyn([2,3,5], [0,1])
+      # will return: [mpfr('0.0'), mpfr('2.0'), mpfr('3.0'), mpfr('5.0')]
+      # that is: 0 + 2x + 3x^2 + 5x^3
+      
+    :argument polyn_a: list of indices of polynome
+    :argument polyn_b: list of indices of polynome (e.g.: [1,3,5,0,2] for 2 + 3^x + 5x^2 + 0x^3 + 2x^4)
+    :returns: a list representing multplication of the two polynomes
     '''
     if not polyn_a:
         return polyn_b
@@ -163,6 +183,12 @@ def pre_get_stirlings(max_nm, needed, verbose=True):
     and as  s(whatever, 0) = 0 :
       s(n+1, 1) = -n * s(n, 1)
     keep only needed stirling numbers (necessary for large communities)
+
+    :argument max_nm: max number of individues in a species
+    :argument needed: list of individues count in species in our dataset, needed
+                      in order to limit the number of stirling numbers kept in
+                      memory.
+    :argument True verbose: displays information about state.
     '''
     STIRLINGS [1, 1] = mpfr (1)
     for one in xrange (1, max_nm):
@@ -194,20 +220,51 @@ def stirling (one, two):
     return STIRLINGS [one, two]
 
 
-def draw_contour_likelihood (abd, model=None, theta_range=None, m_range=None, num_dots=100):
+def fast_etienne_likelihood(abd, params, kda_x=None):
+    '''
+    same as Abundance inner function, but takes advantage of constant
+    m value when varying only theta.
+
+    :argument abd: Abundance object
+    :argument params: list containing theta and m
+    :argument kda_x: precimputed list of exp(kda + ind*immig)
+    '''
+    theta     = params[0]
+    immig     = float (params[1]) / (1 - params[1]) * (abd.J - 1)
+    log_immig = log (immig)
+    theta_s   = theta + abd.S
+    kda       = abd._kda
+    if not kda_x:
+        kda_x = [exp (kda [val] + val * log_immig) for val in xrange (abd.J - abd.S)]
+    poch1 = exp (abd._factor + log (theta) * abd.S - \
+                 lpoch (immig, abd.J) + \
+                 log_immig * abd.S + lngamma(theta))
+    gam_theta_s = gamma (theta_s)
+    lik = mpfr(0.0)
+    for val in xrange (abd.J - abd.S):
+        lik += poch1 * kda_x[val] / gam_theta_s
+        gam_theta_s *= theta_s + val
+    return ((-log (lik)), kda_x)
+
+
+def draw_contour_likelihood (abd, model=None, theta_range=None,
+                             m_range=None, num_dots=100, local_optima=True,
+                             write_lnl=False):
     """
-    draw contour plot of the log likelihood of a given abundance to fit Etienne model
+    Draw contour plot of the log likelihood of a given abundance to fit Etienne model.   
 
     :argument abd: Abundance object
     :argument None model: model name, if None current model is used
     :argument None theta_range: minimum and maximum value of theta as list. If None, goes from 1 to number of species (S)
     :argument None m_range:  minimum and maximum value of m as list. If None, goes from 0 to 1
     :argument 100 num_dots: Number of dots to paint
+    :argument True local_optima: display all local optima founds as white cross
+    :argument False write_lnl: allow to write likelihood values manually by left click on the contour plot.
     """
     if not theta_range:
         theta_range = [1, int (abd.S)]
     if not m_range:
-        m_range = [1e-16, 1-1e-16]
+        m_range = [1e-16, 1-1e-9]
     if not model:
         model = abd.get_current_model_name()
     
@@ -215,7 +272,7 @@ def draw_contour_likelihood (abd, model=None, theta_range=None, m_range=None, nu
     y = np.linspace(m_range[0], m_range[1], num_dots)
 
     if model == 'etienne':
-        lnl_fun = abd.etienne_likelihood
+        lnl_fun = fast_etienne_likelihood
     elif model=='ewens':
         lnl_fun = lambda x: abd.ewens_likelihood(x[0])
     elif model == 'lognorm':
@@ -223,20 +280,52 @@ def draw_contour_likelihood (abd, model=None, theta_range=None, m_range=None, nu
     else:
         raise Exception ('Model not available.')
 
+    abd.set_current_model(model)
     z = np.zeros ((num_dots, num_dots))
-    for k, i in enumerate(x):
-        print k, 'of', num_dots
-        for l, j in enumerate (y):
-            lnl = -lnl_fun ([i, j])
-            z[l][k] = lnl
+    if model=='etienne':
+        kdas = {}
+        for k, i in enumerate(x):
+            print k, 'of', num_dots
+            for l, j in enumerate (y):
+                if not j in kdas:
+                    lnl, kda_x = lnl_fun (abd, [i, j])
+                    lnl = -lnl
+                    kdas[j] = kda_x
+                else:
+                    lnl = -lnl_fun (abd, [i, j], kda_x=kdas[j])[0]
+                z[l][k] = lnl
+    else:
+        for k, i in enumerate(x):
+            print k, 'of', num_dots
+            for l, j in enumerate (y):
+                lnl = -lnl_fun ([i, j])
+                z[l][k] = lnl
+
+    if local_optima:
+        loc_opt = []
+        for i in xrange(1, len(z)-1):
+            for j in xrange(1, len(z)-1):
+                if z[i][j] > z[i][j-1] and \
+                   z[i][j] > z[i][j+1] and \
+                   z[i][j] > z[i-1][j] and \
+                   z[i][j] > z[i+1][j]:
+                    loc_opt.append ((i, j))
+        for i, j in loc_opt:
+            pyplot.plot(x[j], y[i], color='w', marker='x')
 
     # define number of color categories... perhaps not the best way
-    diag = sorted (list (z.diagonal()))
-    diff = abs (z.max() - max (diag))
-    levels = diag + list (np.arange (z.max(), max (diag), diff/num_dots))
-    
+    perc10 = np.percentile(z, 10)
+    perc90 = np.percentile(z, 90)
+    levels = list (np.arange (perc90, perc10, -(perc90-perc10)/num_dots))[::-1] + \
+             list (np.arange (perc90, z.max(), (z.max()-perc90)/num_dots))[1:] + [z.max()]
+    pyplot.plot(abd.theta, abd.m, color='w', marker='*')
     pyplot.contourf (x, y, z, levels)
     pyplot.colorbar (format='%.3f')
+    pyplot.vlines(abd.theta, 0, abd.m, color='w', linestyle='dashed')
+    pyplot.hlines(abd.m, 0, abd.theta, color='w', linestyle='dashed')    
+    if write_lnl:
+        fig = pyplot.contour (x, y, z, levels)
+        pyplot.clabel (fig, inline=1, fontsize=10, colors='black', manual=True)
     pyplot.title ("Log likelihood of abundance under Etienne model")
     pyplot.xlabel ("theta")
     pyplot.ylabel ("m")

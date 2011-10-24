@@ -18,7 +18,7 @@ from os.path          import isfile
 from sys              import stdout
                       
 from utils    import table, factorial_div, mul_polyn, shannon_entropy
-from utils    import lpoch, pre_get_stirlings, stirling, mean, std
+from utils    import lpoch, pre_get_stirlings, stirling## , mean , std
 from ecolopy.ecological_model import EcologicalModel
 
 class Abundance (object):
@@ -65,9 +65,9 @@ class Abundance (object):
         self.m         = None
         self.I         = None
         self.lnL       = None
+        self._factor   = None
         self.__models  = {}
         self.__current_model = None
-        self.__factor  = None
 
 
     def __str__(self):
@@ -161,7 +161,7 @@ class Abundance (object):
         for spe in xrange (max (self.abund)):
             factor -= lngamma (phi[spe] + 1)
         lnl = mpfr (lpoch (theta, self.J)) - log (theta) * self.S - factor
-        self.__factor = factor
+        self._factor = factor
         return lnl
 
 
@@ -198,14 +198,14 @@ class Abundance (object):
         :returns: log likelihood of given theta and I
         
         '''
-        if not self.__factor: # define it
+        if not self._factor: # define it
             self.ewens_optimal_params()
         kda       = self._kda
         theta     = params[0]
         immig     = float (params[1]) / (1 - params[1]) * (self.J - 1)
         log_immig = log (immig)
         theta_s   = theta + self.S
-        poch1 = exp (self.__factor + log (theta) * self.S - \
+        poch1 = exp (self._factor + log (theta) * self.S - \
                      lpoch (immig, self.J) + \
                      log_immig * self.S + lngamma(theta))
         gam_theta_s = gamma (theta_s)

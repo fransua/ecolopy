@@ -7,3 +7,8 @@ Some utilities
 .. autofunction:: shannon_entropy
 .. autofunction:: draw_contour_likelihood
 .. autofunction:: draw_shannon_distrib
+.. autofunction:: fast_etienne_likelihood
+.. autofunction:: pre_get_stirlings
+.. autofunction:: mul_polyn
+.. autofunction:: table
+

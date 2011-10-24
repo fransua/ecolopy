@@ -219,8 +219,13 @@ Generate contour image of likelihood
 .. _contour-fig:
 
 .. figure:: ../ex_figures/contour_lnl.png
+  :scale: 65 %
 
-  Contour graph representing log likelihood values of BCI dataset fitting Etienne model with different values of theta and m.
+  Contour graph representing log likelihood values of BCI dataset fitting Etienne 
+  model with different values of theta and m. Global optima computed by the 
+  optimization is found here at the intersection of dashed lines, while local 
+  optimas are marked by white crosses (7 of them are found, including global 
+  optima).
 
 In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood (:num:`Figure #contour-fig`)
 
