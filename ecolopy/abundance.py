@@ -15,7 +15,7 @@ from scipy.optimize   import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
 from gmpy2            import mpfr, log, exp, lngamma, gamma
 from cPickle          import dump, load
 from os.path          import isfile
-from sys              import stdout
+from sys              import stdout, stderr
                       
 from utils    import table, factorial_div, mul_polyn, shannon_entropy
 from utils    import lpoch, pre_get_stirlings, stirling## , mean , std
@@ -328,7 +328,7 @@ class Abundance (object):
         return self.S * log (theta) + lngamma (theta) - lngamma (theta + self.J)
 
 
-    def test_neutrality (self, model='ewens', gens=100, give_h=False):
+    def test_neutrality (self, model='ewens', gens=100, give_h=False, fix_s=False, tries=1000):
         '''
         test for neutrality comparing shanon entropy
         if (Hobs > Hrand_neut) then eveness of observed data is
@@ -337,6 +337,8 @@ class Abundance (object):
         :argument ewens model: model name otherwise, current model is used
         :argument 100 gens: number of random neutral distributions to generate
         :argument False give_h: also return list of shannon entropies
+        :argument False fix_s: decide wether to fix or not the number of species for the generation of random neutral communities
+        :argument False tries: in case S is fixed, determines the number of tries in order to obtain the exact same number of species as original comunity. In case The number of tries is exceeded, an ERROR message is displayed, and p-value returned is 1.0.
         :returns: p_value anf if give_h also returns shannon entropy of
         all random neutral abundances generated
         '''
@@ -348,7 +350,16 @@ class Abundance (object):
             return None
         neut_h = []
         for _ in xrange (gens):
-            tmp = model.rand_neutral (inds)
+            if fix_s:
+                for _ in xrange (tries):
+                    tmp = model.rand_neutral (inds)
+                    if len(tmp) == self.S:
+                        break
+                else:
+                    stderr.write('ERROR: Unable to obtain S by simulation')
+                    return 1.0
+            else:
+                tmp = model.rand_neutral (inds)
             l_tmp = sum (tmp)
             neut_h.append ((fast_shannon (tmp) + l_tmp*log(l_tmp))/l_tmp)
             pval += neut_h[-1] < self.shannon
