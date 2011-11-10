@@ -339,8 +339,7 @@ class Abundance (object):
         :argument False give_h: also return list of shannon entropies
         :argument False fix_s: decide wether to fix or not the number of species for the generation of random neutral communities
         :argument False tries: in case S is fixed, determines the number of tries in order to obtain the exact same number of species as original comunity. In case The number of tries is exceeded, an ERROR message is displayed, and p-value returned is 1.0.
-        :returns: p_value anf if give_h also returns shannon entropy of
-        all random neutral abundances generated
+        :returns: p_value anf if give_h also returns shannon entropy of all random neutral abundances generated
         '''
         fast_shannon = lambda abund: sum ([-spe * log(spe) for spe in abund])
         pval = 0
@@ -357,7 +356,9 @@ class Abundance (object):
                         break
                 else:
                     stderr.write('ERROR: Unable to obtain S by simulation')
-                    return 1.0
+                    if give_h:
+                        return float('nan'), []
+                    return float('nan')
             else:
                 tmp = model.rand_neutral (inds)
             l_tmp = sum (tmp)
