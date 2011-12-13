@@ -257,7 +257,7 @@ class Abundance (object):
         
         '''
         # define bounds
-        bounds = [(1, self.S), (1e-49, 1-1e-49)]
+        bounds = [(0, self.S), (1e-49, 1-1e-49)]
         all_ok  = True
         # define starting values
         if 'ewens' in self.__models:
