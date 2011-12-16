@@ -27,6 +27,7 @@ def generate_random_neutral_abundance (model_name, size, **kwargs):
     :argument model_name: model name (ewens, etienne, lognorm)
     :argument size: size of the community (J), if lognormal distribution size should be equal to number of species (S)
     :returns: random neutral distribution of abundance
+
     other args should be of kind theta, I, m
     
     **Example:**
@@ -35,7 +36,6 @@ def generate_random_neutral_abundance (model_name, size, **kwargs):
     
       import ecolopy
       ecolopy.generate_random_neutral_abundance('ewens', 100, theta=12, I=12)
-      
     '''
     # import inside because otherwise strange never-ending import...
     from ecolopy.ecological_model import EcologicalModel
@@ -95,13 +95,11 @@ def mul_polyn(polyn_a, polyn_b):
     '''
     computes the product of 2 polynomes, depending of the differences in length
     of the two polynomes, this function will call one of:
-      * _mul_uneq_polyn: when length of polyn_a is >= length of polyn_b, will iterate over coeefficient.
-      * _mul_simil_polyn: in case both polynomes have equal length, will iterate over indices.
+    * _mul_uneq_polyn: when length of polyn_a is >= length of polyn_b, will iterate over coeefficient.
+    * _mul_simil_polyn: in case both polynomes have equal length, will iterate over indices.
 
     to test multiplication of pylnomes try equality of the two functions:
-            _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b)
-                                ==
-            _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)
+    mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b) == _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)
 
     **Example:**
     ::
@@ -115,6 +113,7 @@ def mul_polyn(polyn_a, polyn_b):
     :argument polyn_a: list of indices of polynome
     :argument polyn_b: list of indices of polynome (e.g.: [1,3,5,0,2] for 2 + 3^x + 5x^2 + 0x^3 + 2x^4)
     :returns: a list representing multplication of the two polynomes
+
     '''
     if not polyn_a:
         return polyn_b
@@ -179,9 +178,13 @@ def _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b):
 def pre_get_stirlings(max_nm, needed, verbose=True):
     '''
     takes advantage of recurrence function:
-      s(n, m) = s(n-1, m-1) - (n-1) * s(n-1, m)
+
+    * s(n, m) = s(n-1, m-1) - (n-1) * s(n-1, m)
+
     and as  s(whatever, 0) = 0 :
-      s(n+1, 1) = -n * s(n, 1)
+
+    * s(n+1, 1) = -n * s(n, 1)
+
     keep only needed stirling numbers (necessary for large communities)
 
     :argument max_nm: max number of individues in a species
@@ -189,6 +192,7 @@ def pre_get_stirlings(max_nm, needed, verbose=True):
                       in order to limit the number of stirling numbers kept in
                       memory.
     :argument True verbose: displays information about state.
+
     '''
     STIRLINGS [1, 1] = mpfr (1)
     for one in xrange (1, max_nm):

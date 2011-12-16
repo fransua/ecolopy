@@ -3,6 +3,7 @@ Abundance Class
 
 .. currentmodule:: ecolopy.abundance
 
-.. autoclass:: ecolopy.Abundance
+.. autoclass:: Abundance
    :members:
    :no-undoc-members:
+

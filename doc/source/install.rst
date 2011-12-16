@@ -48,6 +48,15 @@ and afterward it is necessary to download and install gmpy2 from here:
 
 http://code.google.com/p/gmpy/downloads/list
 
+unzip archive
+
+::
+  
+  unzip gmpy2-2.xxx.zip
+  cd gmpy2-2.xxx
+  sudo python setup.py install
+
+
 Installing EcoloPy
 ==================
 
