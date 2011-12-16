@@ -1,7 +1,7 @@
 Abundance Class
 ===============
 
-.. currentmodule:: ecolopy
+.. currentmodule:: ecolopy.abundance
 
 .. autoclass:: ecolopy.Abundance
    :members:

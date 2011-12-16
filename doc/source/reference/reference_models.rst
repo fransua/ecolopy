@@ -1,7 +1,7 @@
 EcologicalModel Class
 =====================
 
-.. currentmodule:: ecolopy
+.. currentmodule:: ecolopy.ecological_model
 
 .. autoclass:: ecolopy.EcologicalModel
    :members:

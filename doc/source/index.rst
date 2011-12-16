@@ -3,16 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-UNTB+ (EcoloPy)
+EcoloPy-UNTBgen
 ***************
 
 **a Python package to test for Unified Neutral Theory of Biodiversity and biogeography in Large dataset.**
+EcoloPy deal with species abundance and diversity data. It allows to fit this data into ecological models and implements some statistical tests.
+It is designed to deal with large dataset like genetic element content of mammalian genomes.
 
 source available for download here:
-https://gitorious.org/ecology/ecology
+https://gitorious.org/ecolopy
 
 PDF version of this tutorial can be downloaded here:
-http://bioinfo.cipf.es/fransua/html/EcoloPy.pdf
+http://bioinfo.cipf.es/fransua/ecolopy/EcoloPy.pdf
 
 -------------------
 

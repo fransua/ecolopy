@@ -43,7 +43,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'EcoloPy'
+project = u'EcoloPy-UNTBgen'
 copyright = u'2011, Francois Serra, Hernán Dopazo'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -182,7 +182,7 @@ htmlhelp_basename = 'EcoloPydoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'EcoloPy.tex', u'EcoloPy Documentation',
+  ('index', 'EcoloPy.tex', u'EcoloPy-UNTBgen Documentation',
    u'François Serra and Hernán Dopazo', 'manual'),
 ]
 

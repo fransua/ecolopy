@@ -14,13 +14,9 @@ Just after counting species abundances in an ecosystem
 Load Abundance
 --------------
 
-Abundance is a class, and derived objects represent simply a distribution of
-species abundance , with associated function in order to calculate descriptive
-statistics or to fit it to evolutionary models.
+Abundance is a class, and derived objects represent simply a distribution of species abundance , with associated function in order to calculate descriptive statistics or to fit it to evolutionary models.
 
-The data needed to create this object consists on a list of values corresponding
-to the abundance of each species. We can either give to Abundance a python list
-of values:
+The data needed to create this object consists on a list of values corresponding to the abundance of each species. We can either give to Abundance a python list of values:
 ::
 
   Abundance ([1, 4, 4, 12, 54, 68, 32, 15])
@@ -43,8 +39,7 @@ mydata.txt would contain the same list of values, one per row:
   32
   15
 
-In the next step we are going to create an object 'Abundance' that will
-represent the distribution of abundance of the well known/studied BCI dataset.
+In the next step we are going to create an object :func:`ecolopy.Abundance` that will represent the distribution of abundance of the well known/studied BCI dataset.
 
 We are going to load this object under the name 'abd':
 
@@ -53,8 +48,7 @@ We are going to load this object under the name 'abd':
   from ecolopy import Abundance
   abd = Abundance ('bci_full.txt')
 
-In order to see quickly how does this abundance looks like, we can use the print
-command:
+In order to see quickly how does this abundance looks like, we can use the print command:
 
 ::
 
@@ -76,7 +70,7 @@ With:
 
 * Number of individuals correspond to the total of the given community
 * Number of species should correspond to the number of element in your input list, or to the number of line in your input file
-* Shannon entropy is computed according to:
+* Shannon entropy [Shannon1948]_ is computed according to:
 
 .. math::
   :nowrap:
@@ -93,7 +87,7 @@ X being the number of individuals for each species and n the number of species.
 
   abd = Abundance ('bci_full.txt', j_tot=10000000)
 
-* Models computed: Abundance can be associated to an Ecological model, the user
+* Models computed: :func:`ecolopy.Abundance` can be associated to an Ecological model, the user
   need first to compute them.
 * Current Model: once computed, we can associate our abundance to a given model
 * theta: given by the model
@@ -108,6 +102,8 @@ Once our distribution of abundances loaded into an Abundance object, EcoloPy pro
 
 Ewens model
 -----------
+
+As described by Hubbell [Hubbell2001]_ 'Ewens model' uses Ewens sampling formula [Ewens1972]_ in order to explain the distribution and abundance of species.
 
 This model assumes that:
 
@@ -150,7 +146,7 @@ to load this model as our current model, just type:
 Etienne model
 ^^^^^^^^^^^^^
 
-Now we can run an other model like the one proposed by Etienne (2005), just type
+Now we can run an other model like the one proposed by Etienne [Etienne2005]_, just type
 
 ::
 
@@ -178,7 +174,7 @@ Now we can run an other model like the one proposed by Etienne (2005), just type
 Best optimization strategy for Etienne model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-etienne_optimal_params function allows to define the optimization strategy to use (see scipy.optimize documentation).
+:func:`ecolopy.Abundance.etienne_optimal_params` function allows to define the optimization strategy to use all from Scipy [Jones2001]_ (see scipy.optimize documentation).
 The fmin optimization strategy is the one usually used, it is fast, but do not allow to set bounds for 
 the values of parameters to optimize, sometimes ending with values of theta almost infinite. 
 
@@ -212,6 +208,7 @@ A simple way to find the best optimization would be:
   # load it as 'etienne' model
   abd.set_model (met)
 
+*Also it is a good thing to try different starting values for optimization, by default* :func:`ecolopy.Abundance.etienne_optimal_params` *will use values from Ewens model as starting values.*
 
 Generate contour image of likelihood
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -221,11 +218,7 @@ Generate contour image of likelihood
 .. figure:: ../ex_figures/contour_lnl.png
   :scale: 65 %
 
-  Contour graph representing log likelihood values of BCI dataset fitting Etienne 
-  model with different values of theta and m. Global optima computed by the 
-  optimization is found here at the intersection of dashed lines, while local 
-  optimas are marked by white crosses (7 of them are found, including global 
-  optima).
+  Contour graph representing log likelihood values of BCI dataset fitting Etienne  model with different values of theta and m. Global optima computed by the optimization is found here at the intersection of dashed lines, while local optimas are marked by white crosses (7 of them are found, including global optima).
 
 In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood (:num:`Figure #contour-fig`)
 
@@ -269,9 +262,7 @@ Comparing Models
 Browsing parameters
 -------------------
 
-Now we have fit our abundance to some models, a summary of corresponding
-parameters are available through the print function, but each of them can also
-be reach like this:
+Now we have fit our abundance to some models, a summary of corresponding parameters are available through the print function, but each of them can also be reach like this:
 
 ::
 
@@ -298,7 +289,8 @@ Searching for best model
 ------------------------
 
 We have run now several models, within which the nested models ewens and etienne, for those we can run a likelihood ratio test using the lrt function.
-This function will compute a chi square test for 2 times the difference in likelihoods, with one degree of freedom (corresponding to the estimation of parameter m):
+
+This function will compute a chi square test for 2 times the difference in likelihoods, with one degree of freedom (corresponding to the estimation of parameter *m*):
 
 ::
 
@@ -390,3 +382,16 @@ Once done EcoloPy allow user to save Abundance object and EcologicalModels objec
   # (re)load it
   abd = Abundance ('stored_bci.pik')
 
+References
+==========
+
+
+.. [Etienne2005] Rampal S Etienne, A new sampling formula for neutral biodiversity. Ecology Letters 8(3) (2005), 253–260.
+
+.. [Ewens1972] Waren J Ewens, The sampling theory of selectively neutral alleles. Theoretical population biology 3(1) (1972), 87–112.
+
+.. [Hubbell2001] Stephen P Hubbell, The unified Neutral Theory of Biodiversity and Biogeography. Princeton University Press, 2001.
+
+.. [Jones2001] Eric Jones, Travis Oliphant, Pearu Peterson, and Others, Scipy: Open source scientific tools for Python, 2001.
+
+.. [Shannon1948] C E Shannon, A mathematical theory of communication, vol. 5. The Bell System Technical Journal, 1948.
