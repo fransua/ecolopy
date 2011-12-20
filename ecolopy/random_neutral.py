@@ -13,14 +13,14 @@ __version__ = "0.13"
 
 from random import random
 from utils  import table
-from math  import exp
+#from math  import exp
 from scipy.stats import lognorm
 
 def rand_neutral_etienne (inds, theta, immig):
     '''
     generates random distribution according to J, theta and I
 
-    :argument inds: number of individues in community (J)
+    :argument inds: number of individuals in community (J)
     :argument theta: corresponding to the model
     :argument immig: immigration rate (I)
 
@@ -51,7 +51,7 @@ def rand_neutral_ewens (inds, theta):
     '''
     generates random distribution according to J and theta
     
-    :argument inds: number of individues in community (J)
+    :argument inds: number of individuals in community (J)
     :argument theta: corresponding to the model
 
     :returns: distribution of abundance (list)
@@ -73,9 +73,9 @@ def rand_lognormal (inds, shape, loc, scale):
     '''
     generates random lognormal distribution
     
-    :argument inds: number of individues in community (J)
-    :argument sd: usually standard deviation of the distribution of abundaces
-    :argument mu: usually mean of the distribution of abundaces
+    :argument inds: number of individuals in community (J)
+    :argument sd: usually standard deviation of the distribution of abundances
+    :argument mu: usually mean of the distribution of abundances
     :returns: distribution of abundance (list)
     '''
     return [int (i+1) for i in lognorm.rvs (shape, scale=scale, loc=loc,

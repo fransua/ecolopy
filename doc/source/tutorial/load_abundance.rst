@@ -39,7 +39,7 @@ mydata.txt would contain the same list of values, one per row:
   32
   15
 
-In the next step we are going to create an object :func:`ecolopy.Abundance` that will represent the distribution of abundance of the well known/studied BCI dataset.
+In the next step we are going to create an object :func:`ecolopy.abundance.Abundance` that will represent the distribution of abundance of the well known/studied BCI dataset.
 
 We are going to load this object under the name 'abd':
 
@@ -87,7 +87,7 @@ X being the number of individuals for each species and n the number of species.
 
   abd = Abundance ('bci_full.txt', j_tot=10000000)
 
-* Models computed: :func:`ecolopy.Abundance` can be associated to an Ecological model, the user
+* Models computed: :func:`ecolopy.abundance.Abundance` can be associated to an Ecological model, the user
   need first to compute them.
 * Current Model: once computed, we can associate our abundance to a given model
 * theta: given by the model
@@ -98,7 +98,7 @@ X being the number of individuals for each species and n the number of species.
 Fit to ecological model
 =======================
 
-Once our distribution of abundances loaded into an Abundance object, EcoloPy proposes a set of of ecological models that we can try to fit to our data.
+Once our distribution of abundances loaded into an Abundance object, EcoloPy proposes a set of ecological models that we can try to fit to our data.
 
 Ewens model
 -----------
@@ -174,7 +174,7 @@ Now we can run an other model like the one proposed by Etienne [Etienne2005]_, j
 Best optimization strategy for Etienne model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:func:`ecolopy.Abundance.etienne_optimal_params` function allows to define the optimization strategy to use all from Scipy [Jones2001]_ (see scipy.optimize documentation).
+:func:`ecolopy.abundance.Abundance.etienne_optimal_params` function allows to define the optimization strategy to use all from Scipy [Jones2001]_ (see scipy.optimize documentation).
 The fmin optimization strategy is the one usually used, it is fast, but do not allow to set bounds for 
 the values of parameters to optimize, sometimes ending with values of theta almost infinite. 
 
@@ -208,7 +208,7 @@ A simple way to find the best optimization would be:
   # load it as 'etienne' model
   abd.set_model (met)
 
-*Also it is a good thing to try different starting values for optimization, by default* :func:`ecolopy.Abundance.etienne_optimal_params` *will use values from Ewens model as starting values.*
+*Also it is a good thing to try different starting values for optimization, by default* :func:`ecolopy.abundance.Abundance.etienne_optimal_params` *will use values from Ewens model as starting values.*
 
 Generate contour image of likelihood
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -218,9 +218,9 @@ Generate contour image of likelihood
 .. figure:: ../ex_figures/contour_lnl.png
   :scale: 65 %
 
-  Contour graph representing log likelihood values of BCI dataset fitting Etienne  model with different values of theta and m. Global optima computed by the optimization is found here at the intersection of dashed lines, while local optimas are marked by white crosses (7 of them are found, including global optima).
+  Contour graph representing log likelihood values of BCI dataset fitting Etienne  model with different values of theta and m. Global optima computed by the optimization is found here at the intersection of dashed lines, while local optima are marked by white crosses (7 of them are found, including global optima).
 
-In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood (:num:`Figure #contour-fig`)
+In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood :num:`Figure #contour-fig` (:func:`ecolopy.utils.draw_contour_likelihood`).
 
 
 ::
@@ -231,10 +231,10 @@ In the case of Etienne model EcoloPy allow user to draw contour frame of likelih
 
 
 
-Lognormal model
----------------
+Log-normal model
+----------------
 
-In ecolopy is also implemented log normal model:
+In EcoloPy is also implemented log normal model:
 
 ::
 
@@ -275,14 +275,14 @@ Now we have fit our abundance to some models, a summary of corresponding paramet
   abd.lnL
   # 318.84864864917472
 
-or you can get any attribute thruogh the model objet linked to our abundance:
+or you can get any attribute through the model linked to our abundance:
 ::
 
   model = abd.get_model('ewens')
   model.lnL
   # 318.84864864917472
 
-All those values coorespond to the current model (in this case ewens).
+All those values correspond to the current model (in this case ewens).
 
 
 Searching for best model
@@ -338,21 +338,33 @@ Testing for neutrality
 Getting significance of deviation from neutrality
 -------------------------------------------------
 
-In order to test if our distribution of abundance is neutral, Ecolopy implements a test based on comparing the distribution of values of Shannon entropies compared to the observed one.
+In order to test if our distribution of abundance is neutral, Ecolopy implements a test based on comparing the distribution of values of Shannon entropies compared to the observed one (:func:`ecolopy.abundance.Abundance.test_neutrality`).
 
 ::
 
-  # call test_neutrality funtion with the give_h option, making it to return the list of simulated entropies
+  # call test_neutrality function with the give_h option, making it to return the list of simulated entropies
   pval, neut_h = abd.test_neutrality(model='etienne', gens=10000, give_h=True)
   print pval
   # 0.1492
 
 Then we can conclude that our dataset (BCI) do not deviates significantly from neutrality.
 
+Variations:
+^^^^^^^^^^^
+* **more restrictive** test can be done by fixing the number of species (S) to the observed number. For our example S-fixed would fix it to 225, and the result of such test would be:
+::
+
+  abd.test_neutrality(model='etienne', gens=10000, fix_s=True)
+  # 0.0977
+
+* another test can also be conducted through the same function, based on the **comparison of likelihoods** instead of Shannon's index [Etienne2007]_
+
+
+
 Plotting distribution of simulations:
 -------------------------------------
 
-We can also draw the distribution of simulated entropies and visually compare them to the observed value (:num:`Figure #shannon-hist`).
+We can also draw the distribution of simulated entropies and visually compare them to the observed value :num:`Figure #shannon-hist` (:func:`ecolopy.utils.draw_shannon_distrib`).
 
 ::
 
@@ -373,7 +385,7 @@ We can also draw the distribution of simulated entropies and visually compare th
 Saving/Loading Abundance object
 ===============================
 
-Once done EcoloPy allow user to save Abundance object and EcologicalModels object into cPikle with dum_abundance and load_abundance functions.
+Once done EcoloPy allow user to save Abundance object and EcologicalModels object into cPikle with :func:`ecolopy.abundance.Abundance.dump_abundance` and :func:`ecolopy.abundance.Abundance.load_abundance` functions.
 
 ::
 
@@ -386,9 +398,11 @@ References
 ==========
 
 
-.. [Etienne2005] Rampal S Etienne, A new sampling formula for neutral biodiversity. Ecology Letters 8(3) (2005), 253–260.
+.. [Etienne2005] Rampal S Etienne, A new sampling formula for neutral biodiversity. Ecology Letters 8(3) (2005), 253-260.
 
-.. [Ewens1972] Waren J Ewens, The sampling theory of selectively neutral alleles. Theoretical population biology 3(1) (1972), 87–112.
+.. [Etienne2007] Rampal S Etienne, A neutral sampling formula for multiple samples and an ’exact’ test of neutrality. Ecology letters 10(7) (2007), 608-18.
+
+.. [Ewens1972] Waren J Ewens, The sampling theory of selectively neutral alleles. Theoretical population biology 3(1) (1972), 87-112.
 
 .. [Hubbell2001] Stephen P Hubbell, The unified Neutral Theory of Biodiversity and Biogeography. Princeton University Press, 2001.
 

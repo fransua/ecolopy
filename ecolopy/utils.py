@@ -2,7 +2,7 @@
 """
 13 Jul 2011
 
-some utils for abundance, essentially for computation of K(D,A)
+some utilities for abundance, essentially for computation of K(D,A)
 """
 
 __author__  = "Francois-Jose Serra"
@@ -16,7 +16,7 @@ try:
     from matplotlib import pyplot
     import numpy as np
 except ImportError:
-    print 'matplotlib or numpt not found'
+    print 'matplotlib or numpy not found'
 
 global STIRLINGS
 STIRLINGS = {}
@@ -25,7 +25,7 @@ STIRLINGS = {}
 def generate_random_neutral_abundance (model_name, size, **kwargs):
     '''
     :argument model_name: model name (ewens, etienne, lognorm)
-    :argument size: size of the community (J), if lognormal distribution size should be equal to number of species (S)
+    :argument size: size of the community (J), if log-normal distribution size should be equal to number of species (S)
     :returns: random neutral distribution of abundance
 
     other args should be of kind theta, I, m
@@ -54,10 +54,10 @@ def lpoch (z, m):
 def shannon_entropy(abund, inds):
     '''
     computes Shannon entropy (H) for a given abundance table
-    and number of individues.
+    and number of individuals.
 
     :argument abund: distribution of abundances as list
-    :returns: shannon entropy
+    :returns: Shannon entropy
     '''
     return (sum ([-spe * log(spe) for spe in abund]) + inds * log (inds)) / inds
 
@@ -68,7 +68,7 @@ def table (out, spp=None):
     any kind of data
 
     :argument out: species abundance
-    :returns: list of counts of individues by species
+    :returns: list of counts of individuals by species
     '''
     setout = set (out)
     if spp == None:
@@ -93,12 +93,12 @@ def factorial_div (one, two):
 
 def mul_polyn(polyn_a, polyn_b):
     '''
-    computes the product of 2 polynomes, depending of the differences in length
-    of the two polynomes, this function will call one of:
-    * _mul_uneq_polyn: when length of polyn_a is >= length of polyn_b, will iterate over coeefficient.
-    * _mul_simil_polyn: in case both polynomes have equal length, will iterate over indices.
+    computes the product of 2 polynomials, depending of the differences in length
+    of the two polynomials, this function will call one of:
+    * _mul_uneq_polyn: when length of polyn_a is >= length of polyn_b, will iterate over coefficient.
+    * _mul_simil_polyn: in case both polynomials have equal length, will iterate over factors.
 
-    to test multiplication of pylnomes try equality of the two functions:
+    to test multiplication of pylnomials try equality of the two functions:
     mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b) == _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)
 
     **Example:**
@@ -110,9 +110,9 @@ def mul_polyn(polyn_a, polyn_b):
       # will return: [mpfr('0.0'), mpfr('2.0'), mpfr('3.0'), mpfr('5.0')]
       # that is: 0 + 2x + 3x^2 + 5x^3
       
-    :argument polyn_a: list of indices of polynome
-    :argument polyn_b: list of indices of polynome (e.g.: [1,3,5,0,2] for 2 + 3^x + 5x^2 + 0x^3 + 2x^4)
-    :returns: a list representing multplication of the two polynomes
+    :argument polyn_a: list of indices of polynomial
+    :argument polyn_b: list of indices of polynomial (e.g.: [1,3,5,0,2] for 2 + 3^x + 5x^2 + 0x^3 + 2x^4)
+    :returns: a list representing multiplication of the two polynomials
 
     '''
     if not polyn_a:
@@ -139,7 +139,7 @@ def mul_polyn(polyn_a, polyn_b):
 
 def _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b):
     '''
-    fast polynomial multiplication when polynomes are nearly equal
+    fast polynomial multiplication when polynomials are nearly equal
     -> iterates over factors
     '''
     def mult_one (la, lb, stop, start=0):
@@ -164,7 +164,7 @@ def _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b):
 
 def _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b):
     '''
-    fast polynomial multiplication when 1 polynome >~ 2 times larger.
+    fast polynomial multiplication when 1 polynomial >~ 2 times larger.
     -> iterates over coefficients
     '''
     new = [mpfr(0)] * (len_a + len_b - 1)
@@ -187,8 +187,8 @@ def pre_get_stirlings(max_nm, needed, verbose=True):
 
     keep only needed stirling numbers (necessary for large communities)
 
-    :argument max_nm: max number of individues in a species
-    :argument needed: list of individues count in species in our dataset, needed
+    :argument max_nm: max number of individuals in a species
+    :argument needed: list of individuals count in species in our dataset, needed
                       in order to limit the number of stirling numbers kept in
                       memory.
     :argument True verbose: displays information about state.
@@ -213,7 +213,7 @@ def pre_get_stirlings(max_nm, needed, verbose=True):
 
 def stirling (one, two):
     '''
-    returns log unsingned stirling number, taking advantage of the fact that
+    returns log unsigned stirling number, taking advantage of the fact that
     if x+y if odd signed stirling will be negative.
     takes also advantage of recurrence function:
     s(n,m) = s(n-1, m-1) - (n-1) * s(n-1,m)
@@ -231,7 +231,7 @@ def fast_etienne_likelihood(abd, params, kda_x=None):
 
     :argument abd: Abundance object
     :argument params: list containing theta and m
-    :argument kda_x: precimputed list of exp(kda + ind*immig)
+    :argument kda_x: precomputed list of exp(kda + ind*immig)
     '''
     theta     = params[0]
     immig     = float (params[1]) / (1 - params[1]) * (abd.J - 1)
@@ -339,10 +339,10 @@ def draw_contour_likelihood (abd, model=None, theta_range=None,
 
 def draw_shannon_distrib(neut_h, obs_h):
     '''
-    draws distribution of shanon values for random neutral
+    draws distribution of Shannon values for random neutral
 
-    :argument neut_h: list of shannon entropies corresponding to simulation under neutral model
-    :argument obs_h: shannon entropy of observed distribution of abundance
+    :argument neut_h: list of Shannon entropies corresponding to simulation under neutral model
+    :argument obs_h: Shannon entropy of observed distribution of abundance
     
     '''
     neut_h = np.array ([float (x) for x in neut_h])
@@ -353,7 +353,7 @@ def draw_shannon_distrib(neut_h, obs_h):
                     facecolor='orange', alpha=0.3)
     pyplot.xlabel('Shannon entropy (H)')
     pyplot.ylabel('Number of observations over %s simulations' % (len (neut_h)))
-    pyplot.title("Histogram of entropies from %s simutations compared to \nobserved entropy (red), deviation computed from simulation" % (len (neut_h)))
+    pyplot.title("Histogram of entropies from %s simulations compared to \nobserved entropy (red), deviation computed from simulation" % (len (neut_h)))
     pyplot.show()
 
 

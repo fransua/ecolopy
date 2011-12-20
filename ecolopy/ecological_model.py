@@ -45,5 +45,18 @@ class EcologicalModel(object):
             return rand_lognormal (inds, self.theta, self.I, self.m)
         else:
             raise Exception ('No random simulation available for this model\n')
-        
+
+
+    def __str__(self):
+        """
+        for print
+        """
+        return '''EcologicalModel (object)
+    Model name                : %d
+    Theta                     : %s
+    I                         : %s
+    m                         : %s
+    lnL                       : %s
+    ''' % (self.name, self.theta, self.I, self.m, self.lnL)
+
 

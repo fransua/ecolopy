@@ -77,7 +77,7 @@ class Abundance (object):
         return '''Abundance (object)
     Number of individuals (J) : %d
     Number of species (S)     : %d
-    Shannon entropy (shannon) : %.4f
+    Shannon's index (shannon) : %.4f
     Metacommunity size (j_tot): %d
     Models computed           : %s
     Current model             : %s
@@ -148,7 +148,7 @@ class Abundance (object):
 
     def ewens_likelihood (self, theta):
         '''
-        get likelihood value of Ewens according to parthy/tetame
+        get likelihood value of Ewens according to Parthy/Tetame (Jabot 2008)
         
         :argument theta: value of theta
         :returns: likelihood
@@ -189,12 +189,12 @@ class Abundance (object):
 
     def etienne_likelihood(self, params):
         '''
-        logikelihood function
+        log-likelihood function
         
         :argument params: a list of 2 parameters:
         
-          * theta = parmas[0]
-          * I     = parmas[1]
+          * theta = params[0]
+          * m     = params[1]
         :returns: log likelihood of given theta and I
         
         '''
@@ -218,7 +218,7 @@ class Abundance (object):
 
     def ewens_optimal_params (self):
         '''
-        Main function to optimize theta using theta likelihood function, acording to Ewens
+        Main function to optimize theta using theta likelihood function, according to Ewens
         model.
         '''
         theta_like   = lambda x: -self._ewens_theta_likelihood (x)
@@ -233,7 +233,7 @@ class Abundance (object):
 
     def lognorm_optimal_params (self):
         '''
-        Main function to get optimal params for lognormal distribution according to abundance
+        Main function to get optimal parameters for log-normal distribution according to abundance
         '''
         ## USED BEFORE WITH LOGNORM_LIKELIHOOD
         ## data = self.abund
@@ -250,8 +250,8 @@ class Abundance (object):
     def etienne_optimal_params (self, method='fmin', verbose=True):
         '''
         Main function to optimize theta and I using etienne likelihood function
-        using scipy package, values that are closest to the one proposed
-        by tetame, are raised by fmin function.
+        using Scipy package, values that are closest to the one proposed
+        by Tetame, are raised by fmin function.
 
         :argument fmin method: optimization strategy, can be one of fmin, slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)
         
@@ -259,13 +259,14 @@ class Abundance (object):
         # define bounds
         bounds = [(0, self.S), (1e-49, 1-1e-49)]
         all_ok  = True
+        err = ''
         # define starting values
         if 'ewens' in self.__models:
             m = self.get_model ('ewens')
             start = m.theta, m.m
         else:
             start = self.S/2, 0.5
-        # conpute kda
+        # compute kda
         if not 'etienne' in self.__models:
             if verbose:
                 print "\nGetting K(D,A) according to Etienne 2005 formula:"
@@ -300,7 +301,7 @@ class Abundance (object):
         self.__models['etienne'] = EcologicalModel ('etienne', theta=theta,
                                                     m=mut, I=I, lnL=lnL)
         if not all_ok:
-            raise Exception ('Optimization failed')
+            raise Exception ('Optimization failed\n', err)
 
 
     def set_current_model (self, name):
@@ -328,18 +329,20 @@ class Abundance (object):
         return self.S * log (theta) + lngamma (theta) - lngamma (theta + self.J)
 
 
-    def test_neutrality (self, model='ewens', gens=100, give_h=False, fix_s=False, tries=1000):
+    def test_neutrality (self, model='ewens', gens=100, give_h=False, fix_s=False, tries=1000,
+                         method='shannon', verbose=False):
         '''
-        test for neutrality comparing shanon entropy
-        if (Hobs > Hrand_neut) then eveness of observed data is
+        test for neutrality comparing Shannon entropy
+        if (Hobs > Hrand_neut) then evenness of observed data is
         higher then neutral
 
         :argument ewens model: model name otherwise, current model is used
         :argument 100 gens: number of random neutral distributions to generate
-        :argument False give_h: also return list of shannon entropies
-        :argument False fix_s: decide wether to fix or not the number of species for the generation of random neutral communities
-        :argument False tries: in case S is fixed, determines the number of tries in order to obtain the exact same number of species as original comunity. In case The number of tries is exceeded, an ERROR message is displayed, and p-value returned is 1.0.
-        :returns: p_value anf if give_h also returns shannon entropy of all random neutral abundances generated
+        :argument False give_h: also return list of Shannon entropies
+        :argument False fix_s: decide whether to fix or not the number of species for the generation of random neutral communities
+        :argument False tries: in case S is fixed, determines the number of tries in order to obtain the exact same number of species as original community. In case The number of tries is exceeded, an ERROR message is displayed, and p-value returned is 1.0.
+        :argument shannon method: can be either "Shannon" for comparing Shannon's entropies or "loglike" for comparing log-likelihood values (Etienne 2007). Last method is much more computationally expensive, as likelihood of neutral distribution must be calculated.
+        :returns: p_value if give_h also returns Shannon entropy (or likelihoods if method="loglike") of all random neutral abundances generated
         '''
         fast_shannon = lambda abund: sum ([-spe * log(spe) for spe in abund])
         pval = 0
@@ -349,6 +352,10 @@ class Abundance (object):
             return None
         neut_h = []
         for _ in xrange (gens):
+            if verbose:
+                stdout.write ("\r  Generating random neutral abundances %s out of %s" \
+                              % (_+1, gens))
+                stdout.flush ()
             if fix_s:
                 for _ in xrange (tries):
                     tmp = model.rand_neutral (inds)
@@ -362,8 +369,16 @@ class Abundance (object):
             else:
                 tmp = model.rand_neutral (inds)
             l_tmp = sum (tmp)
-            neut_h.append ((fast_shannon (tmp) + l_tmp*log(l_tmp))/l_tmp)
-            pval += neut_h[-1] < self.shannon
+            if method is 'shannon':
+                neut_h.append ((fast_shannon (tmp) + l_tmp*log(l_tmp))/l_tmp)
+                pval += neut_h[-1] < self.shannon
+            elif method is 'loglike':
+                tmp = Abundance(tmp)
+                tmp._get_kda(verbose=False)
+                neut_h.append(tmp.etienne_likelihood([model.theta,model.m]))
+                pval += neut_h[-1] < self.shannon
+        if verbose:
+            stdout.write ('\n')
         if give_h:
             return float (pval)/gens, neut_h
         return float (pval)/gens
@@ -405,10 +420,11 @@ class Abundance (object):
         del (self.__models['KDA'])
         del (self.__models['ABUND'])
 
+
     def load_abundance (self, infile):
         '''
         load params and kda with pickle from infile
-        WARNING: do not overright values of params.
+        WARNING: do not overwrite values of params.
 
         :argument infile: path of the outfile
 
@@ -478,7 +494,7 @@ class Abundance (object):
                 polyn1.append (coeff)
             if not polyn1:
                 polyn1.append(mpfr(1.))
-            # polyn1 exponential the number of individues for current species
+            # polyn1 exponential the number of individuals for current species
             polyn2 = polyn1[:]
             for _ in xrange (1, specabund[1][i]):
                 polyn1 = mul_polyn (polyn1, polyn2)
