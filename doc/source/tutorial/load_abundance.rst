@@ -94,6 +94,45 @@ X being the number of individuals for each species and n the number of species.
 * I: given by the model
 * m: given by the model
 
+An other way to see quickly how out abundance looks-like is to print relative species abundance curve (RSA) with :func:`ecolopy.abundance.Abundance.rsa_ascii`:
+::
+  print abd.rsa_ascii(pch='.', width=50, height=20)
+  """
+   (%) Relative
+  Abundances
+
+  8.0021 +.
+         | 
+         | ..
+         |   
+         |   ..
+         |     ...
+         |        ..
+         |          ..
+         |            .
+  0.5213 +             ....
+         |                 ..
+         |                   .....
+         |                        ...
+         |                           ...
+  0.1507 +                              .....
+         |                                   .....
+         |                                        ..
+         |                                          .....
+         |                                               ...
+  0.0435 +                                                  .
+         |                                                   ..
+         |                                                     ...
+         |                                                        .
+         |                                                         ...
+  0.0126 +                                                            ....
+         |                                                                ......
+  0.0000 +----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+         0    16   32   48   64   80   96   112  128  144  160  176  192  208  221
+  
+                                      Species rank                             
+  """
+
 
 Fit to ecological model
 =======================

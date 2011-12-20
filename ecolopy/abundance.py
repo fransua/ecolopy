@@ -16,7 +16,8 @@ from gmpy2            import mpfr, log, exp, lngamma, gamma
 from cPickle          import dump, load
 from os.path          import isfile
 from sys              import stdout, stderr
-                      
+from numpy            import arange
+
 from utils    import table, factorial_div, mul_polyn, shannon_entropy
 from utils    import lpoch, pre_get_stirlings, stirling## , mean , std
 from ecolopy.ecological_model import EcologicalModel
@@ -89,6 +90,53 @@ class Abundance (object):
            ', '.join (self.__models.keys()),
            self.__current_model.name if self.__current_model else None,
            self.theta, self.I, self.m, self.lnL)
+
+
+    def rsa_ascii (self, width=100, height=50, pch='o'):
+        """
+        Draw Relative Species Abundances curve.
+
+        :argument 100 width: width in term of characters
+        :argument 100 height: height in term of characters
+        :argument o pch: dot character
+
+        :returns: string corresponding to plot
+        
+        """
+        dots = sorted([float(x) for x in self.abund],reverse=True)
+        S = float(self.S)
+        J = float(self.J)
+        rabd = []
+        for d in dots:
+            rabd.append (log (100*d/J))
+        y_arange = sorted(arange(min(rabd), max(rabd), abs (min(rabd)- max(rabd))/height), reverse=True)
+        x_arange = sorted(arange(0, S, S/width))
+        y = 0
+        x = 0
+        spaces = ''
+        graph = '\n(%) Relative\nAbundances\n\n'
+        graph += '{0:<7.4f}+'.format (exp(max(rabd)))
+        for i, d in enumerate (rabd):
+            if d < y_arange[y]:
+                graph += '\n'
+                if not (y)%5 and y != 0:
+                    graph += '{0:<7.4f}+'.format (exp(y_arange[y]))
+                else:
+                    graph += ' '*7 + '|'
+                graph += spaces
+                while d < y_arange[y]:
+                    y+=1
+            if i > x_arange[x]:
+                graph += pch
+                spaces += ' '
+                if  x+1 >= width:
+                    break
+                x+= 1
+        graph += '\n'
+        graph += '0.0000 ' + ''.join(['+' if not x%5 else '-' for x in xrange(width+1)]) + '\n'
+        graph += ' '*7 + ''.join(['{0:<5}'.format(int(x_arange[x])) for x in xrange(0,width,5)]) + str( int(x_arange[-1])) + '\n\n'
+        graph += ' '*7 + '{0:^{1}}'.format('Species rank', width)
+        return graph
 
 
     def lrt (self, model_1, model_2, df=1):
