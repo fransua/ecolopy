@@ -91,6 +91,37 @@ def factorial_div (one, two):
         return mpfr (1.)
 
 
+def power_polyn(polyn_a, power):
+    '''
+    TODO: not integrated in K(D,A)
+
+    Recurrence function for polynomial at power *n*, that allows to build Pascal's triangle using Newton's binomial theorem:
+    
+    .. math::
+      :nowrap:
+
+      \\begin{eqnarray}
+        c^n_k = \\sum^m_{i=0} c^{n-1}_{k-i} a_i
+      \\end{eqnarray}
+
+    with *a* being the list of coefficients in the polynomial, *m* the number of elements (maximum factor + 1), *n* the power and *k* the current position in polynomial, or the current factor.
+    
+    :argument polyn_a: list of indices of polynomial
+    :argument power: power at which polynomial will be elevated
+    :returns: polynomial list
+
+    '''
+    # prepare table filled with 0
+    max_f = mpfr(len (polyn_a) - 1)
+    matrix = [ [mpfr(0) for _ in xrange (1 + max_f * (p+1))] for p in xrange (power + 1) ]
+    matrix[0][0] = mpfr(1)
+    for n in xrange (1,power+1):
+        man1 = matrix[n-1]
+        for k in xrange (1 + max_f * n):
+            matrix[n][k] = sum ((man1[k-i] * polyn_a[i] for i in xrange (min(max_f+1,k+1))))
+    return matrix[-1][:-int(max_f)]
+
+
 def mul_polyn(polyn_a, polyn_b):
     '''
     computes the product of 2 polynomials, depending of the differences in length

@@ -133,7 +133,7 @@ class Abundance (object):
                     break
                 x+= 1
         graph += '\n'
-        graph += '0.0000 ' + ''.join(['+' if not x%5 else '-' for x in xrange(width+1)]) + '\n'
+        graph += ' 1/inf ' + ''.join(['+' if not x%5 else '-' for x in xrange(width+1)]) + '\n'
         graph += ' '*7 + ''.join(['{0:<5}'.format(int(x_arange[x])) for x in xrange(0,width,5)]) + str( int(x_arange[-1])) + '\n\n'
         graph += ' '*7 + '{0:^{1}}'.format('Species rank', width)
         return graph
@@ -435,6 +435,7 @@ class Abundance (object):
     def _parse_infile (self):
         '''
         parse infile and return list of abundances
+        infile can contain several columns
         '''
         abundances = []
         lines = open (self.data_path).readlines()
@@ -442,7 +443,7 @@ class Abundance (object):
             self.load_abundance (self.data_path)
             return None
         for line in lines:
-            abundances.append (int (line.strip()))
+            abundances.append (int (line.strip().split('\t')))
         return abundances
 
 
@@ -544,6 +545,8 @@ class Abundance (object):
                 polyn1.append(mpfr(1.))
             # polyn1 exponential the number of individuals for current species
             polyn2 = polyn1[:]
+            # TODO: lets try with polyn2^(specabund[1][i]) * polyn1
+            # see  recurrence function of power of polynomial
             for _ in xrange (1, specabund[1][i]):
                 polyn1 = mul_polyn (polyn1, polyn2)
             # polyn = polyn * polyn1

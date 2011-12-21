@@ -48,6 +48,9 @@ We are going to load this object under the name 'abd':
   from ecolopy import Abundance
   abd = Abundance ('bci_full.txt')
 
+Quick descriptive statistics
+----------------------------
+
 In order to see quickly how does this abundance looks like, we can use the print command:
 
 ::
@@ -94,43 +97,53 @@ X being the number of individuals for each species and n the number of species.
 * I: given by the model
 * m: given by the model
 
+
+RSA curve
+^^^^^^^^^
+
 An other way to see quickly how out abundance looks-like is to print relative species abundance curve (RSA) with :func:`ecolopy.abundance.Abundance.rsa_ascii`:
 ::
-  print abd.rsa_ascii(pch='.', width=50, height=20)
+  print abd.rsa_ascii(pch='o', width=90, height=40)
   """
-   (%) Relative
+  (%) Relative
   Abundances
 
-  8.0021 +.
+  8.0021 +o
          | 
-         | ..
-         |   
-         |   ..
-         |     ...
-         |        ..
-         |          ..
-         |            .
-  0.5213 +             ....
-         |                 ..
-         |                   .....
-         |                        ...
-         |                           ...
-  0.1507 +                              .....
-         |                                   .....
-         |                                        ..
-         |                                          .....
-         |                                               ...
-  0.0435 +                                                  .
-         |                                                   ..
-         |                                                     ...
-         |                                                        .
-         |                                                         ...
-  0.0126 +                                                            ....
-         |                                                                ......
-  0.0000 +----+----+----+----+----+----+----+----+----+----+----+----+----+----+
-         0    16   32   48   64   80   96   112  128  144  160  176  192  208  221
+         | oo
+         |   o
+  2.6181 +    ooo
+         |       o
+         |        ooo
+  1.0319 +           oo
+         |             oo
+         |               o
+         |                o
+         |                 oooo
+  0.4067 +                     ooo
+         |                        oooo
+         |                            oooo
+         |                                oo
+         |                                  ooo
+  0.1603 +                                     oooo
+         |                                         ooooo
+         |                                              ooooo
+         |                                                   o
+         |                                                    oooo
+  0.0632 +                                                        ooooo
+         |                                                             ooo
+         |                                                                oo
+         |                                                                  oo
+         |                                                                    
+  0.0249 +                                                                    oooo
+         |                                                                        oo
+         |                                                                          ooo
+         |                                                                             ooooo
+         |                                                                                  oooooooo
+   1/inf +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+         0    12   25   37   50   62   75   87   100  112  125  137  150  162  175  187  200  212  222
   
-                                      Species rank                             
+                                                Species rank                                       
   """
 
 

@@ -10,5 +10,6 @@ Some utilities
 .. autofunction:: fast_etienne_likelihood
 .. autofunction:: pre_get_stirlings
 .. autofunction:: mul_polyn
+.. autofunction:: power_polyn
 .. autofunction:: table
 
