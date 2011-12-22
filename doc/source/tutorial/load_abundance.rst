@@ -394,8 +394,8 @@ In order to test if our distribution of abundance is neutral, Ecolopy implements
 
 ::
 
-  # call test_neutrality function with the give_h option, making it to return the list of simulated entropies
-  pval, neut_h = abd.test_neutrality(model='etienne', gens=10000, give_h=True)
+  # call test_neutrality function with the full option, making it to return the list of simulated entropies
+  pval, neut_h = abd.test_neutrality(model='etienne', gens=10000, full=True)
   print pval
   # 0.1492
 
@@ -410,6 +410,10 @@ Variations:
   # 0.0977
 
 * another test can also be conducted through the same function, based on the **comparison of likelihoods** instead of Shannon's index [Etienne2007]_
+::
+
+  abd.test_neutrality(model='etienne', gens=1000,method='loglike', verbose=True)
+  # 0.353
 
 
 

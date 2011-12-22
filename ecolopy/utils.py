@@ -98,11 +98,8 @@ def power_polyn(polyn_a, power):
     Recurrence function for polynomial at power *n*, that allows to build Pascal's triangle using Newton's binomial theorem:
     
     .. math::
-      :nowrap:
 
-      \\begin{eqnarray}
-        c^n_k = \\sum^m_{i=0} c^{n-1}_{k-i} a_i
-      \\end{eqnarray}
+        c^n_k = \\sum^m_{i=0} c^{n-1}_{k-i} \cdot a_i
 
     with *a* being the list of coefficients in the polynomial, *m* the number of elements (maximum factor + 1), *n* the power and *k* the current position in polynomial, or the current factor.
     
@@ -142,7 +139,7 @@ def mul_polyn(polyn_a, polyn_b):
       # that is: 0 + 2x + 3x^2 + 5x^3
       
     :argument polyn_a: list of indices of polynomial
-    :argument polyn_b: list of indices of polynomial (e.g.: [1,3,5,0,2] for 2 + 3^x + 5x^2 + 0x^3 + 2x^4)
+    :argument polyn_b: list of indices of polynomial (e.g.: [1,3,5,0,2] for :math:`2 + 3^x + 5x^2 + 0x^3 + 2x^4`)
     :returns: a list representing multiplication of the two polynomials
 
     '''
@@ -210,11 +207,15 @@ def pre_get_stirlings(max_nm, needed, verbose=True):
     '''
     takes advantage of recurrence function:
 
-    * s(n, m) = s(n-1, m-1) - (n-1) * s(n-1, m)
+    .. math::
+      
+        s(n, m) = s(n-1, m-1) - (n-1) \cdot s(n-1, m)
 
-    and as  s(whatever, 0) = 0 :
+    and as  *s(whatever, 0) = 0* :
 
-    * s(n+1, 1) = -n * s(n, 1)
+    .. math::
+      
+        s(n+1, 1) = -n \cdot s(n, 1)
 
     keep only needed stirling numbers (necessary for large communities)
 

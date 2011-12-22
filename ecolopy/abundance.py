@@ -377,7 +377,7 @@ class Abundance (object):
         return self.S * log (theta) + lngamma (theta) - lngamma (theta + self.J)
 
 
-    def test_neutrality (self, model='ewens', gens=100, give_h=False, fix_s=False, tries=1000,
+    def test_neutrality (self, model='ewens', gens=100, full=False, fix_s=False, tries=1000,
                          method='shannon', verbose=False):
         '''
         test for neutrality comparing Shannon entropy
@@ -386,11 +386,11 @@ class Abundance (object):
 
         :argument ewens model: model name otherwise, current model is used
         :argument 100 gens: number of random neutral distributions to generate
-        :argument False give_h: also return list of Shannon entropies
+        :argument False full: also return list of compared values (H or lnL) for simulated abundances
         :argument False fix_s: decide whether to fix or not the number of species for the generation of random neutral communities
         :argument False tries: in case S is fixed, determines the number of tries in order to obtain the exact same number of species as original community. In case The number of tries is exceeded, an ERROR message is displayed, and p-value returned is 1.0.
         :argument shannon method: can be either "Shannon" for comparing Shannon's entropies or "loglike" for comparing log-likelihood values (Etienne 2007). Last method is much more computationally expensive, as likelihood of neutral distribution must be calculated.
-        :returns: p_value if give_h also returns Shannon entropy (or likelihoods if method="loglike") of all random neutral abundances generated
+        :returns: p_value if full=True also returns Shannon entropy (or likelihoods if method="loglike") of all random neutral abundances generated
         '''
         fast_shannon = lambda abund: sum ([-spe * log(spe) for spe in abund])
         pval = 0
@@ -411,7 +411,7 @@ class Abundance (object):
                         break
                 else:
                     stderr.write('ERROR: Unable to obtain S by simulation')
-                    if give_h:
+                    if full:
                         return float('nan'), []
                     return float('nan')
             else:
@@ -423,17 +423,18 @@ class Abundance (object):
             elif method is 'loglike':
                 tmp = Abundance(tmp)
                 tmp._get_kda(verbose=False)
-                neut_h.append(tmp.etienne_likelihood([model.theta,model.m]))
-                pval += neut_h[-1] < self.shannon
+                neut_h.append (tmp.etienne_likelihood([model.theta,model.m]))
+                pval += neut_h[-1] < model.lnL
         if verbose:
             stdout.write ('\n')
-        if give_h:
+        if full:
             return float (pval)/gens, neut_h
         return float (pval)/gens
     
 
     def _parse_infile (self):
         '''
+        TODO: use other columns
         parse infile and return list of abundances
         infile can contain several columns
         '''
@@ -443,7 +444,7 @@ class Abundance (object):
             self.load_abundance (self.data_path)
             return None
         for line in lines:
-            abundances.append (int (line.strip().split('\t')))
+            abundances.append (int (line.strip().split('\t')[0]))
         return abundances
 
 
