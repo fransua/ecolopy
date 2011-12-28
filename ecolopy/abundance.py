@@ -19,8 +19,9 @@ from sys              import stdout, stderr
 from numpy            import arange
 
 from utils    import table, factorial_div, mul_polyn, shannon_entropy
-from utils    import lpoch, pre_get_stirlings, stirling## , mean , std
+from utils    import lpoch, pre_get_stirlings, stirling, power_polyn
 from ecolopy.ecological_model import EcologicalModel
+from polynomial import Polynomial
 
 class Abundance (object):
     '''
@@ -315,7 +316,7 @@ class Abundance (object):
         else:
             start = self.S/2, 0.5
         # compute kda
-        if not 'etienne' in self.__models:
+        if not self._kda:
             if verbose:
                 print "\nGetting K(D,A) according to Etienne 2005 formula:"
             self._get_kda (verbose=verbose)
@@ -417,10 +418,10 @@ class Abundance (object):
             else:
                 tmp = model.rand_neutral (inds)
             l_tmp = sum (tmp)
-            if method is 'shannon':
+            if method == 'shannon':
                 neut_h.append ((fast_shannon (tmp) + l_tmp*log(l_tmp))/l_tmp)
                 pval += neut_h[-1] < self.shannon
-            elif method is 'loglike':
+            elif method == 'loglike':
                 tmp = Abundance(tmp)
                 tmp._get_kda(verbose=False)
                 neut_h.append (tmp.etienne_likelihood([model.theta,model.m]))
@@ -517,6 +518,34 @@ class Abundance (object):
         return model.rand_neutral (J)
 
     
+    def _get_kda_bip (self, verbose=True):
+        '''
+        compute K(D,A) according to etienne formula
+        '''
+        specabund = [sorted (list (set (self.abund))), table (self.abund)]
+        sdiff     = len (specabund [1])
+        polyn     = Polynomial()
+        # compute all stirling numbers taking advantage of recurrence function
+        needed = {0: True}
+        for i in xrange (sdiff):
+            for k in xrange (1, specabund[0][i] + 1):
+                needed [int (specabund[0][i])] = True
+        if verbose:
+            stdout.write('  Getting some stirling numbers...\n')
+        pre_get_stirlings (max (specabund[0]), needed, verbose=verbose)
+        for i in xrange (sdiff):
+            if verbose:
+                stdout.write ("\r  Computing K(D,A) at species %s out of %s" \
+                              % (i+1, sdiff))
+                stdout.flush ()
+            sai = specabund[0][i]
+            polyn = polyn * Polynomial ([stirling(sai, k)*factorial_div(k, sai) for k in xrange (1, sai+1)]) ** specabund[1][i]
+            #polyn1 = polyn1 ** specabund[1][i]
+            #polyn = polyn * polyn1
+        self._kda = [log (i) for i in polyn.plist]
+        if verbose:
+            stdout.write ('\n')
+
     def _get_kda (self, verbose=True):
         '''
         compute K(D,A) according to etienne formula
@@ -537,27 +566,13 @@ class Abundance (object):
                 stdout.write ("\r  Computing K(D,A) at species %s out of %s" \
                               % (i+1, sdiff))
                 stdout.flush ()
-            polyn1 = []
-            for k in xrange (1, specabund[0][i] + 1):
-                coeff = stirling (specabund[0][i], k) * \
-                        factorial_div (k, specabund[0][i])
-                polyn1.append (coeff)
-            if not polyn1:
-                polyn1.append(mpfr(1.))
-            # polyn1 exponential the number of individuals for current species
-            polyn2 = polyn1[:]
-            # TODO: lets try with polyn2^(specabund[1][i]) * polyn1
-            # see  recurrence function of power of polynomial
-            for _ in xrange (1, specabund[1][i]):
-                polyn1 = mul_polyn (polyn1, polyn2)
-            # polyn = polyn * polyn1
+            sai = specabund[0][i]
+            polyn1 = [stirling(sai, k)*factorial_div(k, sai) for k in xrange (1, sai+1)]
+            polyn1 = power_polyn (polyn1, specabund[1][i]) if polyn1 else [mpfr(1.)]
             polyn = mul_polyn (polyn, polyn1)
-        kda = []
+        self._kda = [log (i) for i in polyn]
         if verbose:
             stdout.write ('\n')
-        for i in polyn:
-            kda.append (log (i))
-        self._kda = kda
 
 
 

@@ -71,6 +71,9 @@ def test_etienne (kind, abd, test_failed):
     print ' Testing Etienne algorithm with BCI %s dataset' % kind
     models = []
     test_ok = True
+    t0 = time()
+    abd._get_kda()
+    print '\n      Elapsed time (should be < %s): %s sec\n' % (time_max, time() - t0)
     print '  Testing different optimization strategies: '
     for test in ['fmin', 'slsqp', 'l_bfgs_b', 'tnc']:
         t0 = time()
