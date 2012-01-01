@@ -11,3 +11,11 @@ if bip:
 else:
     abd._get_kda()
 
+abd.etienne_optimal_params()
+abd.set_current_model('etienne')
+print abd
+
+print abd._kda[:10]
+print abd._kda[20872:]
+print '\n'
+print len (abd._kda)

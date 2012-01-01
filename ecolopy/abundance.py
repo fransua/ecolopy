@@ -539,7 +539,9 @@ class Abundance (object):
                               % (i+1, sdiff))
                 stdout.flush ()
             sai = specabund[0][i]
-            polyn = polyn * Polynomial ([stirling(sai, k)*factorial_div(k, sai) for k in xrange (1, sai+1)]) ** specabund[1][i]
+            polyn1 = Polynomial ([stirling(sai, k)*factorial_div(k, sai) for k in xrange (1, sai+1)])
+            polyn1 = polyn1 ** specabund[1][i]
+            polyn  = polyn * polyn1
             #polyn1 = polyn1 ** specabund[1][i]
             #polyn = polyn * polyn1
         self._kda = [log (i) for i in polyn.plist]

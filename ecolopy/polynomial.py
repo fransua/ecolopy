@@ -15,7 +15,10 @@ try:
 except ImportError:
     from numpy import float128 as mpfr
     from operator import mul
-    
+
+from sys import setrecursionlimit
+
+setrecursionlimit(1000000)
 
 class Polynomial(object):
     """
@@ -38,33 +41,45 @@ class Polynomial(object):
     def __str__(self):
         string = []
         for i in xrange (len (self)):
+            if not self.plist[i]: continue
             if i > 1:
-                string.append ('{0}x^{1}'.format(self.plist[i], i))
+                string.append ('{0}x^{1}'.format(int (self.plist[i]), i))
             elif i==1:
-                string.append ('{0}x'.format(self.plist[i]))
+                string.append ('{0}x'.format(int (self.plist[i])))
             else:
-                string.append ('{0}'.format(self.plist[i]))
+                string.append ('{0}'.format(int (self.plist[i])))
         return ' + '.join (reversed (string))
 
-    def __repr__(self):         return str(self.plist)
+    def __repr__(self):
+        return str(self.plist)
 
-    def __neg__(self):          return self * Polynomial([-1])
+    def __neg__(self):
+        return self * Polynomial([-1])
 
-    def __getitem__(self, key): return self.plist[key]
+    def __getitem__(self, key): 
+        return self.plist[key]
 
-    def __len__(self):          return len (self.plist)
+    def __len__(self):
+        return len (self.plist)
     
-    def __add__(self, poly):    return add (self, poly)
+    def __add__(self, poly):
+        return add (self, poly)
 
-    def __iadd__ (self, poly):  return self + poly
+    def __iadd__ (self, poly):
+        return self + poly
 
-    def __sub__(self, poly):    return self + (-poly)
+    def __sub__(self, poly):
+        return self + (-poly)
         
-    def __mul__ (self, poly):   return Polynomial (mul_polyn (self.plist, poly.plist))
+    def __mul__ (self, poly):   
+        return Polynomial (mul_polyn (self.plist, poly.plist))
 
-    def __pow__ (self, p):      return Polynomial (reduce (mul_polyn, (self.plist for _ in xrange(p))))
+    def __pow__ (self, p):
+        #return Polynomial (reduce (mul_polyn, (self.plist for _ in xrange(p))))
+        return poly_2_pow (self, int(p))
 
-    def __iter__(self):         return self.iter_elts()
+    def __iter__(self):
+        return self.iter_elts()
 
     def iter_elts(self):
         for i in self.plist:
@@ -79,7 +94,24 @@ def add(poly_a, poly_b):
     for i in xrange (len (poly_b)):
         new[i] += poly_b[i]
     return Polynomial (new)
-    
+
+
+def poly_2_pow (poly, p, r=()):
+    if p == 1:
+        return poly
+    if p == 0:
+        return  Polynomial([0])
+    if p%2:
+        r = r + (Polynomial(poly.plist[:]),)
+    poly = poly * poly
+    p = p/2
+    if p == 2:
+        poly = poly * poly
+        for i in r:
+            poly = poly * i
+        return poly
+    return poly_2_pow (poly,p,r)
+
 
 def mul_polyn(polyn_a, polyn_b):
     '''
