@@ -19,7 +19,6 @@ def draw_rsa(abund, out, smooth=True, labels=False, pdf=False):
     maxX = 0
     y  = []
     x  = []
-    names = []
     total = sum (abund.values())
     for spe in abund:
         x.append ([abund[spe], spe])
@@ -288,6 +287,9 @@ def get_options():
                       help='draw contour plot for etienne optimization')
    
     opts = parser.parse_args()[0]
+    if not opts.abund or not opts.out:
+        parser.print_help()
+        exit()
     if not opts.out.endswith('/'):
         opts.out += '/'
     opts.models = opts.models.split(',')

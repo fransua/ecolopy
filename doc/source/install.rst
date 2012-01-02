@@ -8,7 +8,7 @@ Download and Install
 GNU/Linux
 =========
 
-EcoloPy requires python>=2.7 as well as several dependencies:
+EcoloPy requires python>=2.6 as well as several dependencies:
 
 * **python-scipy** for optimization, and statistical tests.
 * **gmpy2** in order to deal with huge numbers necessary to compute K(D,A) in Etienne model
@@ -38,11 +38,25 @@ Accessory:
 Install GMPY2
 -------------
 
-First needed some libraries:
+First check your version of python:
 
 ::
 
-  apt-get install python2.7-dev libmpfr-dev libgmp3-dev
+  python --version
+
+*should be 2.6.x or 2.7.x*
+
+Than according to this install the corresponding dev:
+
+::
+
+  apt-get install python2.x-dev 
+
+and gmp/mpfr libraries:
+
+::
+
+  apt-get install libmpfr-dev libgmp3-dev
 
 and afterward it is necessary to download and install gmpy2 from here:
 
