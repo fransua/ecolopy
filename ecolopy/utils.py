@@ -383,3 +383,6 @@ def std (x):
     """
     mean_x = mean (x)
     return (sum([(i - mean_x)**2 for i in x])/len (x))**.5
+
+
+
