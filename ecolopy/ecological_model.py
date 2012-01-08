@@ -42,7 +42,7 @@ class EcologicalModel(object):
         elif self.name == 'etienne':
             return rand_neutral_etienne (inds, self.theta, self.I)
         elif self.name == 'lognorm':
-            return rand_lognormal (inds, self.theta, self.I, self.m)
+            return rand_lognormal (inds, self.theta, self.I)
         else:
             raise Exception ('No random simulation available for this model\n')
 

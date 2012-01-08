@@ -13,12 +13,15 @@ __version__ = "0.0"
 try:
     from gmpy2 import mpfr, mul
 except ImportError:
+    print 'Import Error, gmpy not found'
     from numpy import float128 as mpfr
     from operator import mul
 
 from sys import setrecursionlimit
 
-setrecursionlimit(1000000)
+setrecursionlimit(10000)
+
+mpf0 = mpfr(0)
 
 class Polynomial(object):
     """
@@ -30,7 +33,7 @@ class Polynomial(object):
             plist = []
         elif plist == []:
             plist = [mpfr(1.0)]
-        self.plist = plist
+        self.plist = [mpfr (p) for p in plist]
 
     def add(self, something):
         """
@@ -98,6 +101,8 @@ def add(poly_a, poly_b):
 
 def poly_2_pow (poly, p, r=()):
     if p == 1:
+        for i in r:
+            poly = poly * i
         return poly
     if p == 0:
         return  Polynomial([0])
@@ -146,12 +151,15 @@ def mul_polyn(polyn_a, polyn_b):
     len_b = len (polyn_b)
     diff = abs (len_a - len_b)
     if len_a >= len_b:
-        for _ in xrange (diff):
-            polyn_b.append (mpfr(0))
+        polyn_b = polyn_b + [mpfr(0)] * (diff)
     else:
-        return mul_polyn (polyn_b, polyn_a)
+        _  = Polynomial(polyn_a + [mpfr(0.)] * (diff))
+        polyn_a = Polynomial(polyn_b[:])
+        polyn_b = _
+        len_a = len_b
+        len_b = len (polyn_b)
     # switcher
-    if len_a > len_b*2: # most
+    if len_a > len_b*2 and True: # most
         return _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b)
     return _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)
 
@@ -178,7 +186,7 @@ def _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b):
     for i in xrange (len_a, max_len - 1):
         new.append (sum (mult_one (polyn_a[i-len_a3:len_a1],
                                    polyn_b[len_a:i-len_a:-1], len_a2-i, diff)))
-    return new    
+    return new
 
 
 def _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b):
@@ -186,9 +194,11 @@ def _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b):
     fast polynomial multiplication when 1 polynomial >~ 2 times larger.
     -> iterates over coefficients
     '''
-    new = [mpfr(0)] * (len_a + len_b - 1)
-    for i in xrange (len_a):
-        pai = polyn_a[i]
-        for j in xrange (len_b):
-            new [i + j] += pai * polyn_b[j]
+    new = [mpf0] * (len_a + len_b - 1)
+    for ij, pa, pb in ((i+j, polyn_a[i], polyn_b[j]) for i in xrange(len_a) for j in xrange(len_b)):
+        new [ij] += mul(pa,pb)
+    #for i in xrange (len_a):
+    #    pai = polyn_a[i]
+    #    for j in xrange (len_b):
+    #        new [i + j] += pai * polyn_b[j]
     return new

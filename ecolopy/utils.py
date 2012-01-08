@@ -165,7 +165,7 @@ def _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b):
     for i in xrange (len_a, max_len - 1):
         new.append (sum (mult_one (polyn_a[i-len_a3 : len_a1],
                               polyn_b[len_a    : i-len_a :-1], len_a2-i, diff)))
-    return new    
+    return new
 
 
 def _mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b):

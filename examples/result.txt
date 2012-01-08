@@ -1,0 +1,31 @@
+
+* Abundance (object)
+    Number of individuals (J) : 4219
+    Number of species (S)     : 162
+    Shannon's index (shannon) : 4.5938
+    Metacommunity size (j_tot): 12657
+    Models computed           : 
+    Current model             : None
+    Theta                     : None
+    I                         : None
+    m                         : None
+    lnL                       : None
+    
+* SAD drawn at sad.png
+
+* Ewens model computed:
+   theta: 33.302024
+   lnL: 162.742476
+
+* Etienne model computed:
+   theta: 78.9543363445
+   m: 0.0367700276029
+   lnL: 144.581370
+
+* LRT:
+   Best model: etienne, p-val of LRT: 1.67246887855e-09
+
+* Neutrality test under etienne model
+  (with S free and based on comparison of Shannon values)
+   p-val: 0.99
+   figure: test.png

@@ -10,13 +10,13 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.13"
 
-from scipy.stats      import chisqprob, lognorm
+from scipy.stats      import chisqprob#, lognorm
 from scipy.optimize   import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b, golden
 from gmpy2            import mpfr, log, exp, lngamma, gamma
 from cPickle          import dump, load
 from os.path          import isfile
 from sys              import stdout, stderr
-from numpy            import arange
+from numpy            import arange, mean, std
 
 from utils    import table, factorial_div, mul_polyn, shannon_entropy
 from utils    import lpoch, pre_get_stirlings, stirling, power_polyn
@@ -291,9 +291,11 @@ class Abundance (object):
         ## mu, sd = fmin (self.lognorm_likelihood, start,
         ##                full_output=False, disp=0)
         ## lnL   = self.lognorm_likelihood ((mu, sd))
-        shape, loc, scale = lognorm.fit([float (x) for x in self.abund])
-        self.__models['lognorm'] = EcologicalModel ('lognorm', theta=shape,
-                                                    I=loc, m=scale, lnL=None)
+        # shape, loc, scale = lognorm.fit([float (x) for x in self.abund])
+        mu = mean ([float (log (x)) for x in self.abund])
+        sd = std  ([float (log (x)) for x in self.abund])
+        self.__models['lognorm'] = EcologicalModel ('lognorm', theta=mu,
+                                                    I=sd, m=None, lnL=None)
 
 
     def etienne_optimal_params (self, method='fmin', verbose=True):

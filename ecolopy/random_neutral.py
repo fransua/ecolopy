@@ -11,10 +11,10 @@ __licence__ = "GPLv3"
 __version__ = "0.13"
 
 
-from random import random
+from random import random, lognormvariate
 from utils  import table
 #from math  import exp
-from scipy.stats import lognorm
+#from scipy.stats import lognorm
 
 def rand_neutral_etienne (inds, theta, immig):
     '''
@@ -69,7 +69,7 @@ def rand_neutral_ewens (inds, theta):
     return table (out, spp)
 
 
-def rand_lognormal (inds, shape, loc, scale):
+def rand_lognormal (inds, mu, sd):
     '''
     generates random lognormal distribution
     
@@ -78,6 +78,7 @@ def rand_lognormal (inds, shape, loc, scale):
     :argument mu: usually mean of the distribution of abundances
     :returns: distribution of abundance (list)
     '''
-    return [int (i+1) for i in lognorm.rvs (shape, scale=scale, loc=loc,
-                                            size=int (inds))]
+    return [lognormvariate (mu, sd) for _ in xrange(inds)]
+    #return [int (i+1) for i in lognorm.rvs (shape, scale=scale, loc=loc,
+    #                                        size=int (inds))]
     ## return table ([int (i) for i in norm.rvs(mu, sd, size=inds)])
