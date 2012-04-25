@@ -131,7 +131,7 @@ def mul_polyn(polyn_a, polyn_b):
     **Example:**
     ::
 
-      from ecolopy.utils import mul_polyn
+      from ecolopy_dev.utils import mul_polyn
       # (2 + 3^x + 5x^2)  * (x)
       mul_polyn([2,3,5], [0,1])
       # will return: [mpfr('0.0'), mpfr('2.0'), mpfr('3.0'), mpfr('5.0')]

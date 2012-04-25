@@ -1,5 +1,5 @@
 import sys
-from ecolopy import Abundance
+from ecolopy_dev import Abundance
 
 abd = Abundance ('../dataset_trial/bci_full.txt')
 

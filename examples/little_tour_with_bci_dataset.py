@@ -17,11 +17,11 @@ from time import sleep, time
 print """
 When starting with ECOLOGY package the first thing is to load it:
 
-  from ecolopy import Abundance
+  from ecolopy_dev import Abundance
 
 """
 
-from ecolopy import Abundance
+from ecolopy_dev import Abundance
 
 sleep (1)
 

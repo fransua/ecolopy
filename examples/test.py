@@ -1,7 +1,7 @@
 
 
-from ecolopy import Abundance
-from ecolopy.utils import draw_shannon_distrib
+from ecolopy_dev import Abundance
+from ecolopy_dev.utils import draw_shannon_distrib
 
 abd = Abundance('test.txt')
 abd.lognorm_optimal_params()

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-11 Jul 2011
+24 Apr 2012
 
 
 """
@@ -11,6 +11,17 @@ __licence__ = "GPLv3"
 __version__ = "0.0"
 
 
-from abundance import Abundance
-from ecological_model import EcologicalModel
-from utils import generate_random_neutral_abundance
+a = prn
+
+
+
+def main():
+    """
+    main function
+    """
+    pass
+
+
+
+if __name__ == "__main__":
+    exit(main())

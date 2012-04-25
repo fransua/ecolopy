@@ -18,8 +18,8 @@ from sys import argv
 from lockfile import FileLock
 from cPickle import load, dump
 
-from ecolopy.abundance import Abundance
-from ecolopy.random_neutral import rand_neutral_ewens, rand_neutral_etienne
+from ecolopy_dev.abundance import Abundance
+from ecolopy_dev.random_neutral import rand_neutral_ewens, rand_neutral_etienne
 
 def get_random_S():
     return int (10+random()*990)

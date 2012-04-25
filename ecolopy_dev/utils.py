@@ -34,11 +34,11 @@ def generate_random_neutral_abundance (model_name, size, **kwargs):
     
     ::
     
-      import ecolopy
+      import ecolopy_dev
       ecolopy.generate_random_neutral_abundance('ewens', 100, theta=12, I=12)
     '''
     # import inside because otherwise strange never-ending import...
-    from ecolopy.ecological_model import EcologicalModel
+    from ecolopy_dev.models import EcologicalModel
     model = EcologicalModel (model_name, **kwargs)
     return model.rand_neutral(size)
 
@@ -62,6 +62,23 @@ def shannon_entropy(abund, inds):
     return (sum ([-spe * log(spe) for spe in abund]) + inds * log (inds)) / inds
 
 
+def table_mpfr (out, spp=None):
+    '''
+    data to contingency table
+    any kind of data
+
+    :argument out: species abundance
+    :returns: list of counts of individuals by species
+    '''
+    setout = set (out)
+    if spp == None:
+        spp = len (setout)
+    counts = dict (zip (setout, [float(0.)]*spp))
+    for ind in out:
+        counts[ind] += mpfr(1)
+    return [counts[x] for x in sorted (counts)]
+
+
 def table (out, spp=None):
     '''
     data to contingency table
@@ -73,11 +90,11 @@ def table (out, spp=None):
     setout = set (out)
     if spp == None:
         spp = len (setout)
-    counts = dict (zip (setout, [mpfr(0.)]*spp))
+    counts = dict (zip (setout, [float(0.)]*spp))
     for ind in out:
-        counts[ind] += mpfr(1)
+        counts[ind] += 1
     return [counts[x] for x in sorted (counts)]
-
+    
 
 def factorial_div (one, two):
     '''
@@ -110,7 +127,7 @@ def mul_polyn(polyn_a, polyn_b):
     **Example:**
     ::
 
-      from ecolopy.utils import mul_polyn
+      from ecolopy_dev.utils import mul_polyn
       # (2 + 3^x + 5x^2)  * (x)
       mul_polyn([2,3,5], [0,1])
       # will return: [mpfr('0.0'), mpfr('2.0'), mpfr('3.0'), mpfr('5.0')]

@@ -6,11 +6,11 @@
 """
 
 from optparse import OptionParser
-from ecolopy import Abundance
+from ecolopy_dev import Abundance
 import pylab
 import numpy as np
 from scipy.interpolate import spline
-from ecolopy.utils import fast_etienne_likelihood
+from ecolopy_dev.utils import fast_etienne_likelihood
 
 __title__ = 'Ecolopy-UNTBGen'
 

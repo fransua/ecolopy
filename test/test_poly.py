@@ -5,8 +5,8 @@
 
 """
 
-from ecolopy.polynomial import Polynomial, mul_polyn
-from ecolopy.utils import *
+from ecolopy_dev.polynomial import Polynomial, mul_polyn
+from ecolopy_dev.utils import *
 from gmpy2 import mpfr
 
 
