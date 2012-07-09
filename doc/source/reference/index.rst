@@ -5,7 +5,11 @@ EcoloPy's Reference Guide
 .. toctree::
    :maxdepth: 3
    
-   reference_abundance
-   reference_models
+   reference_community
+   reference_ecological_model
    reference_utils
-   reference_randoms
+   reference_lognormal_model
+   reference_untb_model
+   reference_ewens_model
+   reference_etienne_model
+

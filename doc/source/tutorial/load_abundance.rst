@@ -11,20 +11,20 @@ Just after counting species abundances in an ecosystem
 ======================================================
 
 
-Load Abundance
+Load Community
 --------------
 
-Abundance is a class, and derived objects represent simply a distribution of species abundance , with associated function in order to calculate descriptive statistics or to fit it to evolutionary models.
+Community is a class, and derived objects represent simply a distribution of species abundance , with associated function in order to calculate descriptive statistics or to fit it to evolutionary models.
 
-The data needed to create this object consists on a list of values corresponding to the abundance of each species. We can either give to Abundance a python list of values:
+The data needed to create this object consists on a list of values corresponding to the abundance of each species. We can either give to Community a python list of values:
 ::
 
-  Abundance ([1, 4, 4, 12, 54, 68, 32, 15])
+  Community ([1, 4, 4, 12, 54, 68, 32, 15])
 
 or the path to a file containing those values:
 ::
 
-  Abundance ('whatever_path/mydata.txt')
+  Community ('whatever_path/mydata.txt')
 
 mydata.txt would contain the same list of values, one per row:
 
@@ -39,14 +39,14 @@ mydata.txt would contain the same list of values, one per row:
   32
   15
 
-In the next step we are going to create an object :func:`ecolopy.abundance.Abundance` that will represent the distribution of abundance of the well known/studied BCI dataset.
+In the next step we are going to create an object :func:`ecolopy.abundance.Community` that will represent the distribution of abundance of the well known/studied BCI dataset.
 
-We are going to load this object under the name 'abd':
+We are going to load this object under the name 'com':
 
 ::
 
-  from ecolopy import Abundance
-  abd = Abundance ('bci_full.txt')
+  from ecolopy import Community
+  com = Community ('bci_full.txt')
 
 Quick descriptive statistics
 ----------------------------
@@ -55,9 +55,9 @@ In order to see quickly how does this abundance looks like, we can use the print
 
 ::
 
-  print abd
+  print com
 
-  #  Abundance (object)
+  #  Community (object)
   #      Number of individuals (J) : 21457
   #      Number of species (S)     : 225
   #      Shannon entropy (shannon) : 4.2704
@@ -88,9 +88,9 @@ X being the number of individuals for each species and n the number of species.
 
 ::
 
-  abd = Abundance ('bci_full.txt', j_tot=10000000)
+  com = Community ('bci_full.txt', j_tot=10000000)
 
-* Models computed: :func:`ecolopy.abundance.Abundance` can be associated to an Ecological model, the user
+* Models computed: :func:`ecolopy.abundance.Community` can be associated to an Ecological model, the user
   need first to compute them.
 * Current Model: once computed, we can associate our abundance to a given model
 * theta: given by the model
@@ -101,12 +101,12 @@ X being the number of individuals for each species and n the number of species.
 RSA curve
 ^^^^^^^^^
 
-An other way to see quickly how out abundance looks-like is to print relative species abundance curve (RSA) with :func:`ecolopy.abundance.Abundance.rsa_ascii`:
+An other way to see quickly how out abundance looks-like is to print relative species abundance curve (RSA) with :func:`ecolopy.abundance.Community.rsa_ascii`:
 ::
-  print abd.rsa_ascii(pch='o', width=90, height=40)
+  print com.rsa_ascii(pch='o', width=90, height=40)
   """
   (%) Relative
-  Abundances
+  Communitys
 
   8.0021 +o
          | 
@@ -150,7 +150,7 @@ An other way to see quickly how out abundance looks-like is to print relative sp
 Fit to ecological model
 =======================
 
-Once our distribution of abundances loaded into an Abundance object, EcoloPy proposes a set of ecological models that we can try to fit to our data.
+Once our distribution of abundances loaded into an Community object, EcoloPy proposes a set of ecological models that we can try to fit to our data.
 
 Ewens model
 -----------
@@ -170,7 +170,7 @@ we just have to type:
 
 ::
 
-  abd.ewens_optimal_params()
+  com.ewens_optimal_params()
 
 this step is usually very fast.
 
@@ -178,11 +178,11 @@ to load this model as our current model, just type:
 
 ::
 
-  abd.set_current_model('ewens')
+  com.set_current_model('ewens')
 
-  print abd
+  print com
 
-  #  Abundance (object)
+  #  Community (object)
   #      Number of individuals (J) : 21457
   #      Number of species (S)     : 225
   #      Shannon entropy (shannon) : 4.2704
@@ -202,15 +202,15 @@ Now we can run an other model like the one proposed by Etienne [Etienne2005]_, j
 
 ::
 
-  abd.etienne_optimal_params()
-  abd.set_current_model ('etienne')
+  com.etienne_optimal_params()
+  com.set_current_model ('etienne')
   # Getting K(D,A) according to Etienne 2005 formula:
   #   Getting some stirling numbers...
   #     1000 of 1717.0, size: 3145976
   #   Computing K(D,A) at species 108 out of 108
 
-  print abd
-  # Abundance (object)
+  print com
+  # Community (object)
   #     Number of individuals (J) : 21457
   #     Number of species (S)     : 225
   #     Shannon entropy (shannon) : 4.2704
@@ -226,7 +226,7 @@ Now we can run an other model like the one proposed by Etienne [Etienne2005]_, j
 Best optimization strategy for Etienne model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:func:`ecolopy.abundance.Abundance.etienne_optimal_params` function allows to define the optimization strategy to use all from Scipy [Jones2001]_ (see scipy.optimize documentation).
+:func:`ecolopy.abundance.Community.etienne_optimal_params` function allows to define the optimization strategy to use all from Scipy [Jones2001]_ (see scipy.optimize documentation).
 The fmin optimization strategy is the one usually used, it is fast, but do not allow to set bounds for 
 the values of parameters to optimize, sometimes ending with values of theta almost infinite. 
 
@@ -238,8 +238,8 @@ A simple way to find the best optimization would be:
   tmp = {}
   for met in ['fmin', 'slsqp', 'l_bfgs_b', 'tnc']:
       try:
-          abd.etienne_optimal_params(method=opt)
-          model = abd.get_model('etienne')
+          com.etienne_optimal_params(method=opt)
+          model = com.get_model('etienne')
           tmp[met] ={}
           tmp[met]['theta'] = model.theta
           tmp[met]['I']     = model.I
@@ -250,7 +250,7 @@ A simple way to find the best optimization would be:
           pass
 
   # in case optimization by fmin failed to found correct values for theta and m:
-  if not (1 <= tmp['fmin']['theta'] < abd.S and \
+  if not (1 <= tmp['fmin']['theta'] < com.S and \
           1e-50 <= tmp['fmin']['m'] < 1-1e-50):
       del (tmp['fmin'])
 
@@ -258,9 +258,9 @@ A simple way to find the best optimization would be:
   met = min (tmp, key=lambda x: tmp[x]['lnL'])
 
   # load it as 'etienne' model
-  abd.set_model (met)
+  com.set_model (met)
 
-*Also it is a good thing to try different starting values for optimization, by default* :func:`ecolopy.abundance.Abundance.etienne_optimal_params` *will use values from Ewens model as starting values.*
+*Also it is a good thing to try different starting values for optimization, by default* :func:`ecolopy.abundance.Community.etienne_optimal_params` *will use values from Ewens model as starting values.*
 
 Generate contour image of likelihood
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -279,7 +279,7 @@ In the case of Etienne model EcoloPy allow user to draw contour frame of likelih
 
   from ecolopy.utils import draw_contour_likelihood
   # this can take 2 or 3 hours to compute
-  draw_contour_likelihood(abd, theta_range=[20,100], m_range=[0.05, 0.8], num_dots=100)
+  draw_contour_likelihood(com, theta_range=[20,100], m_range=[0.05, 0.8], num_dots=100)
 
 
 
@@ -290,11 +290,11 @@ In EcoloPy is also implemented log normal model:
 
 ::
 
-  abd.lognorm_optimal_params()
-  abd.set_current_model ('lognorm')
+  com.lognorm_optimal_params()
+  com.set_current_model ('lognorm')
 
-  print abd
-  # Abundance (object)
+  print com
+  # Community (object)
   #     Number of individuals (J) : 21457
   #     Number of species (S)     : 225
   #     Shannon entropy (shannon) : 4.2704
@@ -318,19 +318,19 @@ Now we have fit our abundance to some models, a summary of corresponding paramet
 
 ::
 
-  abd.theta
+  com.theta
   # 34.962254203932339
-  abd.m
+  com.m
   # 0.00081470508933989701
-  abd.I
+  com.I
   # 17.494565308269266
-  abd.lnL
+  com.lnL
   # 318.84864864917472
 
 or you can get any attribute through the model linked to our abundance:
 ::
 
-  model = abd.get_model('ewens')
+  model = com.get_model('ewens')
   model.lnL
   # 318.84864864917472
 
@@ -346,7 +346,7 @@ This function will compute a chi square test for 2 times the difference in likel
 
 ::
 
-  abd.lrt ('ewens', 'etienne')
+  com.lrt ('ewens', 'etienne')
   # 6.80784682569e-06
 
 
@@ -359,7 +359,7 @@ By default EcoloPy will use the parameters of the current model but this can be 
 
 ::
 
-  abd.generate_random_neutral_distribution(model='etienne')
+  com.generate_random_neutral_distribution(model='etienne')
   # [mpfr('17.0'), mpfr('867.0'), mpfr('397.0'), mpfr('184.0'), mpfr('71.0'), 
   # ...
   # ...
@@ -370,14 +370,14 @@ By default EcoloPy will use the parameters of the current model but this can be 
 
 ::
 
-  abd.generate_random_neutral_distribution()
+  com.generate_random_neutral_distribution()
   # [mpfr('17.0'), mpfr('867.0'), mpfr('397.0'), mpfr('184.0'), mpfr('71.0'), 
   # ...
   # ...
   # mpfr('2.0'), mpfr('2.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0'), mpfr('1.0')]
 
   # or in order to get floats:
-  [int (i)for i in abd.generate_random_neutral_distribution()]
+  [int (i)for i in com.generate_random_neutral_distribution()]
   # [273, 263, 461, 754, 1140, 163, 67, 113, 1014, 407, 1496, 1395, 405, 534, 1435, 260, 
   # ...
   # ...
@@ -390,12 +390,12 @@ Testing for neutrality
 Getting significance of deviation from neutrality
 -------------------------------------------------
 
-In order to test if our distribution of abundance is neutral, Ecolopy implements a test based on comparing the distribution of values of Shannon entropies compared to the observed one (:func:`ecolopy.abundance.Abundance.test_neutrality`).
+In order to test if our distribution of abundance is neutral, Ecolopy implements a test based on comparing the distribution of values of Shannon entropies compared to the observed one (:func:`ecolopy.abundance.Community.test_neutrality`).
 
 ::
 
   # call test_neutrality function with the full option, making it to return the list of simulated entropies
-  pval, neut_h = abd.test_neutrality(model='etienne', gens=10000, full=True)
+  pval, neut_h = com.test_neutrality(model='etienne', gens=10000, full=True)
   print pval
   # 0.1492
 
@@ -406,13 +406,13 @@ Variations:
 * **more restrictive** test can be done by fixing the number of species (S) to the observed number. For our example S-fixed would fix it to 225, and the result of such test would be:
 ::
 
-  abd.test_neutrality(model='etienne', gens=10000, fix_s=True)
+  com.test_neutrality(model='etienne', gens=10000, fix_s=True)
   # 0.0977
 
 * another test can also be conducted through the same function, based on the **comparison of likelihoods** instead of Shannon's index [Etienne2007]_
 ::
 
-  abd.test_neutrality(model='etienne', gens=1000,method='loglike', verbose=True)
+  com.test_neutrality(model='etienne', gens=1000,method='loglike', verbose=True)
   # 0.353
 
 
@@ -425,7 +425,7 @@ We can also draw the distribution of simulated entropies and visually compare th
 ::
 
   # using previously generated neut_h
-  draw_shannon_distrib(neut_h, abd.shannon)
+  draw_shannon_distrib(neut_h, com.shannon)
 
 
 .. _shannon-hist:
@@ -438,17 +438,17 @@ We can also draw the distribution of simulated entropies and visually compare th
 
 
 
-Saving/Loading Abundance object
+Saving/Loading Community object
 ===============================
 
-Once done EcoloPy allow user to save Abundance object and EcologicalModels object into cPikle with :func:`ecolopy.abundance.Abundance.dump_abundance` and :func:`ecolopy.abundance.Abundance.load_abundance` functions.
+Once done EcoloPy allow user to save Community object and EcologicalModels object into cPikle with :func:`ecolopy.abundance.Community.dump_abundance` and :func:`ecolopy.abundance.Community.load_abundance` functions.
 
 ::
 
   # save it
-  abd.dump_abundance('stored_bci.pik')
+  com.dump_abundance('stored_bci.pik')
   # (re)load it
-  abd = Abundance ('stored_bci.pik')
+  com = Community ('stored_bci.pik')
 
 References
 ==========

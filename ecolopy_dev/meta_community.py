@@ -11,13 +11,14 @@ __licence__ = "GPLv3"
 __version__ = "0.0"
 
 
-a = prn
-
 
 
 def main():
     """
     main function
+    TODO: all...
+    the starting idea is to use it in the same way as parthy.
+    load all genome in one.
     """
     pass
 

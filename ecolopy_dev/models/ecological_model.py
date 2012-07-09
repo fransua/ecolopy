@@ -24,15 +24,15 @@ class EcologicalModel(object):
         self._lnL = float('-inf')
 
         # old
-        for key in kwargs:
-            setattr(self, key, kwargs[key])
+        #for key in kwargs:
+        #    setattr(self, key, kwargs[key])
         #if not 'theta' in kwargs or not 'I' in kwargs:
         #    raise Exception ('Must supply theta and I values\n')
 
 
     def __str__(self):
         """
-        for print
+        to print model parameters.
         """
         summary = 'EcologicalModel (object)\n'
         summary += 'Model name                : %s\n' % self.__class__.__name__
@@ -41,21 +41,39 @@ class EcologicalModel(object):
         return summary
 
     def random_community(self):
+        """
+        generic function
+        """
         pass
         
     def likelihood(self):
+        """
+        generic function
+        """
         pass
         
     def optimal_params(self):
+        """
+        generic function
+        """
         pass
         
     def get_lnL(self):
+        """
+        generic function
+        """
         return self._lnL
         
     def __set_lnL(self, lnl):
+        """
+        generic function
+        """
         self._lnL = lnl
         
     def doc_lnL(self):
+        """
+        variable doc
+        """
         return "Model likelihood"
 
     lnL = property(get_lnL, __set_lnL, doc=doc_lnL)
