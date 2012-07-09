@@ -23,25 +23,25 @@ class EwensModel(UNTBModel):
         super(EwensModel, self).__init__(community, **kwargs)
         self.optimize()
     
-    def likelihood (self, theta):
+    def likelihood(self, theta):
         '''
         get likelihood value of Ewens according to Parthy/Tetame (Jabot 2008)
         
         :argument theta: value of theta
         :returns: likelihood
         '''
-        factor = lgamma (self.community.J + 1)
+        factor = lgamma(self.community.J + 1)
         phi = table (self.community.abund)
-        phi += [0] * int (max (self.community.abund) - len (phi))
-        for spe in xrange (self.community.S):
-            factor -= log (max (1, self.community.abund[spe]))
-        for spe in xrange (max (self.community.abund)):
-            factor -= lgamma (phi[spe] + 1)
-        lnl = lpoch (theta, self.community.J) - log (theta) * self.community.S - factor
+        phi += [0] * int(max(self.community.abund) - len (phi))
+        for spe in xrange(self.community.S):
+            factor -= log(max(1, self.community.abund[spe]))
+        for spe in xrange(max(self.community.abund)):
+            factor -= lgamma(phi[spe] + 1)
+        lnl = lpoch(theta, self.community.J) - log(theta) * self.community.S - factor
         self._factor = factor
         return lnl
 
-    def optimize (self):
+    def optimize(self):
         '''
         Main function to optimize theta using theta likelihood function, according to Ewens
         model.

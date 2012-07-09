@@ -16,6 +16,7 @@ from dataset        import *
 from test_community import *
 from test_ewens     import *
 from test_etienne   import *
+from test_lognormal import *
 
 if __name__ == '__main__':
     unittest.main()

@@ -25,7 +25,7 @@ class EcologicalModel(object):
 
         # old
         for key in kwargs:
-            setattr (self, key, kwargs[key])
+            setattr(self, key, kwargs[key])
         #if not 'theta' in kwargs or not 'I' in kwargs:
         #    raise Exception ('Must supply theta and I values\n')
 
@@ -52,8 +52,8 @@ class EcologicalModel(object):
     def get_lnL(self):
         return self._lnL
         
-    def __set_lnL(self):
-        return self._lnL
+    def __set_lnL(self, lnl):
+        self._lnL = lnl
         
     def doc_lnL(self):
         return "Model likelihood"

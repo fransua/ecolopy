@@ -16,8 +16,9 @@ from cPickle        import dump, load
 from os.path        import isfile, exists
 from sys            import stdout, stderr
 from numpy          import arange, mean, std
+from warnings       import warn
 
-from utils          import shannon_entropy
+from ecolopy_dev.utils  import shannon_entropy
 from ecolopy_dev.models import *
 
 class Community (object):
@@ -61,7 +62,8 @@ class Community (object):
         self.j_tot     = j_tot if j_tot else self.J * 3
         self.shannon   = shannon_entropy (self.abund, self.J)
         self.__models  = {}
-
+        self.__current_model = None
+        
     def __str__(self):
         """
         for print
@@ -132,8 +134,11 @@ class Community (object):
 
         """
         import pylab
-        import matplotlib.ticker
-        
+        try:
+            import matplotlib.ticker
+        except ImportError:
+            warn("WARNING: matplotlib not found, try rsa_ascii function instead")
+            
         pylab.grid(alpha=0.4)
         y  = []
         x  = []
@@ -150,10 +155,10 @@ class Community (object):
         # title legend...
         maxX = len (x)
         pylab.yscale('log')
-        pylab.xticks (range (0,maxX+1,5), range (0,maxX+1,5), rotation=90)
-        pylab.title ('Ranked abundance.')
-        pylab.xlabel ('Elements number ranked by size')
-        pylab.ylabel ('Percentage of representation of each species')
+        pylab.xticks(range (0,maxX+1,5), range (0,maxX+1,5), rotation=90)
+        pylab.title('Ranked abundance.')
+        pylab.xlabel('Elements number ranked by size')
+        pylab.ylabel('Percentage of representation of each species')
         pylab.xlim(1, len(x)+1)
         pylab.ylim(log(1.0/float(self.J)), max(y)*1.5)
         ax = pylab.gca()
@@ -214,9 +219,11 @@ class Community (object):
         :return: model
         """
         if name == 'etienne':
-            self.__models['etienne'] = EtienneModel(self)
+            self.__models['etienne']   = EtienneModel(self)
         elif name == 'ewens':
-            self.__models['ewens']   = EwensModel(self)
+            self.__models['ewens']     = EwensModel(self)
+        elif name == 'lognormal':
+            self.__models['lognormal'] = LognormalModel(self)
 
     def set_model (self, model):
         """
@@ -239,24 +246,6 @@ class Community (object):
             return None
 
 
-    def lognorm_optimal_params (self):
-        '''
-        Main function to get optimal parameters for log-normal distribution according to abundance
-        '''
-        ## USED BEFORE WITH LOGNORM_LIKELIHOOD
-        ## data = self.abund
-        ## start = (mean ([float (log (x)) for x in data]),
-        ##          std ([float (log (x)) for x in data]))
-        ## mu, sd = fmin (self.lognorm_likelihood, start,
-        ##                full_output=False, disp=0)
-        ## lnL   = self.lognorm_likelihood ((mu, sd))
-        # shape, loc, scale = lognorm.fit([float (x) for x in self.abund])
-        mu = mean ([float (log (x)) for x in self.abund])
-        sd = std  ([float (log (x)) for x in self.abund])
-        self.__models['lognorm'] = EcologicalModel ('lognorm', theta=mu,
-                                                    I=sd, m=None, lnL=None)
-
-
     def set_current_model (self, name):
         """
         set on model as default/current model.
@@ -265,15 +254,16 @@ class Community (object):
         
         """
         self.__current_model = self.get_model(name)
-        for key in ['theta', 'I', 'm', 'lnL']:
+        for key in ['theta', 'I', 'm']:
             try:
-                self.__dict__[key] = self.__current_model.__dict__[key]
+                self.__dict__[key] = self.__current_model._parameters[key]
             except KeyError:
                 self.__dict__[key] = None
+        self.__dict__['lnL'] = self.__current_model.lnL
                 
 
-    def test_neutrality (self, model='ewens', gens=100, full=False, fix_s=False, tries=1000,
-                         method='shannon', verbose=False):
+    def test_neutrality (self, model='ewens', gens=100, full=False, fix_s=False,
+                         tries=1000, method='shannon', verbose=False):
         '''
         test for neutrality comparing Shannon entropy
         if (Hobs > Hrand_neut) then evenness of observed data is
@@ -289,9 +279,10 @@ class Community (object):
         '''
         fast_shannon = lambda abund: sum ([-spe * log(spe) for spe in abund])
         pval = 0
-        inds = self.S if model is 'lognorm' else self.J
+        inds = self.S if 'LognormalModel' in repr(model) else self.J
         model = self.get_model (model)
         if not model:
+            warn("WARNING: Model '%s' not found.\n" % model)
             return None
         neut_h = []
         for _ in xrange (gens):
@@ -301,7 +292,7 @@ class Community (object):
                 stdout.flush ()
             if fix_s:
                 for _ in xrange (tries):
-                    tmp = model.rand_neutral (inds)
+                    tmp = model.random_community(inds)
                     if len(tmp) == self.S:
                         break
                 else:
@@ -310,7 +301,7 @@ class Community (object):
                         return float('nan'), []
                     return float('nan')
             else:
-                tmp = model.rand_neutral (inds)
+                tmp = model.random_community(inds)
             l_tmp = sum (tmp)
             if method == 'shannon':
                 neut_h.append ((fast_shannon (tmp) + l_tmp*log(l_tmp))/l_tmp)
@@ -412,6 +403,6 @@ class Community (object):
             raise Exception ('Need first to optimize this model,\n       ' + \
                              '    Unable to generate random distribution.')
         if not J:
-            J = self.S if model.name is 'lognorm' else self.J
-        return model.rand_neutral (J)
+            J = self.S if 'LognormalModel' in repr(model) else self.J
+        return model.random_community (J)
 

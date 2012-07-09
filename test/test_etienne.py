@@ -34,3 +34,4 @@ class Test_etienne(unittest.TestCase):
         etienne_model = com.get_model('etienne')
         self.assertEqual(sum(etienne_model.random_community()), com.J)
         self.assertEqual(sum(etienne_model.random_community(2500)), 2500)
+        

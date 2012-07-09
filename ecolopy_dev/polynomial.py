@@ -13,7 +13,7 @@ __version__ = "0.0"
 try:
     from gmpy2 import mpfr, mul
 except ImportError:
-    print 'Import Error, gmpy not found'
+    warn("WARNING: GMPY2 library not found, using numpy")
     from numpy import float128 as mpfr
     from operator import mul
 

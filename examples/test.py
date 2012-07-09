@@ -1,29 +1,29 @@
 
 
-from ecolopy_dev import Abundance
+from ecolopy_dev import Community
 from ecolopy_dev.utils import draw_shannon_distrib
 
-abd = Abundance('test.txt')
-abd.lognorm_optimal_params()
-abd.set_current_model('lognorm')
-pval, neut_h = abd.test_neutrality (model='lognorm',
-                                    gens=1000, give_h=True)
-draw_shannon_distrib(neut_h,abd.shannon)
+abd = Community('test.txt')
+abd.fit_model('lognormal')
+abd.set_current_model('lognormal')
+pval, neut_h = abd.test_neutrality (model='lognormal',
+                                    gens=1000, full=True)
+draw_shannon_distrib(neut_h, abd.shannon)
 
-abd2 = Abundance('test2.txt')
-abd2.lognorm_optimal_params()
-abd2.set_current_model('lognorm')
-pval, neut_h = abd2.test_neutrality (model='lognorm',
-                                    gens=1000, give_h=True)
+abd2 = Community('test2.txt')
+abd2.fit_model('lognormal')
+abd2.set_current_model('lognormal')
+pval, neut_h = abd2.test_neutrality (model='lognormal',
+                                     gens=1000, full=True)
 draw_shannon_distrib(neut_h,abd2.shannon)
 
 
-bci = Abundance('../dataset_trial/bci_full.txt')
-bci.lognorm_optimal_params()
-bci.set_current_model('lognorm')
+bci = Community('../dataset_trial/bci_full.txt')
+bci.fit_model('lognormal')
+bci.set_current_model('lognormal')
 
-pval, bci_neut_h = bci.test_neutrality (model='lognorm',
-                                    gens=1000, give_h=True)
+pval, bci_neut_h = bci.test_neutrality (model='lognormal',
+                                        gens=1000, full=True)
 
 
 print pval
@@ -73,7 +73,7 @@ rnd_b = lognorm.rvs(shape, scale=scale, loc=loc, size=len(b))
 plb.hist(rnd_b, bins=20, alpha=0.5)
 plb.hist(b, bins=20, color='r', alpha=0.5)
 
-mean (b)
-shape = std (b)
+np.mean (b)
+shape = np.std (b)
 
 plb.show()

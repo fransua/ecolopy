@@ -12,12 +12,21 @@ __version__ = "0.13"
 
 
 from ecolopy_dev.models.untb_model import UNTBModel
-from ecolopy_dev.utils  import table_mpfr, table, factorial_div, power_polyn, lpoch
-from ecolopy_dev.utils  import pre_get_stirlings, stirling, mul_polyn
-from gmpy2          import log, lngamma, exp, gamma, mpfr
-from scipy.optimize   import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b
-from sys            import stdout
-from random import random
+from ecolopy_dev.utils             import table_mpfr, table, factorial_div
+from ecolopy_dev.utils             import power_polyn, lpoch
+from ecolopy_dev.utils             import pre_get_stirlings, stirling, mul_polyn
+from warnings                      import warn
+
+try:
+    from gmpy2                         import log, lngamma, exp, gamma, mpfr
+except ImportError:
+    warn("WARNING: GMPY2 library not found, using numpy")
+    from numpy                         import log, exp, float128 as mpfr
+    from scipy.special                 import gamma, gammaln as lngamma
+    
+from scipy.optimize                import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b
+from sys                           import stdout
+from random                        import random
 
 
 class EtienneModel(UNTBModel):
@@ -37,16 +46,16 @@ class EtienneModel(UNTBModel):
     def random_community (self, inds=None, theta=None, immig=None):
         '''
         generates random distribution according to J, theta and I
-    
+
         :argument inds: number of individuals in community (J)
         :argument theta: corresponding to the model
         :argument immig: immigration rate (I)
-    
+
         :returns: distribution of abundance (list)
-        
+
         '''
         theta    = float (theta) if theta else self.theta
-        inds     = inds if inds else self.community.J
+        inds     = inds or self.community.J
         immig    = float (immig) if immig else self.I
         mcnum    = [0] * int (inds)
         locnum   = [0] * int (inds)
