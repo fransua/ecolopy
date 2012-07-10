@@ -10,6 +10,8 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.12"
 
+from warnings import warn
+
 try:
     from gmpy2            import log, lngamma, exp, gamma, mpfr, mul, div
 except ImportError:
