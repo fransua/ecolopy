@@ -1,7 +1,7 @@
 Some utilities
 ==============
 
-.. currentmodule:: ecolopy.utils
+.. currentmodule:: ecolopy_dev.utils
 
 .. autofunction:: generate_random_neutral_abundance
 .. autofunction:: shannon_entropy

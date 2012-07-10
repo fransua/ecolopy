@@ -51,17 +51,16 @@ class Community (object):
         """
         creation of Community object
         """
+        self.__models  = {}
         if type (data) != list:
             self.data_path = data
             data = self._parse_infile ()
         if not data is None:
             self.abund     = [x for x in sorted (data [:])]
-            self._kda      = None
         self.J         = sum (self.abund)
         self.S         = len (self.abund)
         self.j_tot     = j_tot if j_tot else self.J * 3
         self.shannon   = shannon_entropy (self.abund, self.J)
-        self.__models  = {}
         self.__current_model = None
         
     def __str__(self):
@@ -74,8 +73,13 @@ class Community (object):
     Shannon's index (shannon) : %.4f
     Metacommunity size (j_tot): %d
     Models computed           : %s
+    Model loaded              : %s
     ''' % (self.J, self.S, self.shannon, self.j_tot,
-           ', '.join (self.__models.keys()))
+           ', '.join (self.__models.keys()),
+           (self.__current_model.__class__.__name__ + \
+            '\n' + ' ' * 8 + ('\n' + ' ' * 8).join(
+                [l for l in str(self.__current_model).split('\n')[2:]]
+            )) if self.__current_model else "None")
 
 
     def rsa_ascii (self, width=100, height=50, pch='o'):
@@ -119,8 +123,11 @@ class Community (object):
                     break
                 x+= 1
         graph += '\n'
-        graph += ' 1/inf ' + ''.join(['+' if not x%5 else '-' for x in xrange(width+1)]) + '\n'
-        graph += ' '*7 + ''.join(['{0:<5}'.format(int(x_arange[x])) for x in xrange(0,width,5)]) + str( int(x_arange[-1])) + '\n\n'
+        graph += ' 1/inf ' + ''.join(
+            ['+' if not x%5 else '-' for x in xrange(width+1)]) + '\n'
+        graph += ' '*7 + ''.join(
+            ['{0:<5}'.format(int(x_arange[x])) for x in xrange(0,width,5)]
+        ) + str( int(x_arange[-1])) + '\n\n'
         graph += ' '*7 + '{0:^{1}}'.format('Species rank', width)
         return graph
 
@@ -148,17 +155,18 @@ class Community (object):
             y.append (100*float (abd) / float(self.J))
         if len (y) == 1:
             raise Exception ('list of abundances is too short man')
-        m = 'o'
-        c = 'red'
-        l = '-'
-        pylab.plot (x,  y, marker=m, ms=2, lw=2,ls= l, color=c)
+        mark = 'o'
+        lcol = 'grey'
+        mcol = 'black'
+        lsty = '-'
+        pylab.plot(x, y, marker=mark, ms=5, color=lcol, lw=3, mfc=mcol, ls=lsty)
         # title legend...
         maxX = len (x)
         pylab.yscale('log')
         pylab.xticks(range (0,maxX+1,5), range (0,maxX+1,5), rotation=90)
-        pylab.title('Ranked abundance.')
-        pylab.xlabel('Elements number ranked by size')
-        pylab.ylabel('Percentage of representation of each species')
+        pylab.title('Ranked Species Abundance')
+        pylab.xlabel('Species rank number (rank according to abundance)')
+        pylab.ylabel('Relative abundance percentage of each species')
         pylab.xlim(1, len(x)+1)
         pylab.ylim(log(1.0/float(self.J)), max(y)*1.5)
         ax = pylab.gca()
@@ -171,9 +179,9 @@ class Community (object):
                 F.savefig (outfile, dpi=DPI+30, filetype='pdf')
             elif filetype == 'png':
                 F.savefig (outfile, dpi=DPI+30, filetype='png')
+            pylab.close()
         else:
             pylab.show()
-        pylab.close()
         
 
     def lrt (self, model_1, model_2, df=1):
@@ -210,20 +218,21 @@ class Community (object):
         for model in self.__models.values():
             yield model
 
-    def fit_model (self, name="ewens"):
+    def fit_model (self, name="ewens", **kwargs):
         """
         Fit Community to model.
+        Extra arguments can be pssed depending on the model to fit. See doc of its corresponding optimize function.
 
         :argument Ewens name: name of the model, between Etienne, Ewens or Log-normal
 
         :return: model
         """
         if name == 'etienne':
-            self.__models['etienne']   = EtienneModel(self)
+            self.__models['etienne']   = EtienneModel(self, **kwargs)
         elif name == 'ewens':
-            self.__models['ewens']     = EwensModel(self)
+            self.__models['ewens']     = EwensModel(self, **kwargs)
         elif name == 'lognormal':
-            self.__models['lognormal'] = LognormalModel(self)
+            self.__models['lognormal'] = LognormalModel(self, **kwargs)
 
     def set_model (self, model):
         """
@@ -232,7 +241,8 @@ class Community (object):
         :argument model: model object
         
         """
-        self.__models[model.name] = model
+        name  = model.__class__.__name__.replace('Model', '').lower()
+        self.__models[name] = model
 
 
     def get_model (self, name):
@@ -338,7 +348,6 @@ class Community (object):
         return abundances
 
 
-
     def dump_community (self, outfile, force=False):
         '''
         save params and kda with pickle
@@ -351,13 +360,13 @@ class Community (object):
         '''
         if isfile (outfile) and not force:
             self.load_community (outfile)
-        try:
-            self.__models['KDA']   = self._kda[:]
-        except TypeError:
-            self.__models['KDA'] = None
+        # changed, kda no longer here
+        #try:
+        #    self.__models['KDA']   = self._kda[:]
+        #except TypeError:
+        #    self.__models['KDA'] = None
         self.__models['ABUND'] = self.abund[:]
         dump (self.__models, open (outfile, 'w'))
-        del (self.__models['KDA'])
         del (self.__models['ABUND'])
 
 
@@ -374,11 +383,11 @@ class Community (object):
         self.__models = old_params
         self.abund = self.__models['ABUND']
         del (self.__models['ABUND'])
-        if 'KDA' in self.__models:
-            self._kda  = self.__models['KDA']
-            del (self.__models['KDA'])
-        else:
-            self._kda = None
+        #if 'KDA' in self.__models:
+        #    self._kda  = self.__models['KDA']
+        #    del (self.__models['KDA'])
+        #else:
+        #    self._kda = None
 
 
     def generate_random_neutral_distribution (self, model=None, J=None):

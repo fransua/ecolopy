@@ -38,6 +38,7 @@ class EcologicalModel(object):
         summary += 'Model name                : %s\n' % self.__class__.__name__
         for p in self._parameters:
             summary += '%-24s: %s\n' % (p, self._parameters[p])
+        summary += '%-24s: %s\n' % ('lnL', self._lnL)
         return summary
 
     def random_community(self):

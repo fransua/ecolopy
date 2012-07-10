@@ -62,7 +62,7 @@ We are going to load this object under the name 'com':
 
 """
 
-com = Community ('../dataset_trial/bci_full.txt')
+com = Community ('dataset_trial/bci_short.txt')
 
 print """
 In order to see quickly how does this abundance looks like, we can use the print
@@ -112,6 +112,15 @@ print """
 ... type 'enter' to continue
 """
 raw_input()
+
+print """
+In order to check our distribution of abundances, we can quickly draw an RSA curve through the draw_rsa function, or in case we do not have X (or we just want a brief view), through the rsa_ascii function.
+
+com.draw_rsa()
+
+"""
+
+com.draw_rsa(size=(10,8))
 
 print """
 Once our distribution of abundances loaded into an Community object, we can try
@@ -248,12 +257,78 @@ raw_input()
 
 com.set_current_model ('etienne')
 
+print com
+
+print """
+In order to ensure that optimization step worked fine, we can try with different optimization strategies, this can be done like this:
+
+  tmp = {}
+  for met in ['fmin', 'slsqp', 'l_bfgs_b', 'tnc']:
+      print 'Optimizing with %s...' % met
+      try:
+          com.fit_model(name='etienne', method=met, verbose=False)
+          model = com.get_model('etienne')
+          tmp[met] ={}
+	  tmp[met]['model'] = model
+          tmp[met]['theta'] = model.theta
+          tmp[met]['I']     = model.I
+          tmp[met]['m']     = model.m
+          tmp[met]['lnL']   = model.lnL
+      except Exception as e:
+          print '    optimization failed: ' + e.args[0]
+
+  # in case optimization by fmin failed to found correct values for theta and m:
+  if not (1 <= tmp['fmin']['theta'] < com.S and \
+          1e-50 <= tmp['fmin']['m'] < 1-1e-50):
+      del (tmp['fmin'])
+
+  # find the model with the higher likelihood:
+  met = min(tmp, key=lambda x: tmp[x]['lnL'])
+
+  print 'Best optimization method was: ' + met
+
+  # load it as 'etienne' model
+  com.set_model(tmp[met]['model'])
+
+
+"""
+
+tmp = {}
+for met in ['fmin', 'slsqp', 'l_bfgs_b', 'tnc']:
+    print 'Optimizing with %s...' % met
+    try:
+        com.fit_model(name='etienne', method=met, verbose=False)
+        model = com.get_model('etienne')
+        tmp[met] ={}
+        tmp[met]['model'] = model
+        tmp[met]['theta'] = model.theta
+        tmp[met]['I']     = model.I
+        tmp[met]['m']     = model.m
+        tmp[met]['lnL']   = model.lnL
+    except Exception as e:
+        print '    optimization failed: ' + e.args[0]
+
+# in case optimization by fmin failed to found correct values for theta and m:
+if not (1 <= tmp['fmin']['theta'] < com.S and \
+        1e-50 <= tmp['fmin']['m'] < 1-1e-50):
+    del (tmp['fmin'])
+
+# find the model with the higher likelihood:
+met = min(tmp, key=lambda x: tmp[x]['lnL'])
+
+print 'Best optimization method was: ' + met
+
+# load it as 'etienne' model
+com.set_model(tmp[met]['model'])
+
+raw_input()
+
 print """
 we have run now one new model, Community object are able to decide though LRT
 which has a better likelihood (this is done with chi square test with one degree
 of freedom, corresponding to the estimation of parameter m):
 
->>> com.lrt ('ewens', 'etienne')
+>>> com.lrt('ewens', 'etienne')
 %s
 
 this means that etienne model has a significantly better fit than ewens.
@@ -265,7 +340,7 @@ and see the estimations of its parameters:
 >>> print com
 %s
 
-""" % (com.lrt ('ewens', 'etienne'), com.get_model('etienne').lnL,
+""" % (com.lrt('ewens', 'etienne'), com.get_model('etienne').lnL,
        com.__str__())
 
 

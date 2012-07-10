@@ -40,7 +40,7 @@ class EtienneModel(UNTBModel):
         if not 'kda' in kwargs:
             self._kda = None
         super(EtienneModel, self).__init__(community, **kwargs)
-        self.optimize()
+        self.optimize(**kwargs)
 
 
     def random_community (self, inds=None, theta=None, immig=None):
@@ -102,13 +102,15 @@ class EtienneModel(UNTBModel):
         return -log (lik)
 
         
-    def optimize (self, method='fmin', verbose=True):
+    def optimize (self, method='fmin', start=None, verbose=True):
         '''
         Main function to optimize theta and I using etienne likelihood function
         using Scipy package, values that are closest to the one proposed
         by Tetame, are raised by fmin function.
 
         :argument fmin method: optimization strategy, can be one of fmin, slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)
+        :argument (community.S,0.5) start: tupple for startin values of theta and m
+        :argument True verbose: displays running status
         
         '''
         # define bounds
@@ -116,7 +118,7 @@ class EtienneModel(UNTBModel):
         all_ok  = True
         err = ''
         # define starting values
-        start = self.community.S/2, 0.5
+        start = start or self.community.S/2, 0.5
         # compute kda
         if not self._kda:
             if verbose:

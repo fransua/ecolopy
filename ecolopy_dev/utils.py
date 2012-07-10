@@ -10,7 +10,14 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.12"
 
-from gmpy2 import log, mul, mpfr, div, lngamma, gamma, exp
+try:
+    from gmpy2            import log, lngamma, exp, gamma, mpfr, mul, div
+except ImportError:
+    warn("WARNING: GMPY2 library not found, using numpy")
+    from numpy            import log, exp, float128 as mpfr
+    from scipy.special    import gamma, gammaln as lngamma
+    from operators        import mul, div
+
 from sys import stdout
 try:
     from matplotlib import pyplot
@@ -251,7 +258,7 @@ def stirling (one, two):
     return STIRLINGS [one, two]
 
 
-def fast_etienne_likelihood(abd, params, kda_x=None):
+def fast_etienne_likelihood(mod, params, kda=None, kda_x=None):
     '''
     same as Abundance inner function, but takes advantage of constant
     m value when varying only theta.
@@ -261,18 +268,18 @@ def fast_etienne_likelihood(abd, params, kda_x=None):
     :argument kda_x: precomputed list of exp(kda + ind*immig)
     '''
     theta     = params[0]
-    immig     = float (params[1]) / (1 - params[1]) * (abd.J - 1)
+    immig     = float (params[1]) / (1 - params[1]) * (mod.community.J - 1)
     log_immig = log (immig)
-    theta_s   = theta + abd.S
-    kda       = abd._kda
+    theta_s   = theta + mod.community.S
     if not kda_x:
-        kda_x = [exp (kda [val] + val * log_immig) for val in xrange (abd.J - abd.S)]
-    poch1 = exp (abd._factor + log (theta) * abd.S - \
-                 lpoch (immig, abd.J) + \
-                 log_immig * abd.S + lngamma(theta))
+        kda_x = [exp(mod._kda[val] + val * log_immig) for val in \
+                 xrange (mod.community.J - mod.community.S)]
+    poch1 = exp (mod._factor + log (theta) * mod.community.S - \
+                 lpoch (immig, mod.community.J) + \
+                 log_immig * mod.community.S + lngamma(theta))
     gam_theta_s = gamma (theta_s)
     lik = mpfr(0.0)
-    for val in xrange (abd.J - abd.S):
+    for val in xrange (mod.community.J - mod.community.S):
         lik += poch1 * kda_x[val] / gam_theta_s
         gam_theta_s *= theta_s + val
     return ((-log (lik)), kda_x)
@@ -284,7 +291,7 @@ def draw_contour_likelihood (abd, model=None, theta_range=None,
     """
     Draw contour plot of the log likelihood of a given abundance to fit Etienne model.   
 
-    :argument abd: Abundance object
+    :argument abd: Community object
     :argument None model: model name, if None current model is used
     :argument None theta_range: minimum and maximum value of theta as list. If None, goes from 1 to number of species (S)
     :argument None m_range:  minimum and maximum value of m as list. If None, goes from 0 to 1
@@ -301,7 +308,8 @@ def draw_contour_likelihood (abd, model=None, theta_range=None,
     
     x = np.linspace(theta_range[0], theta_range[1], num_dots)
     y = np.linspace(m_range[0], m_range[1], num_dots)
-
+    kda = None
+    
     if model == 'etienne':
         lnl_fun = fast_etienne_likelihood
     elif model=='ewens':
@@ -311,7 +319,7 @@ def draw_contour_likelihood (abd, model=None, theta_range=None,
     else:
         raise Exception ('Model not available.')
 
-    abd.set_current_model(model)
+    mod = abd.get_model(model)
     z = np.zeros ((num_dots, num_dots))
     if model=='etienne':
         kdas = {}
@@ -319,11 +327,11 @@ def draw_contour_likelihood (abd, model=None, theta_range=None,
             print k, 'of', num_dots
             for l, j in enumerate (y):
                 if not j in kdas:
-                    lnl, kda_x = lnl_fun (abd, [i, j])
+                    lnl, kda_x = lnl_fun(mod, [i, j])
                     lnl = -lnl
                     kdas[j] = kda_x
                 else:
-                    lnl = -lnl_fun (abd, [i, j], kda_x=kdas[j])[0]
+                    lnl = -lnl_fun(mod, [i, j], kda_x=kdas[j])[0]
                 z[l][k] = lnl
     else:
         for k, i in enumerate(x):
