@@ -10,12 +10,12 @@ __email__   = "francois@barrabin.org"
 __licence__ = "GPLv3"
 __version__ = "0.13"
 
-from scipy.stats    import chisqprob#, lognorm
+from scipy.stats    import chisqprob
 from math           import log, exp
 from cPickle        import dump, load
 from os.path        import isfile, exists
 from sys            import stdout, stderr
-from numpy          import arange, mean, std
+from numpy          import arange
 from warnings       import warn
 
 from ecolopy_dev.utils  import shannon_entropy
@@ -25,13 +25,14 @@ class Community (object):
     '''
     Main community class.
 
-    :argument data: containing species count, can be given in one of those format:
+    :argument data: containing species count, can be given in one of:
     
        * python list, each element being a species count
        * text file containing one species count per line
        * pickle file containing community object
 
-    :argument None j_tot: is the size of the metacommunity, if not defined j_tot = J * 3
+    :argument None j_tot: is the size of the metacommunity, if not defined
+    j_tot = J * 3
 
     :returns: an Community object
 
@@ -67,14 +68,14 @@ class Community (object):
         """
         for print
         """
-        return '''Community (object)
+        return """Community (object)
     Number of individuals (J) : %d
     Number of species (S)     : %d
     Shannon's index (shannon) : %.4f
     Metacommunity size (j_tot): %d
     Models computed           : %s
     Model loaded              : %s
-    ''' % (self.J, self.S, self.shannon, self.j_tot,
+    """ % (self.J, self.S, self.shannon, self.j_tot,
            ', '.join (self.__models.keys()),
            (self.__current_model.__class__.__name__ + \
             '\n' + ' ' * 8 + ('\n' + ' ' * 8).join(
@@ -93,35 +94,35 @@ class Community (object):
         :returns: string corresponding to plot
         
         """
-        dots = sorted([float(x) for x in self.abund],reverse=True)
-        S = float(self.S)
-        J = float(self.J)
+        dots = sorted([float(x) for x in self.abund], reverse=True)
         rabd = []
-        for d in dots:
-            rabd.append (log (100*d/J))
-        y_arange = sorted(arange(min(rabd), max(rabd), abs (min(rabd)- max(rabd))/height), reverse=True)
-        x_arange = sorted(arange(0, S, S/width))
-        y = 0
-        x = 0
+        for dot in dots:
+            rabd.append (log (100 * dot / float(self.J)))
+        y_arange = sorted(arange(min(rabd), max(rabd),
+                                 abs (min(rabd) - max(rabd))/height),
+                          reverse=True)
+        x_arange = sorted(arange(0, float(self.S), float(self.S) / width))
+        yval = 0
+        xval = 0
         spaces = ''
         graph = '\n(%) Relative\nAbundances\n\n'
         graph += '{0:<7.4f}+'.format (exp(max(rabd)))
-        for i, d in enumerate (rabd):
-            if d < y_arange[y]:
+        for i, dot in enumerate (rabd):
+            if dot < y_arange[yval]:
                 graph += '\n'
-                if not (y)%5 and y != 0:
-                    graph += '{0:<7.4f}+'.format (exp(y_arange[y]))
+                if not (yval)%5 and yval != 0:
+                    graph += '{0:<7.4f}+'.format (exp(y_arange[yval]))
                 else:
                     graph += ' '*7 + '|'
                 graph += spaces
-                while d < y_arange[y]:
-                    y+=1
-            if i > x_arange[x]:
+                while dot < y_arange[yval]:
+                    yval += 1
+            if i > x_arange[xval]:
                 graph += pch
                 spaces += ' '
-                if  x+1 >= width:
+                if  xval + 1 >= width:
                     break
-                x+= 1
+                xval += 1
         graph += '\n'
         graph += ' 1/inf ' + ''.join(
             ['+' if not x%5 else '-' for x in xrange(width+1)]) + '\n'
@@ -131,73 +132,75 @@ class Community (object):
         graph += ' '*7 + '{0:^{1}}'.format('Species rank', width)
         return graph
 
-    def draw_rsa(self, outfile=None, filetype=None, size=(15,15)):
+
+    def draw_rsa(self, outfile=None, filetype=None, size=(15, 15)):
         """
         Draw Relative Species Abundances curve.
 
-        :argument None outfile: path were image will be saved, if none, plot will be shown using matplotlib GUI
+        :argument None outfile: path were image will be saved, if none, plot
+        will be shown using matplotlib GUI
         :argument None filetype: pdf or png
         :argument (15,15) size: size in inches of the drawing
 
         """
         import pylab
         try:
-            import matplotlib.ticker
+            import matplotlib.ticker as ticker
         except ImportError:
-            warn("WARNING: matplotlib not found, try rsa_ascii function instead")
+            warn("WARNING: matplotlib not found, try rsa_ascii()  instead")
             
         pylab.grid(alpha=0.4)
-        y  = []
-        x  = []
-        for rank,  abd in enumerate(sorted(self.abund, reverse=True,
-                                           key=float)):
-            x.append (rank+1)
-            y.append (100*float (abd) / float(self.J))
-        if len (y) == 1:
+        yval = []
+        xval = []
+        for rank, abd in enumerate(sorted(self.abund, reverse=True,
+                                          key=float)):
+            xval.append (rank + 1)
+            yval.append (100 * float(abd) / float(self.J))
+        if len(yval) == 1:
             raise Exception ('list of abundances is too short man')
-        mark = 'o'
-        lcol = 'grey'
-        mcol = 'black'
-        lsty = '-'
-        pylab.plot(x, y, marker=mark, ms=5, color=lcol, lw=3, mfc=mcol, ls=lsty)
+        
+        pylab.plot(xval, yval, marker='o', ms=5, color='grey', lw=3,
+                   mfc='black', ls='-')
         # title legend...
-        maxX = len (x)
+        max_x = len (xval)
         pylab.yscale('log')
-        pylab.xticks(range (0,maxX+1,5), range (0,maxX+1,5), rotation=90)
+        pylab.xticks(range (0, max_x+1, 5), range (0, max_x+1, 5), rotation=90)
         pylab.title('Ranked Species Abundance')
         pylab.xlabel('Species rank number (rank according to abundance)')
         pylab.ylabel('Relative abundance percentage of each species')
-        pylab.xlim(1, len(x)+1)
-        pylab.ylim(log(1.0/float(self.J)), max(y)*1.5)
-        ax = pylab.gca()
-        ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.4f'))
-        F = pylab.gcf()
-        DPI = F.get_dpi()
-        F.set_size_inches (size)
+        pylab.xlim(1, len(xval) + 1)
+        pylab.ylim(log(1.0 / float(self.J)), max(yval) * 1115.5)
+        axe = pylab.gca()
+        axe.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.4f'))
+        fig = pylab.gcf()
+        dpi = fig.get_dpi()
+        fig.set_size_inches (size)
         if outfile:
             if filetype == 'pdf':
-                F.savefig (outfile, dpi=DPI+30, filetype='pdf')
+                fig.savefig(outfile, dpi=dpi+30, filetype='pdf')
             elif filetype == 'png':
-                F.savefig (outfile, dpi=DPI+30, filetype='png')
+                fig.savefig(outfile, dpi=dpi+30, filetype='png')
             pylab.close()
         else:
             pylab.show()
         
 
-    def lrt (self, model_1, model_2, df=1):
+    def lrt (self, model_1, model_2, dgf=1):
         '''
         likelihood-ratio-test between two neutral models
 
         :argument model_1: string representing simplest model, usually Ewens
-        :argument model_2: string representing most complex model, usually Etienne
-        :argument 1 df: number of degrees of freedom (1 when comparing Etienne and Ewens)
+        :argument model_2: string representing most complex model, usually
+        Etienne
+        :argument 1 dgf: number of degrees of freedom (1 when comparing Etienne
+        and Ewens)
         
         :returns: p-value of rejection of alternative model
         
         eg: usually ewens, etienne. And if pval < 0.05 than use etienne
         '''
         return chisqprob(2 * (float (self.get_model(model_1).lnL) - \
-                              float (self.get_model(model_2).lnL)), df=df)
+                              float (self.get_model(model_2).lnL)), df=dgf)
 
 
     def get_current_model_name (self):
@@ -221,9 +224,11 @@ class Community (object):
     def fit_model (self, name="ewens", **kwargs):
         """
         Fit Community to model.
-        Extra arguments can be pssed depending on the model to fit. See doc of its corresponding optimize function.
+        Extra arguments can be pssed depending on the model to fit. See doc of
+        its corresponding optimize function.
 
-        :argument Ewens name: name of the model, between Etienne, Ewens or Log-normal
+        :argument Ewens name: name of the model, between Etienne, Ewens or
+        Log-normal
 
         :return: model
         """
@@ -236,7 +241,8 @@ class Community (object):
 
     def set_model (self, model):
         """
-        add one model computed externally to the computed models of current Community object
+        add one model computed externally to the computed models of current
+        Community object
 
         :argument model: model object
         
@@ -248,7 +254,8 @@ class Community (object):
     def get_model (self, name):
         """
         :argument name: name of a computed model
-        :returns: a EcologicalModel object corresponding to one of the computed models
+        :returns: a EcologicalModel object corresponding to one of the computed
+        models
         """
         if name in self.__models:
             return self.__models[name]
@@ -274,31 +281,41 @@ class Community (object):
 
     def test_neutrality (self, model='ewens', gens=100, full=False, fix_s=False,
                          tries=1000, method='shannon', verbose=False):
-        '''
+        """
         test for neutrality comparing Shannon entropy
         if (Hobs > Hrand_neut) then evenness of observed data is
         higher then neutral
 
         :argument ewens model: model name otherwise, current model is used
         :argument 100 gens: number of random neutral distributions to generate
-        :argument False full: also return list of compared values (H or lnL) for simulated abundances
-        :argument False fix_s: decide whether to fix or not the number of species for the generation of random neutral communities
-        :argument False tries: in case S is fixed, determines the number of tries in order to obtain the exact same number of species as original community. In case The number of tries is exceeded, an ERROR message is displayed, and p-value returned is 1.0.
-        :argument shannon method: can be either "Shannon" for comparing Shannon's entropies or "loglike" for comparing log-likelihood values (Etienne 2007). Last method is much more computationally expensive, as likelihood of neutral distribution must be calculated.
-        :returns: p_value if full=True also returns Shannon entropy (or likelihoods if method="loglike") of all random neutral abundances generated
-        '''
+        :argument False full: also return list of compared values (H or lnL) for
+        simulated abundances
+        :argument False fix_s: decide whether to fix or not the number of
+        species for the generation of random neutral communities
+        :argument False tries: in case S is fixed, determines the number of
+        tries in order to obtain the exact same number of species as original
+        community. In case The number of tries is exceeded, an ERROR message is
+        displayed, and p-value returned is 1.0.
+        :argument shannon method: can be either 'Shannon' for comparing
+        Shannon's entropies or 'loglike' for comparing log-likelihood values
+        (Etienne 2007). Last method is much more computationally expensive, as
+        likelihood of neutral distribution must be calculated.
+        :returns: p_value if full=True also returns Shannon entropy (or
+        likelihoods if method='loglike') of all random neutral abundances
+        generated
+        """
         fast_shannon = lambda abund: sum ([-spe * log(spe) for spe in abund])
         pval = 0
         inds = self.S if 'LognormalModel' in repr(model) else self.J
-        model = self.get_model (model)
+        model = self.get_model(model)
         if not model:
             warn("WARNING: Model '%s' not found.\n" % model)
             return None
         neut_h = []
         for _ in xrange (gens):
             if verbose:
-                stdout.write ("\r  Generating random neutral abundances %s out of %s" \
-                              % (_+1, gens))
+                stdout.write ("\r  Generating random neutral abundances %s/%s" \
+                              % (_ + 1, gens))
                 stdout.flush ()
             if fix_s:
                 for _ in xrange (tries):
@@ -314,12 +331,12 @@ class Community (object):
                 tmp = model.random_community(inds)
             l_tmp = sum (tmp)
             if method == 'shannon':
-                neut_h.append ((fast_shannon (tmp) + l_tmp*log(l_tmp))/l_tmp)
+                neut_h.append ((fast_shannon(tmp) + l_tmp*log(l_tmp))/l_tmp)
                 pval += neut_h[-1] < self.shannon
             elif method == 'loglike':
                 tmp = Community(tmp)
                 tmp._get_kda(verbose=False)
-                neut_h.append (tmp.etienne_likelihood([model.theta,model.m]))
+                neut_h.append(tmp.etienne_likelihood([model.theta, model.m]))
                 pval += neut_h[-1] < model.lnL
         if verbose:
             stdout.write ('\n')
@@ -390,14 +407,15 @@ class Community (object):
         #    self._kda = None
 
 
-    def generate_random_neutral_distribution (self, model=None, J=None):
+    def generate_random_neutral_distribution(self, model=None, J=None):
         """
         return distribution of abundance, according to a given model
         and a given community size.
         if none of them are given, values of current Community are used.
 
         :argument None model: model name (default current model)
-        :argument None J: size of wanted community (default size of the community of current abundance)
+        :argument None J: size of wanted community (default size of the
+        community of current abundance)
         :returns: random neutral distribution of abundances
         
         """
@@ -405,7 +423,7 @@ class Community (object):
             try:
                 model = self.__current_model
             except:
-                return None
+                return
         else:
             model = self.get_model(model)
         if model is None:
@@ -413,5 +431,5 @@ class Community (object):
                              '    Unable to generate random distribution.')
         if not J:
             J = self.S if 'LognormalModel' in repr(model) else self.J
-        return model.random_community (J)
+        return model.random_community(J)
 

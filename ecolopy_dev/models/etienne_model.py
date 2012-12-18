@@ -18,15 +18,15 @@ from ecolopy_dev.utils             import pre_get_stirlings, stirling, mul_polyn
 from warnings                      import warn
 
 try:
-    from gmpy2                         import log, lngamma, exp, gamma, mpfr
+    from gmpy2 import log, lngamma, exp, gamma, mpfr
 except ImportError:
     warn("WARNING: GMPY2 library not found, using numpy")
-    from numpy                         import log, exp, float128 as mpfr
-    from scipy.special                 import gamma, gammaln as lngamma
+    from numpy         import log, exp, float128 as mpfr
+    from scipy.special import gamma, gammaln as lngamma
     
-from scipy.optimize                import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b
-from sys                           import stdout
-from random                        import random
+from scipy.optimize import fmin, fmin_slsqp, fmin_tnc, fmin_l_bfgs_b
+from sys            import stdout
+from random         import random
 
 
 class EtienneModel(UNTBModel):
@@ -72,7 +72,7 @@ class EtienneModel(UNTBModel):
                 else:
                     mcnum[new] = mcnum[int (random () * (new))]
                 locnum[ind] = mcnum[new]
-        return table (locnum, new + 1)
+        return table(locnum, new + 1)
 
 
     def likelihood(self, params):
@@ -88,28 +88,30 @@ class EtienneModel(UNTBModel):
         '''
         kda       = self._kda
         theta     = params[0]
-        immig     = float (params[1]) / (1 - params[1]) * (self.community.J - 1)
-        log_immig = log (immig)
+        immig     = float(params[1]) / (1 - params[1]) * (self.community.J - 1)
+        log_immig = log(immig)
         theta_s   = theta + self.community.S
-        poch1 = exp (self._factor + log (theta) * self.community.S - \
-                     lpoch (immig, self.community.J) + \
-                     log_immig * self.community.S + lngamma(theta))
-        gam_theta_s = gamma (theta_s)
+        poch1 = exp(self._factor + log(theta) * self.community.S - \
+                    lpoch(immig, self.community.J) + \
+                    log_immig * self.community.S + lngamma(theta))
+        gam_theta_s = gamma(theta_s)
         lik = mpfr(0.0)
-        for abd in xrange (self.community.J - self.community.S):
-            lik += poch1 * exp (kda [abd] + abd * log_immig) / gam_theta_s
+        for abd in xrange(self.community.J - self.community.S):
+            lik += poch1 * exp(kda[abd] + abd * log_immig) / gam_theta_s
             gam_theta_s *= theta_s + abd
-        return -log (lik)
+        return -log(lik)
 
         
-    def optimize (self, method='fmin', start=None, verbose=True):
+    def optimize(self, method='fmin', start=None, verbose=True):
         '''
         Main function to optimize theta and I using etienne likelihood function
         using Scipy package, values that are closest to the one proposed
         by Tetame, are raised by fmin function.
 
-        :argument fmin method: optimization strategy, can be one of fmin, slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)
-        :argument (community.S,0.5) start: tupple for startin values of theta and m
+        :argument fmin method: optimization strategy, can be one of fmin,
+        slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)
+        :argument (community.S,0.5) start: tupple for startin values of theta
+        and m
         :argument True verbose: displays running status
         
         '''
@@ -129,24 +131,22 @@ class EtienneModel(UNTBModel):
             theta, mut = fmin (self.likelihood, start,
                                full_output=False, disp=0)
         elif method == 'slsqp':
-            a, _, _, err, _ = fmin_slsqp (self.likelihood, start,
-                                          iter=1000, iprint=0,
-                                          bounds=bounds, full_output=True)
-            theta, mut = a
+            (theta, mut), _, _, err, _ = fmin_slsqp(self.likelihood, start,
+                                                    iter=1000, iprint=0,
+                                                    bounds=bounds,
+                                                    full_output=True)
             if err != 0:
                 all_ok = False
         elif method == 'l_bfgs_b':
-            a, _, err = fmin_l_bfgs_b (self.likelihood, start,
-                                       maxfun=1000, bounds=bounds,
-                                       iprint=-1, approx_grad=True)
-            theta, mut = a
+            theta, mut, _, err = fmin_l_bfgs_b(self.likelihood, start,
+                                               maxfun=1000, bounds=bounds,
+                                               iprint=-1, approx_grad=True)
             if err['warnflag'] != 0:
                 all_ok = False
         elif method == 'tnc':
-            a, _, err = fmin_tnc (self.likelihood, start, maxfun=1000,
-                                  messages=0, bounds=bounds,
-                                  approx_grad=True)
-            theta, mut = a
+            theta, mut, _, err = fmin_tnc(self.likelihood, start, maxfun=1000,
+                                          messages=0, bounds=bounds,
+                                          approx_grad=True)
             if err != 1:
                 all_ok = False
         self._parameters['I']     = mut * (self.community.J - 1) / (1 - mut)
@@ -161,28 +161,30 @@ class EtienneModel(UNTBModel):
         '''
         compute K(D,A) according to etienne formula
         '''
-        specabund = [sorted (list (set (self.community.abund))),
-                     table_mpfr (self.community.abund)]
-        sdiff     = len (specabund [1])
+        specabund = [sorted(list(set(self.community.abund))),
+                     table_mpfr(self.community.abund)]
+        sdiff     = len(specabund[1])
         polyn     = []
         # compute all stirling numbers taking advantage of recurrence function
         needed = {0: True}
-        for i in xrange (sdiff):
-            for k in xrange (1, specabund[0][i] + 1):
-                needed [int (specabund[0][i])] = True
+        for i in xrange(sdiff):
+            for k in xrange(1, specabund[0][i] + 1):
+                needed[int(specabund[0][i])] = True
         if verbose:
             stdout.write('  Getting some stirling numbers...\n')
-        pre_get_stirlings (max (specabund[0]), needed, verbose=verbose)
-        for i in xrange (sdiff):
+        pre_get_stirlings(max(specabund[0]), needed, verbose=verbose)
+        for i in xrange(sdiff):
             if verbose:
-                stdout.write ("\r  Computing K(D,A) at species %s out of %s" \
-                              % (i+1, sdiff))
+                stdout.write("\r  Computing K(D,A) at species %s out of %s" \
+                             % (i+1, sdiff))
                 stdout.flush ()
             sai = specabund[0][i]
-            polyn1 = [stirling(sai, k)*factorial_div(k, sai) for k in xrange (1, sai+1)]
-            polyn1 = power_polyn (polyn1, specabund[1][i]) if polyn1 else [mpfr(1.)]
-            polyn = mul_polyn (polyn, polyn1)
-        self._kda = [log (i) for i in polyn]
+            polyn1 = [stirling(sai, k) * factorial_div(k, sai) \
+                      for k in xrange(1, sai+1)]
+            polyn1 = power_polyn(polyn1, specabund[1][i]) \
+                     if polyn1 else [mpfr(1.)]
+            polyn = mul_polyn(polyn, polyn1)
+        self._kda = [log(i) for i in polyn]
         if verbose:
-            stdout.write ('\n')
+            stdout.write('\n')
 
