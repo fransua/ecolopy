@@ -5,6 +5,16 @@ EcoloPy
 PREREQUISITE
 ============
 
+PYTHON
+------
+
+This is to install python packages easily.
+
+::
+
+  sudo apt-get install python-setuptools
+
+
 MPFR 
 ----
 
@@ -60,8 +70,8 @@ GMPY2
 for huge numbers.
 ::
 
-  apt-get install python2.7-dev libmpfr-dev libgmp3-dev libmpc-dev
-  http://code.google.com/p/gmpy/downloads/list
+  sudo apt-get install python2.7-dev libmpfr-dev libgmp3-dev libmpc-dev
+  sudo easy_install gmpy2
 
 
 SCIPY
@@ -71,14 +81,16 @@ for optimization of log likelihood
 
 ::
 
-  easy_install scipy
+  sudo easy_install scipy
+
 
 NUMPY
 -----
 
 ::
 
-  easy_install numpy
+  sudo easy_install numpy
+
 
 MATPLOTLIB
 ----------
@@ -87,16 +99,21 @@ Not compulsory, only to draw graphs
 
 ::
 
-  easy_install matplotlib
+  sudo easy_install matplotlib
 
 
 INSTALL:
 ========
 
-sudo python setup.py install
+::
+
+  sudo python setup.py install
 
 test usage:
-python test_all.py full
+
+::
+
+  python test_all.py full
 
 
 TODO:
@@ -106,6 +123,7 @@ TODO:
 
 Links
 =====
+
 `Travis CI <https://travis-ci.org/#!/tkf/emacs-jedi>`_ |build-status|
 
 .. |build-status|
