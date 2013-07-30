@@ -124,6 +124,16 @@ TODO:
 Links
 =====
 
+WIKI
+----
+
+http://bioinfo.cipf.es/ecolopy/index.html
+
+
+
+travis build
+------------
+
 `Travis CI <https://travis-ci.org/#!/tkf/emacs-jedi>`_ |build-status|
 
 .. |build-status|
