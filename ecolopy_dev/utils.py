@@ -18,7 +18,7 @@ except ImportError:
     warn("WARNING: GMPY2 library not found, using numpy")
     from numpy            import log, exp, float128 as mpfr
     from scipy.special    import gamma, gammaln as lngamma
-    from operators        import mul, div
+    from operator         import mul, div
 
 from sys import stdout
 try:

@@ -21,6 +21,6 @@ class Test_ewens(unittest.TestCase):
         ewens_model = com.get_model('ewens')
         print '* fitted to ewens model:'
         print ewens_model
-        self.assertEqual(29.257363187464055, ewens_model.theta)
-        self.assertEqual(107.69183285311374, ewens_model.lnL)
+        self.assertEqual(round(29.257363187464055, 4), round(ewens_model.theta, 4))
+        self.assertEqual(round(107.69183285311374, 4), round(ewens_model.lnL, 4))
         self.assertEqual(14.720795937459272, ewens_model.I)
