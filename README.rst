@@ -124,10 +124,10 @@ TODO:
 Links
 =====
 
-WIKI
-----
+Documentation
+-------------
 
-http://bioinfo.cipf.es/ecolopy/index.html
+http://fransua.github.io/ecolopy/
 
 
 

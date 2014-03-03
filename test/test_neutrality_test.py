@@ -18,7 +18,7 @@ from sys import argv
 from lockfile import FileLock
 from cPickle import load, dump
 
-from ecolopy_dev.abundance import Abundance
+from ecolopy_dev.community import Community
 from ecolopy_dev.random_neutral import rand_neutral_ewens, rand_neutral_etienne
 
 def get_random_S():
@@ -99,7 +99,6 @@ def main():
     """
     main function
     """
-    proc = argv[1]
 
     sizes = [10,30,50]#,100,150]#,200,400,1000]
     people  = [10000, 100000]#, 1000000]
@@ -119,14 +118,14 @@ def main():
     for m in models:
         for S in sizes:
             for inds in people:
-                if inds == 1000000 and S<50:
+                if inds == 1000000 and S < 50:
                     continue
                 print m
                 distr = generate_random_distribution(m, S, inds)
                 print 'S: {0}, J: {1}'.format (len (distr), sum(distr))
-                abd = Abundance(distr)
-                abd.ewens_optimal_params()
-                abd.etienne_optimal_params(verbose=False)
+                abd = Community(distr)
+                abd.fit_model('ewens')
+                abd.fit_model('etienne', verbose=False)
                 lrt = abd.lrt('ewens', 'etienne')
                 best = 'ewens' if lrt > 0.05 else 'etienne'
                 pv_f = abd.test_neutrality(gens=1000, model=best)
@@ -139,7 +138,7 @@ def main():
                 results['lib'][m]['all'].append(pv_l)
                 
 
-    log = '/home/francisco/queue/abd_neut_test_simulations_01.pik'
+    log = '/tmp/abd_neut_test_simulations_01.pik'
     lock = FileLock(log)
     with lock:
         pik = open(log, 'w')
@@ -157,7 +156,7 @@ def main():
         dump(old_results, pik)
         pik.close()
 
-    exit(main())
+exit(main())
 
 
 

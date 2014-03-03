@@ -91,7 +91,7 @@ if missing:
 ete_version = open("VERSION").readline().strip()
 mod_name = ete_version.split("rev")[0]
 
-long_description = open("README").read()
+long_description = open("README.rst").read()
 long_description += open("INSTALL").read()
 long_description.replace("ecolopy", mod_name)
 

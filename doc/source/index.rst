@@ -11,10 +11,8 @@ EcoloPy deal with species abundance and diversity data. It allows to fit this da
 It is designed to deal with large dataset like genetic element content of mammalian genomes.
 
 source available for download here:
-https://gitorious.org/ecolopy
+https://github.com/fransua/ecolopy
 
-PDF version of this tutorial can be downloaded here:
-http://bioinfo.cipf.es/fransua/ecolopy/EcoloPy.pdf
 
 -------------------
 
