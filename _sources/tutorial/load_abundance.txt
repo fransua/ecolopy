@@ -207,7 +207,7 @@ output:
           lnL                     : 318.84864864926203
 
 Etienne model
-^^^^^^^^^^^^^
+-------------
 
 Now we can run an other model like the one proposed by Etienne [Etienne2005]_:
 

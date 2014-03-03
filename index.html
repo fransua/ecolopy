@@ -49,11 +49,13 @@
 <h1>EcoloPy-UNTBgen<a class="headerlink" href="#ecolopy-untbgen" title="Permalink to this headline">¶</a></h1>
 <p><strong>a Python package to test for Unified Neutral Theory of Biodiversity and biogeography in Large dataset.</strong>
 EcoloPy deal with species abundance and diversity data. It allows to fit this data into ecological models and implements some statistical tests.
-It is designed to deal with large dataset like genetic element content of mammalian genomes.</p>
-<p>source available for download here:
-<a class="reference external" href="https://github.com/fransua/ecolopy">https://github.com/fransua/ecolopy</a></p>
-<hr class="docutils" />
-<p><strong>Contents:</strong></p>
+It is able to deal with large dataset like genetic element content of mammalian genomes.</p>
+<p>The package was implemented in the context of a study of the distribution of genetic elements in Eukaryotic genomes <a class="reference internal" href="#citation"><em>[Serra2013]</em></a>.</p>
+<p>The source is freely available for download here:
+<a class="reference external" href="https://github.com/fransua/ecolopy">https://github.com/fransua/ecolopy</a> <em>(Do not hesitate to send us feedback)</em>.</p>
+</div>
+<div class="section" id="table-of-contents">
+<h1>Table of Contents:<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a><ul>
@@ -63,62 +65,40 @@ It is designed to deal with large dataset like genetic element content of mammal
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Download and Install</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="install.html#gnu-linux">GNU/Linux</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="install.html#install-python-libraries">Install Python libraries:</a></li>
-<li class="toctree-l3"><a class="reference internal" href="install.html#install-gmpy2">Install GMPY2</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#gnu-linux">GNU/Linux</a></li>
 <li class="toctree-l2"><a class="reference internal" href="install.html#installing-ecolopy">Installing EcoloPy</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial/load_abundance.html">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#just-after-counting-species-abundances-in-an-ecosystem">Just after counting species abundances in an ecosystem</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tutorial/load_abundance.html#load-community">Load Community</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorial/load_abundance.html#quick-descriptive-statistics">Quick descriptive statistics</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="tutorial/load_abundance.html#rsa-curve">RSA curve</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#fit-to-ecological-model">Fit to ecological model</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tutorial/load_abundance.html#ewens-model">Ewens model</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="tutorial/load_abundance.html#etienne-model">Etienne model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="tutorial/load_abundance.html#best-optimization-strategy-for-etienne-model">Best optimization strategy for Etienne model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="tutorial/load_abundance.html#generate-contour-image-of-likelihood">Generate contour image of likelihood</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="tutorial/load_abundance.html#log-normal-model">Log-normal model</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#comparing-models">Comparing Models</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tutorial/load_abundance.html#browsing-parameters">Browsing parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tutorial/load_abundance.html#searching-for-best-model">Searching for best model</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#just-after-counting-species-abundances-in-an-ecosystem">Just after counting species abundances in an ecosystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#fit-to-ecological-model">Fit to ecological model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#comparing-models">Comparing Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#generate-random-distribution">Generate random distribution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#testing-for-neutrality">Testing for neutrality</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="tutorial/load_abundance.html#getting-significance-of-deviation-from-neutrality">Getting significance of deviation from neutrality</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="tutorial/load_abundance.html#variations">Variations:</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="tutorial/load_abundance.html#plotting-distribution-of-simulations">Plotting distribution of simulations:</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#testing-for-neutrality">Testing for neutrality</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#saving-loading-community-object">Saving/Loading Community object</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial/load_abundance.html#references">References</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="reference/index.html">EcoloPy&#8217;s Reference Guide</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="reference/reference_community.html">Community Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/reference_ecological_model.html">EcologicalModel Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/reference_utils.html">Some utilities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/reference_lognormal_model.html">UNTB Model Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/reference_untb_model.html">UNTB Model Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/reference_ewens_model.html">Ewens Model Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/reference_etienne_model.html">Etienne Model Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/reference_lognormal_model.html">Lognormal Model Class</a></li>
 </ul>
 </li>
 </ul>
+</div>
+<div class="section" id="citation">
+<span id="id1"></span><h2>Citation<a class="headerlink" href="#citation" title="Permalink to this headline">¶</a></h2>
+<p>Please refer to the following article if you use this package to analyze or process results that are part of a published work:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Serra, F., Becher, V., &amp; Dopazo, H. (2013). <strong>Neutral Theory Predicts the Relative Abundance and Diversity of Genetic Elements in a Broad Array of Eukaryotic Genomes.</strong> PloS One, 8(6), e63915. doi:<a class="reference external" href="http://dx.plos.org/10.1371/journal.pone.0063915">10.1371/journal.pone.0063915</a></li>
+</ul>
+</div></blockquote>
 </div>
 </div>
 
@@ -136,7 +116,7 @@ It is designed to deal with large dataset like genetic element content of mammal
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Download and Install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial/load_abundance.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference/index.html">EcoloPy&#8217;s Reference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference Guide</a></li>
 </ul>
 
   <h3>This Page</h3>

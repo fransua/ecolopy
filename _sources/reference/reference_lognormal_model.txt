@@ -1,5 +1,5 @@
-UNTB Model Class
-================
+Lognormal Model Class
+=====================
 
 .. currentmodule:: ecolopy_dev.models.lognormal_model
 
