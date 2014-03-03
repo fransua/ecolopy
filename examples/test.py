@@ -5,9 +5,9 @@ from ecolopy_dev import Community
 from ecolopy_dev.utils import draw_shannon_distrib
 
 abd = Community('dataset_trial/bci_short.txt')
-abd.fit_model('lognormal')
-abd.set_current_model('lognormal')
-pval, neut_h = abd.test_neutrality (model='lognormal',
+abd.fit_model('etienne')
+abd.set_current_model('etienne')
+pval, neut_h = abd.test_neutrality (model='etienne',
                                     gens=1000, full=True)
 draw_shannon_distrib(neut_h, abd.shannon, outfile='lala.png')
 
