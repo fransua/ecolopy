@@ -1,0 +1,434 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Community Class &mdash; EcoloPy-UNTBgen 0.1.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="EcoloPy-UNTBgen 0.1.3 documentation" href="../index.html" />
+    <link rel="up" title="EcoloPy’s Reference Guide" href="index.html" />
+    <link rel="next" title="EcologicalModel Class" href="reference_ecological_model.html" />
+    <link rel="prev" title="EcoloPy’s Reference Guide" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="reference_ecological_model.html" title="EcologicalModel Class"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="EcoloPy’s Reference Guide"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">EcoloPy&#8217;s Reference Guide</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="community-class">
+<h1>Community Class<a class="headerlink" href="#community-class" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="ecolopy_dev.community.Community">
+<em class="property">class </em><tt class="descclassname">ecolopy_dev.community.</tt><tt class="descname">Community</tt><big>(</big><em>data</em>, <em>j_tot=None</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main community class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> &#8211; <p>containing species count, can be given in one of:</p>
+<ul>
+<li>python list, each element being a species count</li>
+<li>text file containing one species count per line</li>
+<li>pickle file containing community object</li>
+</ul>
+</li>
+<li><strong>j_tot</strong> (<em>None</em>) &#8211; is the size of the metacommunity, if not defined</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>j_tot = J * 3</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">an Community object</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples:</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># python list</span>
+<span class="n">abd</span> <span class="o">=</span> <span class="n">Community</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">])</span>
+<span class="c"># text file</span>
+<span class="n">abd</span> <span class="o">=</span> <span class="n">Community</span><span class="p">(</span><span class="s">&quot;bci.txt&quot;</span><span class="p">,</span> <span class="n">j_tot</span><span class="o">=</span><span class="mi">256987</span><span class="p">)</span>
+<span class="c"># finally a saved Community object</span>
+<span class="n">abd</span> <span class="o">=</span> <span class="n">Community</span><span class="p">(</span><span class="s">&quot;abundance_bci_first_try.pik&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.draw_rsa">
+<tt class="descname">draw_rsa</tt><big>(</big><em>outfile=None</em>, <em>filetype=None</em>, <em>size=(15</em>, <em>15)</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.draw_rsa"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.draw_rsa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw Relative Species Abundances curve.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>outfile</strong> (<em>None</em>) &#8211; path were image will be saved, if none, plot</td>
+</tr>
+</tbody>
+</table>
+<p>will be shown using matplotlib GUI
+:argument None filetype: pdf or png
+:argument (15,15) size: size in inches of the drawing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.dump_community">
+<tt class="descname">dump_community</tt><big>(</big><em>outfile</em>, <em>force=False</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.dump_community"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.dump_community" title="Permalink to this definition">¶</a></dt>
+<dd><p>save params and kda with pickle
+force option is for writing pickle with no consideration
+if existing</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>outfile</strong> &#8211; path of the outfile</li>
+<li><strong>force</strong> (<em>False</em>) &#8211; overwrite existing outfile</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.fit_model">
+<tt class="descname">fit_model</tt><big>(</big><em>name='ewens'</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.fit_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.fit_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit Community to model.
+Extra arguments can be pssed depending on the model to fit. See doc of
+its corresponding optimize function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>Ewens</em>) &#8211; name of the model, between Etienne, Ewens or</td>
+</tr>
+</tbody>
+</table>
+<p>Log-normal</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">model</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.generate_random_neutral_distribution">
+<tt class="descname">generate_random_neutral_distribution</tt><big>(</big><em>model=None</em>, <em>J=None</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.generate_random_neutral_distribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.generate_random_neutral_distribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>return distribution of abundance, according to a given model
+and a given community size.
+if none of them are given, values of current Community are used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> (<em>None</em>) &#8211; model name (default current model)</li>
+<li><strong>J</strong> (<em>None</em>) &#8211; size of wanted community (default size of the</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>community of current abundance)
+:returns: random neutral distribution of abundances</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.get_current_model_name">
+<tt class="descname">get_current_model_name</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.get_current_model_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.get_current_model_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current model name</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.get_model">
+<tt class="descname">get_model</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.get_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.get_model" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; name of a computed model</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a EcologicalModel object corresponding to one of the computed</td>
+</tr>
+</tbody>
+</table>
+<p>models</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.iter_models">
+<tt class="descname">iter_models</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.iter_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.iter_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterate over pre computed models</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">model object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.load_community">
+<tt class="descname">load_community</tt><big>(</big><em>infile</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.load_community"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.load_community" title="Permalink to this definition">¶</a></dt>
+<dd><p>load params and kda with pickle from infile
+WARNING: do not overwrite values of params.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>infile</strong> &#8211; path of the outfile</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.lrt">
+<tt class="descname">lrt</tt><big>(</big><em>model_1</em>, <em>model_2</em>, <em>dgf=1</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.lrt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.lrt" title="Permalink to this definition">¶</a></dt>
+<dd><p>likelihood-ratio-test between two neutral models</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model_1</strong> &#8211; string representing simplest model, usually Ewens</li>
+<li><strong>model_2</strong> &#8211; string representing most complex model, usually</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Etienne
+:argument 1 dgf: number of degrees of freedom (1 when comparing Etienne
+and Ewens)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">p-value of rejection of alternative model</td>
+</tr>
+</tbody>
+</table>
+<p>eg: usually ewens, etienne. And if pval &lt; 0.05 than use etienne</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.rsa_ascii">
+<tt class="descname">rsa_ascii</tt><big>(</big><em>width=100</em>, <em>height=50</em>, <em>pch='o'</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.rsa_ascii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.rsa_ascii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw Relative Species Abundances curve (ASCII format).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>width</strong> (<em>100</em>) &#8211; width in term of characters</li>
+<li><strong>height</strong> (<em>100</em>) &#8211; height in term of characters</li>
+<li><strong>pch</strong> (<em>o</em>) &#8211; dot character</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">string corresponding to plot</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.set_current_model">
+<tt class="descname">set_current_model</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.set_current_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.set_current_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>set on model as default/current model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; model name of precomputed model</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.set_model">
+<tt class="descname">set_model</tt><big>(</big><em>model</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.set_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.set_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>add one model computed externally to the computed models of current
+Community object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> &#8211; model object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.community.Community.test_neutrality">
+<tt class="descname">test_neutrality</tt><big>(</big><em>model='ewens'</em>, <em>gens=100</em>, <em>full=False</em>, <em>fix_s=False</em>, <em>tries=1000</em>, <em>method='shannon'</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/community.html#Community.test_neutrality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.community.Community.test_neutrality" title="Permalink to this definition">¶</a></dt>
+<dd><p>test for neutrality comparing Shannon entropy
+if (Hobs &gt; Hrand_neut) then evenness of observed data is
+higher then neutral</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> (<em>ewens</em>) &#8211; model name otherwise, current model is used</li>
+<li><strong>gens</strong> (<em>100</em>) &#8211; number of random neutral distributions to generate</li>
+<li><strong>full</strong> (<em>False</em>) &#8211; also return list of compared values (H or lnL) for</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>simulated abundances
+:argument False fix_s: decide whether to fix or not the number of
+species for the generation of random neutral communities
+:argument False tries: in case S is fixed, determines the number of
+tries in order to obtain the exact same number of species as original
+community. In case The number of tries is exceeded, an ERROR message is
+displayed, and p-value returned is 1.0.
+:argument shannon method: can be either &#8216;Shannon&#8217; for comparing
+Shannon&#8217;s entropies or &#8216;loglike&#8217; for comparing log-likelihood values
+(Etienne 2007). Last method is much more computationally expensive, as
+likelihood of neutral distribution must be calculated.
+:returns: p_value if full=True also returns Shannon entropy (or
+likelihoods if method=&#8217;loglike&#8217;) of all random neutral abundances
+generated</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/dna-tree-forest.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Download and Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/load_abundance.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">EcoloPy&#8217;s Reference Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Community Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_ecological_model.html">EcologicalModel Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_utils.html">Some utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_lognormal_model.html">UNTB Model Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_untb_model.html">UNTB Model Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_ewens_model.html">Ewens Model Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_etienne_model.html">Etienne Model Class</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/reference/reference_community.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">EcoloPy&#8217;s Reference Guide</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="reference_ecological_model.html"
+                        title="next chapter">EcologicalModel Class</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="reference_ecological_model.html" title="EcologicalModel Class"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="EcoloPy’s Reference Guide"
+             >previous</a> |</li>
+        <li><a href="../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >EcoloPy&#8217;s Reference Guide</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Francois Serra, Hernán Dopazo.
+      Last updated on Mar 03, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

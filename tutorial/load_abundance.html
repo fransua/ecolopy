@@ -1,0 +1,627 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tutorial &mdash; EcoloPy-UNTBgen 0.1.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="EcoloPy-UNTBgen 0.1.3 documentation" href="../index.html" />
+    <link rel="next" title="EcoloPy’s Reference Guide" href="../reference/index.html" />
+    <link rel="prev" title="Download and Install" href="../install.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../reference/index.html" title="EcoloPy’s Reference Guide"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../install.html" title="Download and Install"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tutorial">
+<h1><a class="toc-backref" href="#id7">Tutorial</a><a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#tutorial" id="id7">Tutorial</a><ul>
+<li><a class="reference internal" href="#just-after-counting-species-abundances-in-an-ecosystem" id="id8">Just after counting species abundances in an ecosystem</a><ul>
+<li><a class="reference internal" href="#load-community" id="id9">Load Community</a></li>
+<li><a class="reference internal" href="#quick-descriptive-statistics" id="id10">Quick descriptive statistics</a><ul>
+<li><a class="reference internal" href="#rsa-curve" id="id11">RSA curve</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fit-to-ecological-model" id="id12">Fit to ecological model</a><ul>
+<li><a class="reference internal" href="#ewens-model" id="id13">Ewens model</a><ul>
+<li><a class="reference internal" href="#etienne-model" id="id14">Etienne model</a></li>
+<li><a class="reference internal" href="#best-optimization-strategy-for-etienne-model" id="id15">Best optimization strategy for Etienne model</a></li>
+<li><a class="reference internal" href="#generate-contour-image-of-likelihood" id="id16">Generate contour image of likelihood</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#log-normal-model" id="id17">Log-normal model</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#comparing-models" id="id18">Comparing Models</a><ul>
+<li><a class="reference internal" href="#browsing-parameters" id="id19">Browsing parameters</a></li>
+<li><a class="reference internal" href="#searching-for-best-model" id="id20">Searching for best model</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#generate-random-distribution" id="id21">Generate random distribution</a></li>
+<li><a class="reference internal" href="#testing-for-neutrality" id="id22">Testing for neutrality</a><ul>
+<li><a class="reference internal" href="#getting-significance-of-deviation-from-neutrality" id="id23">Getting significance of deviation from neutrality</a><ul>
+<li><a class="reference internal" href="#variations" id="id24">Variations:</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#plotting-distribution-of-simulations" id="id25">Plotting distribution of simulations:</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#saving-loading-community-object" id="id26">Saving/Loading Community object</a></li>
+<li><a class="reference internal" href="#references" id="id27">References</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="just-after-counting-species-abundances-in-an-ecosystem">
+<h2><a class="toc-backref" href="#id8">Just after counting species abundances in an ecosystem</a><a class="headerlink" href="#just-after-counting-species-abundances-in-an-ecosystem" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="load-community">
+<h3><a class="toc-backref" href="#id9">Load Community</a><a class="headerlink" href="#load-community" title="Permalink to this headline">¶</a></h3>
+<p>Community is a class, and derived objects represent simply a distribution of species abundance , with associated function in order to calculate descriptive statistics or to fit it to evolutionary models.</p>
+<p>The data needed to create this object consists on a list of values corresponding to the abundances of each species. We can either give to Community a python list of values:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Community</span> <span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">54</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">15</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>or the path to a file containing those values:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Community</span> <span class="p">(</span><span class="s">&#39;whatever_path/mydata.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>mydata.txt would contain the same list of values, one per row:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="mi">1</span>
+<span class="mi">4</span>
+<span class="mi">4</span>
+<span class="mi">12</span>
+<span class="mi">54</span>
+<span class="mi">68</span>
+<span class="mi">32</span>
+<span class="mi">15</span>
+</pre></div>
+</div>
+<p>In the next step we are going to create an object <a class="reference internal" href="../reference/reference_community.html#ecolopy_dev.community.Community" title="ecolopy_dev.community.Community"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.community.Community()</span></tt></a> that will represent the distribution of abundances of the well known/studied BCI dataset.</p>
+<p>We are going to load this object under the name &#8216;com&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ecolopy</span> <span class="kn">import</span> <span class="n">Community</span>
+<span class="n">com</span> <span class="o">=</span> <span class="n">Community</span> <span class="p">(</span><span class="s">&#39;bci_full.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="quick-descriptive-statistics">
+<h3><a class="toc-backref" href="#id10">Quick descriptive statistics</a><a class="headerlink" href="#quick-descriptive-statistics" title="Permalink to this headline">¶</a></h3>
+<p>In order to see quickly how does this community looks like, we can use the print command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="n">com</span>
+</pre></div>
+</div>
+<p>output:</p>
+<div class="highlight-text"><div class="highlight"><pre>Community (object)
+    Number of individuals (J) : 21457
+    Number of species (S)     : 225
+    Shannon entropy (shannon) : 4.2704
+    Metacommunity size (j_tot): 64371
+    Models computed           :
+    Model loaded              : None
+</pre></div>
+</div>
+<p>With:</p>
+<ul class="simple">
+<li>Number of individuals correspond to the total of the given community</li>
+<li>Number of species should correspond to the number of element in your input list, or to the number of line in your input file</li>
+<li>Shannon entropy <a class="reference internal" href="#shannon1948" id="id1">[Shannon1948]</a> is computed according to:</li>
+</ul>
+<div class="math">
+<p><img src="../_images/math/13c760bbc9660cc9265506667da2a9d85075ad21.png" alt="\begin{eqnarray}
+  H(X) = \sum_{0\le i\le n} p(x_i) * log (p(x_i))
+\end{eqnarray}"/></p>
+</div><p>X being the number of individuals for each species and n the number of species.</p>
+<ul class="simple">
+<li>Metacommunity size: correspond to 3 times the community size if not defined by user, we could have write to fix it at a given value instead of default:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">com</span> <span class="o">=</span> <span class="n">Community</span> <span class="p">(</span><span class="s">&#39;bci_full.txt&#39;</span><span class="p">,</span> <span class="n">j_tot</span><span class="o">=</span><span class="mi">10000000</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>Models computed: <a class="reference internal" href="../reference/reference_community.html#ecolopy_dev.community.Community" title="ecolopy_dev.community.Community"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.community.Community()</span></tt></a> can be associated to an Ecological model, the user
+need first to compute them.</li>
+<li>Current Model: once computed, we can associate our community to a given model</li>
+</ul>
+<div class="section" id="rsa-curve">
+<h4><a class="toc-backref" href="#id11">RSA curve</a><a class="headerlink" href="#rsa-curve" title="Permalink to this headline">¶</a></h4>
+<p>An other way to see quickly how our community looks-like is to print relative species abundance curve (RSA) with <a class="reference internal" href="../reference/reference_community.html#ecolopy_dev.community.Community.rsa_ascii" title="ecolopy_dev.community.Community.rsa_ascii"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.community.Community.rsa_ascii()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="n">com</span><span class="o">.</span><span class="n">rsa_ascii</span><span class="p">(</span><span class="n">pch</span><span class="o">=</span><span class="s">&#39;o&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">(%) Relative</span>
+<span class="sd">Communitys</span>
+
+<span class="sd">8.0021 +o</span>
+<span class="sd">       |</span>
+<span class="sd">       | oo</span>
+<span class="sd">       |   o</span>
+<span class="sd">2.6181 +    ooo</span>
+<span class="sd">       |       o</span>
+<span class="sd">       |        ooo</span>
+<span class="sd">1.0319 +           oo</span>
+<span class="sd">       |             oo</span>
+<span class="sd">       |               o</span>
+<span class="sd">       |                o</span>
+<span class="sd">       |                 oooo</span>
+<span class="sd">0.4067 +                     ooo</span>
+<span class="sd">       |                        oooo</span>
+<span class="sd">       |                            oooo</span>
+<span class="sd">       |                                oo</span>
+<span class="sd">       |                                  ooo</span>
+<span class="sd">0.1603 +                                     oooo</span>
+<span class="sd">       |                                         ooooo</span>
+<span class="sd">       |                                              ooooo</span>
+<span class="sd">       |                                                   o</span>
+<span class="sd">       |                                                    oooo</span>
+<span class="sd">0.0632 +                                                        ooooo</span>
+<span class="sd">       |                                                             ooo</span>
+<span class="sd">       |                                                                oo</span>
+<span class="sd">       |                                                                  oo</span>
+<span class="sd">       |</span>
+<span class="sd">0.0249 +                                                                    oooo</span>
+<span class="sd">       |                                                                        oo</span>
+<span class="sd">       |                                                                          ooo</span>
+<span class="sd">       |                                                                             ooooo</span>
+<span class="sd">       |                                                                                  oooooooo</span>
+<span class="sd"> 1/inf +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+</span>
+<span class="sd">       0    12   25   37   50   62   75   87   100  112  125  137  150  162  175  187  200  212  222</span>
+
+<span class="sd">                                              Species rank</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>Also, if pylab is installed nicer plot can be generated, through the <a class="reference internal" href="../reference/reference_community.html#ecolopy_dev.community.Community.draw_rsa" title="ecolopy_dev.community.Community.draw_rsa"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.community.Community.draw_rsa()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">com</span><span class="o">.</span><span class="n">draw_rsa</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="figure" id="rsa-fig">
+<a class="reference internal image-reference" href="../_images/rsa.png"><img alt="../_images/rsa.png" src="../_images/rsa.png" style="width: 800.0px; height: 640.0px;" /></a>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="fit-to-ecological-model">
+<h2><a class="toc-backref" href="#id12">Fit to ecological model</a><a class="headerlink" href="#fit-to-ecological-model" title="Permalink to this headline">¶</a></h2>
+<p>Once our distribution of abundances loaded into an Community object, EcoloPy proposes a set of ecological models that we can try to fit to our data.</p>
+<div class="section" id="ewens-model">
+<h3><a class="toc-backref" href="#id13">Ewens model</a><a class="headerlink" href="#ewens-model" title="Permalink to this headline">¶</a></h3>
+<p>As described by Hubbell <a class="reference internal" href="#hubbell2001" id="id2">[Hubbell2001]</a> &#8216;Ewens model&#8217; uses Ewens sampling formula <a class="reference internal" href="#ewens1972" id="id3">[Ewens1972]</a> in order to explain the distribution and abundances of species.</p>
+<p>This model assumes that:</p>
+<div class="math">
+<p><img src="../_images/math/4c7f020132cf65fbf13e18554a8a836e128b06e4.png" alt="\begin{eqnarray}
+  I  = \frac{m}{(1 - m) * (J - 1)}
+\end{eqnarray}"/></p>
+</div><p>we just have to type:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">com</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="s">&#39;ewens&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>this step is usually very fast. When finished just type, to load this model as our current model:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">com</span><span class="o">.</span><span class="n">set_current_model</span><span class="p">(</span><span class="s">&#39;ewens&#39;</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">com</span>
+</pre></div>
+</div>
+<p>output:</p>
+<div class="highlight-text"><div class="highlight"><pre>Community (object)
+    Number of individuals (J) : 21457
+    Number of species (S)     : 225
+    Shannon&#39;s index (shannon) : 4.2704
+    Metacommunity size (j_tot): 64371
+    Models computed           : ewens
+    Model loaded              : EwensModel
+        I                       : 17.4945806282
+        theta                   : 34.9622847952
+        m                       : 0.000814705802191
+        lnL                     : 318.84864864926203
+</pre></div>
+</div>
+<div class="section" id="etienne-model">
+<h4><a class="toc-backref" href="#id14">Etienne model</a><a class="headerlink" href="#etienne-model" title="Permalink to this headline">¶</a></h4>
+<p>Now we can run an other model like the one proposed by Etienne <a class="reference internal" href="#etienne2005" id="id4">[Etienne2005]</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">com</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="s">&#39;etienne&#39;</span><span class="p">)</span>
+<span class="n">com</span><span class="o">.</span><span class="n">set_current_model</span><span class="p">(</span><span class="s">&#39;etienne&#39;</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">com</span>
+</pre></div>
+</div>
+<p>output:</p>
+<div class="highlight-text"><div class="highlight"><pre>Getting K(D,A) according to Etienne 2005 formula:
+  Getting some stirling numbers...
+    1000 of 1717, size: 3145976
+  Computing K(D,A) at species 108 out of 108
+
+Community (object)
+    Number of individuals (J) : 21457
+    Number of species (S)     : 225
+    Shannon&#39;s index (shannon) : 4.2704
+    Metacommunity size (j_tot): 64371
+    Models computed           : ewens, etienne
+    Model loaded              : EtienneModel
+        I                       : 2211.10111912
+        theta                   : 47.6743015824
+        m                       : 0.0934250928321
+        lnL                     : 308.72540670819615
+</pre></div>
+</div>
+</div>
+<div class="section" id="best-optimization-strategy-for-etienne-model">
+<h4><a class="toc-backref" href="#id15">Best optimization strategy for Etienne model</a><a class="headerlink" href="#best-optimization-strategy-for-etienne-model" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="../reference/reference_community.html#ecolopy_dev.community.Community.fit_model" title="ecolopy_dev.community.Community.fit_model"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.community.Community.fit_model()</span></tt></a> function, when called for Etienne model, allows to define the optimization strategy to use all from Scipy <a class="reference internal" href="#jones2001" id="id5">[Jones2001]</a> (see scipy.optimize documentation).
+The fmin optimization strategy is the one used by default, it is fast, but do not allow to set bounds for
+the values of parameters to optimize, sometimes ending with values of <em>theta</em> almost infinite.</p>
+<p>To circumvent this problem, other optimization strategies are available, it is recommended to use several of them.
+A simple way to find the best optimization would be:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">tmp</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">met</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;fmin&#39;</span><span class="p">,</span> <span class="s">&#39;slsqp&#39;</span><span class="p">,</span> <span class="s">&#39;l_bfgs_b&#39;</span><span class="p">,</span> <span class="s">&#39;tnc&#39;</span><span class="p">]:</span>
+    <span class="k">print</span> <span class="s">&#39;Optimizing with </span><span class="si">%s</span><span class="s">...&#39;</span> <span class="o">%</span> <span class="n">met</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">com</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;etienne&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">met</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">com</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="s">&#39;etienne&#39;</span><span class="p">)</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">met</span><span class="p">]</span> <span class="o">=</span><span class="p">{}</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">met</span><span class="p">][</span><span class="s">&#39;model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">met</span><span class="p">][</span><span class="s">&#39;theta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">theta</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">met</span><span class="p">][</span><span class="s">&#39;I&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">I</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">met</span><span class="p">][</span><span class="s">&#39;m&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">met</span><span class="p">][</span><span class="s">&#39;lnL&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">lnL</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;    optimization failed: &#39;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c"># in case optimization by fmin failed to found correct values for theta and m:</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">tmp</span><span class="p">[</span><span class="s">&#39;fmin&#39;</span><span class="p">][</span><span class="s">&#39;theta&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">com</span><span class="o">.</span><span class="n">S</span> <span class="ow">and</span> \
+        <span class="mf">1e-50</span> <span class="o">&lt;=</span> <span class="n">tmp</span><span class="p">[</span><span class="s">&#39;fmin&#39;</span><span class="p">][</span><span class="s">&#39;m&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="o">-</span><span class="mf">1e-50</span><span class="p">):</span>
+    <span class="k">del</span> <span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="s">&#39;fmin&#39;</span><span class="p">])</span>
+
+<span class="c"># find the model with the higher likelihood:</span>
+<span class="n">met</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">tmp</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;lnL&#39;</span><span class="p">])</span>
+
+<span class="c"># load it as &#39;etienne&#39; model</span>
+<span class="n">com</span><span class="o">.</span><span class="n">set_model</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="n">met</span><span class="p">][</span><span class="s">&#39;model&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><em>Also it is a good thing to try different starting values for optimization, by default</em> <a class="reference internal" href="../reference/reference_community.html#ecolopy_dev.community.Community.fit_model" title="ecolopy_dev.community.Community.fit_model"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.community.Community.fit_model()</span></tt></a> <em>will use the number of species for theta and 0.5 for m (for the full doc see</em> <a class="reference internal" href="../reference/reference_etienne_model.html#ecolopy_dev.models.etienne_model.EtienneModel.optimize" title="ecolopy_dev.models.etienne_model.EtienneModel.optimize"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.models.etienne_model.EtienneModel.optimize()</span></tt></a> <em>, the funticon called internally by fit_model)</em></p>
+</div>
+<div class="section" id="generate-contour-image-of-likelihood">
+<h4><a class="toc-backref" href="#id16">Generate contour image of likelihood</a><a class="headerlink" href="#generate-contour-image-of-likelihood" title="Permalink to this headline">¶</a></h4>
+<div class="figure" id="contour-fig">
+<a class="reference internal image-reference" href="../_images/contour_lnl.png"><img alt="../_images/contour_lnl.png" src="../_images/contour_lnl.png" style="width: 880.0px; height: 660.55px;" /></a>
+<p class="caption">Figure 2: Contour plots representing log likelihood values of BCI dataset fitting Etienne  model with different values of <em>theta</em> and <em>m</em>. Global optima computed by the optimization is found here at the intersection of dashed lines, while local optima are marked by white crosses (7 of them are found, including global optima).</p>
+</div>
+<p>In the case of Etienne model EcoloPy allow user to draw contour frame of likelihood <a href="tutorial/load_abundance.html#contour-fig">Figure  2</a> (<a class="reference internal" href="../reference/reference_utils.html#ecolopy_dev.utils.draw_contour_likelihood" title="ecolopy_dev.utils.draw_contour_likelihood"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.utils.draw_contour_likelihood()</span></tt></a>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ecolopy.utils</span> <span class="kn">import</span> <span class="n">draw_contour_likelihood</span>
+<span class="c"># this can take 2 or 3 hours to compute</span>
+<span class="n">draw_contour_likelihood</span><span class="p">(</span><span class="n">com</span><span class="p">,</span> <span class="n">theta_range</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span><span class="mi">100</span><span class="p">],</span> <span class="n">m_range</span><span class="o">=</span><span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="n">num_dots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="log-normal-model">
+<h3><a class="toc-backref" href="#id17">Log-normal model</a><a class="headerlink" href="#log-normal-model" title="Permalink to this headline">¶</a></h3>
+<p>In EcoloPy is also implemented log normal model:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">com</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span><span class="s">&#39;lognormal&#39;</span><span class="p">)</span>
+<span class="n">com</span><span class="o">.</span><span class="n">set_current_model</span> <span class="p">(</span><span class="s">&#39;lognormal&#39;</span><span class="p">)</span>
+
+<span class="k">print</span> <span class="n">com</span>
+</pre></div>
+</div>
+<p>output:</p>
+<div class="highlight-text"><div class="highlight"><pre>Community (object)
+    Number of individuals (J) : 4219
+    Number of species (S)     : 162
+    Shannon&#39;s index (shannon) : 4.5938
+    Metacommunity size (j_tot): 12657
+    Models computed           : lognormal, ewens, etienne
+    Model loaded              : LognormalModel
+        mu                      : 3.14269458985
+        sd                      : 1.78719175872
+        lnL                     : None
+</pre></div>
+</div>
+<p><em>Note: As likelihood value of log-normal model is not comparable to the one of Etienne or Ewens models, it is not calculated.</em></p>
+</div>
+</div>
+<div class="section" id="comparing-models">
+<h2><a class="toc-backref" href="#id18">Comparing Models</a><a class="headerlink" href="#comparing-models" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="browsing-parameters">
+<h3><a class="toc-backref" href="#id19">Browsing parameters</a><a class="headerlink" href="#browsing-parameters" title="Permalink to this headline">¶</a></h3>
+<p>Now we have fit our community to some models, a summary of the corresponding parameters are available through the print function, but each of them can also be reach like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">com</span><span class="o">.</span><span class="n">set_current_model</span><span class="p">(</span><span class="s">&#39;ewens&#39;</span><span class="p">)</span>
+<span class="n">com</span><span class="o">.</span><span class="n">theta</span>
+<span class="n">com</span><span class="o">.</span><span class="n">m</span>
+<span class="n">com</span><span class="o">.</span><span class="n">I</span>
+<span class="n">com</span><span class="o">.</span><span class="n">lnL</span>
+</pre></div>
+</div>
+<p>output:</p>
+<div class="highlight-text"><div class="highlight"><pre>34.962254203932339
+0.00081470508933989701
+17.494565308269266
+318.84864864917472
+</pre></div>
+</div>
+<p>or you can get any attribute through the model linked to our community:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span> <span class="o">=</span> <span class="n">com</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="s">&#39;ewens&#39;</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">lnL</span>
+</pre></div>
+</div>
+<p>output:</p>
+<div class="highlight-text"><div class="highlight"><pre>318.84864864917472
+</pre></div>
+</div>
+<p><em>All these values correspond to the current model (in this case ewens).</em></p>
+</div>
+<div class="section" id="searching-for-best-model">
+<h3><a class="toc-backref" href="#id20">Searching for best model</a><a class="headerlink" href="#searching-for-best-model" title="Permalink to this headline">¶</a></h3>
+<p>We have run now several models, within which the nested models ewens and etienne, for those we can run a likelihood ratio test using the lrt function.</p>
+<p>This function will compute a chi square test for 2 times the difference in likelihoods, with one degree of freedom (corresponding to the estimation of parameter <em>m</em>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="n">com</span><span class="o">.</span><span class="n">lrt</span> <span class="p">(</span><span class="s">&#39;ewens&#39;</span><span class="p">,</span> <span class="s">&#39;etienne&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>output:</p>
+<div class="highlight-text"><div class="highlight"><pre>6.80784682569e-06
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="generate-random-distribution">
+<h2><a class="toc-backref" href="#id21">Generate random distribution</a><a class="headerlink" href="#generate-random-distribution" title="Permalink to this headline">¶</a></h2>
+<p>In order to compare our distribution of abundances to the expected one according to a specific model, we can generate random neutral distributions.
+By default EcoloPy will use the parameters of the current model but this can be change passing to the function the name of the wanted model:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">com</span><span class="o">.</span><span class="n">generate_random_neutral_distribution</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;etienne&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>output:</p>
+<div class="highlight-text"><div class="highlight"><pre>[17.0, 867.0, 397.0, 184.0, 71.0,
+...
+...
+2.0, 2.0, 1.0, 1.0, 1.0, 1.0]
+</pre></div>
+</div>
+</div>
+<div class="section" id="testing-for-neutrality">
+<h2><a class="toc-backref" href="#id22">Testing for neutrality</a><a class="headerlink" href="#testing-for-neutrality" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="getting-significance-of-deviation-from-neutrality">
+<h3><a class="toc-backref" href="#id23">Getting significance of deviation from neutrality</a><a class="headerlink" href="#getting-significance-of-deviation-from-neutrality" title="Permalink to this headline">¶</a></h3>
+<p>In order to test if our distribution of abundances is neutral, Ecolopy implements a test based on comparing the distribution of values of Shannon entropies compared to the observed one (<a class="reference internal" href="../reference/reference_community.html#ecolopy_dev.community.Community.test_neutrality" title="ecolopy_dev.community.Community.test_neutrality"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.community.Community.test_neutrality()</span></tt></a>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># call test_neutrality function with the full option, making it to return the list</span>
+<span class="c"># of simulated entropies (WARNING: this number of generations is large...</span>
+<span class="c"># it will take a while)</span>
+<span class="n">pval</span><span class="p">,</span> <span class="n">neut_h</span> <span class="o">=</span> <span class="n">com</span><span class="o">.</span><span class="n">test_neutrality</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;etienne&#39;</span><span class="p">,</span> <span class="n">gens</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">pval</span>
+</pre></div>
+</div>
+<p>output:</p>
+<div class="highlight-text"><div class="highlight"><pre>0.1492
+</pre></div>
+</div>
+<p>According to this p-value, we would conclude that our dataset do not deviates significantly from neutrality.</p>
+<div class="section" id="variations">
+<h4><a class="toc-backref" href="#id24">Variations:</a><a class="headerlink" href="#variations" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><strong>more restrictive</strong> test can be done by fixing the number of species (S) to the observed number. For our example S-fixed would fix it to 225, and the result of such test would be:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="n">com</span><span class="o">.</span><span class="n">test_neutrality</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;etienne&#39;</span><span class="p">,</span> <span class="n">gens</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">fix_s</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>output:</p>
+<div class="highlight-text"><div class="highlight"><pre>0.0977
+</pre></div>
+</div>
+<ul class="simple">
+<li>another test can also be conducted through the same function, based on the <strong>comparison of likelihoods</strong> instead of Shannon&#8217;s index <a class="reference internal" href="#etienne2007" id="id6">[Etienne2007]</a></li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">print</span> <span class="n">com</span><span class="o">.</span><span class="n">test_neutrality</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s">&#39;etienne&#39;</span><span class="p">,</span> <span class="n">gens</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s">&#39;loglike&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>output (this time, we set the verbose option, in order to follow the progression of the generation of random neutral community):</p>
+<div class="highlight-text"><div class="highlight"><pre>Generating random neutral abundances 1000 out of 1000
+0.353
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="plotting-distribution-of-simulations">
+<h3><a class="toc-backref" href="#id25">Plotting distribution of simulations:</a><a class="headerlink" href="#plotting-distribution-of-simulations" title="Permalink to this headline">¶</a></h3>
+<p>We can also draw the distribution of simulated entropies and visually compare them to the observed value <a href="tutorial/load_abundance.html#shannon-hist">Figure  3</a> (<a class="reference internal" href="../reference/reference_utils.html#ecolopy_dev.utils.draw_shannon_distrib" title="ecolopy_dev.utils.draw_shannon_distrib"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.utils.draw_shannon_distrib()</span></tt></a>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># using previously generated neut_h</span>
+<span class="n">draw_shannon_distrib</span><span class="p">(</span><span class="n">neut_h</span><span class="p">,</span> <span class="n">com</span><span class="o">.</span><span class="n">shannon</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure" id="shannon-hist">
+<img alt="../_images/shannon_hist.png" src="../_images/shannon_hist.png" />
+<p class="caption">Figure 3: Histogram of distribution of shannon entropy values after 10.000 simulation under neutral model Etienne.
+Red vertical bar represents the observed value of entropy for our dataset, and the orange shade,
+the corresponding deviation inferred from simulation.</p>
+</div>
+</div>
+</div>
+<div class="section" id="saving-loading-community-object">
+<h2><a class="toc-backref" href="#id26">Saving/Loading Community object</a><a class="headerlink" href="#saving-loading-community-object" title="Permalink to this headline">¶</a></h2>
+<p>Once done EcoloPy allow user to save Community object and EcologicalModels object into cPikle with <a class="reference internal" href="../reference/reference_community.html#ecolopy_dev.community.Community.dump_community" title="ecolopy_dev.community.Community.dump_community"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.community.Community.dump_community()</span></tt></a> and <a class="reference internal" href="../reference/reference_community.html#ecolopy_dev.community.Community.load_community" title="ecolopy_dev.community.Community.load_community"><tt class="xref py py-func docutils literal"><span class="pre">ecolopy_dev.community.Community.load_community()</span></tt></a> functions.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># save it</span>
+<span class="n">com</span><span class="o">.</span><span class="n">dump_community</span><span class="p">(</span><span class="s">&#39;stored_bci.pik&#39;</span><span class="p">)</span>
+<span class="c"># (re)load it</span>
+<span class="n">com</span> <span class="o">=</span> <span class="n">Community</span><span class="p">(</span><span class="s">&#39;stored_bci.pik&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="references">
+<h2><a class="toc-backref" href="#id27">References</a><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="etienne2005" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[Etienne2005]</a></td><td>Rampal S Etienne, A new sampling formula for neutral biodiversity. Ecology Letters 8(3) (2005), 253-260.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="etienne2007" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[Etienne2007]</a></td><td>Rampal S Etienne, A neutral sampling formula for multiple samples and an ’exact’ test of neutrality. Ecology letters 10(7) (2007), 608-18.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="ewens1972" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[Ewens1972]</a></td><td>Waren J Ewens, The sampling theory of selectively neutral alleles. Theoretical population biology 3(1) (1972), 87-112.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="hubbell2001" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[Hubbell2001]</a></td><td>Stephen P Hubbell, The unified Neutral Theory of Biodiversity and Biogeography. Princeton University Press, 2001.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="jones2001" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[Jones2001]</a></td><td>Eric Jones, Travis Oliphant, Pearu Peterson, and Others, Scipy: Open source scientific tools for Python, 2001.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="shannon1948" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[Shannon1948]</a></td><td>C E Shannon, A mathematical theory of communication, vol. 5. The Bell System Technical Journal, 1948.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/dna-tree-forest.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Download and Install</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#just-after-counting-species-abundances-in-an-ecosystem">Just after counting species abundances in an ecosystem</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#load-community">Load Community</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quick-descriptive-statistics">Quick descriptive statistics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rsa-curve">RSA curve</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#fit-to-ecological-model">Fit to ecological model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ewens-model">Ewens model</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#etienne-model">Etienne model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#best-optimization-strategy-for-etienne-model">Best optimization strategy for Etienne model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#generate-contour-image-of-likelihood">Generate contour image of likelihood</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#log-normal-model">Log-normal model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#comparing-models">Comparing Models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#browsing-parameters">Browsing parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#searching-for-best-model">Searching for best model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#generate-random-distribution">Generate random distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing-for-neutrality">Testing for neutrality</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#getting-significance-of-deviation-from-neutrality">Getting significance of deviation from neutrality</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#variations">Variations:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#plotting-distribution-of-simulations">Plotting distribution of simulations:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-loading-community-object">Saving/Loading Community object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">EcoloPy&#8217;s Reference Guide</a></li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tutorial/load_abundance.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../install.html"
+                        title="previous chapter">Download and Install</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../reference/index.html"
+                        title="next chapter">EcoloPy&#8217;s Reference Guide</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../reference/index.html" title="EcoloPy’s Reference Guide"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../install.html" title="Download and Install"
+             >previous</a> |</li>
+        <li><a href="../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Francois Serra, Hernán Dopazo.
+      Last updated on Mar 03, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

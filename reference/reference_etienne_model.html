@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Etienne Model Class &mdash; EcoloPy-UNTBgen 0.1.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="EcoloPy-UNTBgen 0.1.3 documentation" href="../index.html" />
+    <link rel="up" title="EcoloPy’s Reference Guide" href="index.html" />
+    <link rel="prev" title="Ewens Model Class" href="reference_ewens_model.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="reference_ewens_model.html" title="Ewens Model Class"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">EcoloPy&#8217;s Reference Guide</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="etienne-model-class">
+<h1>Etienne Model Class<a class="headerlink" href="#etienne-model-class" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="ecolopy_dev.models.etienne_model.EtienneModel">
+<em class="property">class </em><tt class="descclassname">ecolopy_dev.models.etienne_model.</tt><tt class="descname">EtienneModel</tt><big>(</big><em>community</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/models/etienne_model.html#EtienneModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.models.etienne_model.EtienneModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class representing Ecological models</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; name of the class, can be either ewens, etienne or lognorm</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">EcologicalModel object</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="ecolopy_dev.models.etienne_model.EtienneModel.likelihood">
+<tt class="descname">likelihood</tt><big>(</big><em>params</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/models/etienne_model.html#EtienneModel.likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.models.etienne_model.EtienneModel.likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>log-likelihood function</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; <p>a list of 2 parameters:</p>
+<ul class="simple">
+<li>theta = params[0]</li>
+<li>m     = params[1]</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">log likelihood of given theta and I</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.models.etienne_model.EtienneModel.optimize">
+<tt class="descname">optimize</tt><big>(</big><em>method='fmin'</em>, <em>start=None</em>, <em>verbose=True</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/models/etienne_model.html#EtienneModel.optimize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.models.etienne_model.EtienneModel.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function to optimize theta and I using etienne likelihood function
+using Scipy package, values that are closest to the one proposed
+by Tetame, are raised by fmin function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>method</strong> (<em>fmin</em>) &#8211; optimization strategy, can be one of fmin,</td>
+</tr>
+</tbody>
+</table>
+<p>slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)
+:argument (community.S,0.5) start: tupple for startin values of theta
+and m
+:argument True verbose: displays running status</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ecolopy_dev.models.etienne_model.EtienneModel.random_community">
+<tt class="descname">random_community</tt><big>(</big><em>inds=None</em>, <em>theta=None</em>, <em>immig=None</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/models/etienne_model.html#EtienneModel.random_community"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.models.etienne_model.EtienneModel.random_community" title="Permalink to this definition">¶</a></dt>
+<dd><p>generates random distribution according to J, theta and I</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>inds</strong> &#8211; number of individuals in community (J)</li>
+<li><strong>theta</strong> &#8211; corresponding to the model</li>
+<li><strong>immig</strong> &#8211; immigration rate (I)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">distribution of abundance (list)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/dna-tree-forest.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Download and Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/load_abundance.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">EcoloPy&#8217;s Reference Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="reference_community.html">Community Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_ecological_model.html">EcologicalModel Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_utils.html">Some utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_lognormal_model.html">UNTB Model Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_untb_model.html">UNTB Model Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_ewens_model.html">Ewens Model Class</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Etienne Model Class</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/reference/reference_etienne_model.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="reference_ewens_model.html"
+                        title="previous chapter">Ewens Model Class</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="reference_ewens_model.html" title="Ewens Model Class"
+             >previous</a> |</li>
+        <li><a href="../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >EcoloPy&#8217;s Reference Guide</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Francois Serra, Hernán Dopazo.
+      Last updated on Mar 03, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

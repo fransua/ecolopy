@@ -1,0 +1,235 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; EcoloPy-UNTBgen 0.1.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="EcoloPy-UNTBgen 0.1.3 documentation" href="index.html" />
+    <link rel="next" title="Download and Install" href="install.html" />
+    <link rel="prev" title="EcoloPy-UNTBgen" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="install.html" title="Download and Install"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="EcoloPy-UNTBgen"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1><a class="toc-backref" href="#id15">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#introduction" id="id15">Introduction</a><ul>
+<li><a class="reference internal" href="#what-is-ecolopy" id="id16">What is EcoloPy?</a></li>
+<li><a class="reference internal" href="#why-an-other-package" id="id17">Why an other package?</a></li>
+<li><a class="reference internal" href="#references" id="id18">References</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="what-is-ecolopy">
+<h2><a class="toc-backref" href="#id16">What is EcoloPy?</a><a class="headerlink" href="#what-is-ecolopy" title="Permalink to this headline">¶</a></h2>
+<p>EcoloPy directly draws inspiration from the UNTB package in R <a class="reference internal" href="#hankin2007" id="id1">[Hankin2007]</a>, to infer neutrality of an ecosystem distribution of species. It is able to fit sampling data of a community into a neutral model and implements functions to interact and represent the original data and the results of statistical tests.
+Ewens and Etienne neutral models are implemented.</p>
+</div>
+<div class="section" id="why-an-other-package">
+<h2><a class="toc-backref" href="#id17">Why an other package?</a><a class="headerlink" href="#why-an-other-package" title="Permalink to this headline">¶</a></h2>
+<p>Several packages or programs were already developed in order to deal with species abundances data, implementing statistical functions in order to fit data in ecological models and even able to test for neutrality <a class="reference internal" href="#jabotchave2011" id="id2">[JabotChave2011]</a> <a class="reference internal" href="tutorial/load_abundance.html#etienne2007" id="id3">[Etienne2007]</a> <a class="reference internal" href="#hankin2007" id="id4">[Hankin2007]</a>. However none of those programs were able to deal with genomic data, with abundances reaching the million of individuals. The main computational bottleneck, or in this case cul-de-sac, being the calculation of Etienne’s sampling formula <a class="reference internal" href="tutorial/load_abundance.html#etienne2005" id="id5">[Etienne2005]</a> where computation of K(D, A) uses stirling numbers.</p>
+<dl class="docutils">
+<dt>In order to adapt the algorithm already implemented, to genomic dataset we developed the Ecolopy package, that, as a main point, uses the GMP <a class="reference internal" href="#granlund2000" id="id6">[Granlund2000]</a> and MPFR <a class="reference internal" href="#fousse2007" id="id7">[Fousse2007]</a> libraries through GMPY biding <a class="reference internal" href="#martelli2007" id="id8">[Martelli2007]</a>. Other improvements specific to Ecolopy, and needed for dealing with genomic dataset where implemented, mainly:</dt>
+<dd><ul class="first last simple">
+<li>usage of recurrence function of stirling numbers, and building of table of stirling numbers (already used by <a class="reference internal" href="#jabotchave2011" id="id9">[JabotChave2011]</a>)</li>
+<li>table of stirling numbers is reduced on the fly keeping only numbers needed, in order to save memory.</li>
+<li>model optimization using different optimization strategies from Scipy <a class="reference internal" href="tutorial/load_abundance.html#jones2001" id="id10">[Jones2001]</a>.</li>
+</ul>
+</dd>
+</dl>
+<p>In top of those necessary technical improvements, EcoloPy presents one main advantage as it is entirely written in Python <a class="reference internal" href="#vanrossumdeboer1991" id="id11">[vanRossumdeBoer1991]</a>, a programming language that offers a strong support for integration with other languages and tools, and whose popularity is raising among the bioinformatics community <a class="reference internal" href="#bassi2007" id="id12">[Bassi2007]</a>. Ecolopy is still a fully ripened package as the number of functions and ecological models is still low. But the package was designed to provide a scalable program architecture.</p>
+<dl class="docutils">
+<dt>The ecological models currently implemented are:</dt>
+<dd><ul class="first last simple">
+<li>Hubbell&#8217;s implementation of Ewens sampling formula <a class="reference internal" href="tutorial/load_abundance.html#hubbell2001" id="id13">[Hubbell2001]</a>.</li>
+<li>Etienne&#8217;s sampling formula <a class="reference internal" href="tutorial/load_abundance.html#etienne2005" id="id14">[Etienne2005]</a>.</li>
+<li>Log-normal.</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="references">
+<h2><a class="toc-backref" href="#id18">References</a><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="bassi2007" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id12">[Bassi2007]</a></td><td>S Bassi, A primer on python for life science researchers. PLoS computational biology 3(11) (2007), p. e199.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="etienne2005" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Etienne2005]</td><td><em>(<a class="fn-backref" href="#id5">1</a>, <a class="fn-backref" href="#id14">2</a>)</em> Rampal S Etienne, A new sampling formula for neutral biodiversity. Ecology Letters 8(3) (2005), 253–260.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="etienne2007" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[Etienne2007]</a></td><td>Rampal S Etienne, A neutral sampling formula for multiple samples and an &#8216;exact&#8217; test of neutrality. Ecology letters 10(7) (2007), 608–18.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="fousse2007" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[Fousse2007]</a></td><td>Laurent Fousse, Guillaume Hanrot, Vincent Lefevre, Patrick Pelissier, and Paul Zimmermann, MPFR: A multiple-precision binary floating-point library with correct rounding. ACM Transactions on Mathematical Software (TOMS) 33(2) (2007), p. 13.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="granlund2000" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[Granlund2000]</a></td><td>Torbjorn Granlund, GMP: The GNU Multiple Precision Arithmetic Library, 2000.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="hankin2007" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Hankin2007]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> R.K.S. Hankin, Introducing UNTB, an R package for simulating ecological drift under the unified neutral theory of biodiversity. Journal of Statistical Software 22(12) (2007), 1–15.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="hubbell2001" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id13">[Hubbell2001]</a></td><td>Stephen P Hubbell, The unified Neutral Theory of Biodiversity and Biogeography. Princeton University Press, 2001.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="jabotchave2011" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[JabotChave2011]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id9">2</a>)</em> Franck Jabot and Jerome Chave, Analyzing Tropical Forest Tree Species Abundance Distributions Using a Nonneutral Model and through Approximate Bayesian Inference. The American naturalist 178(2) (2011), E37–47.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="jones2001" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id10">[Jones2001]</a></td><td>Eric Jones, Travis Oliphant, Pearu Peterson, and Others, Scipy: Open source scientific tools for Python, 2001.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="martelli2007" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[Martelli2007]</a></td><td>Alex Martelli, GMPY Multiprecision arithmetic for Python, 2007.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="vanrossumdeboer1991" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id11">[vanRossumdeBoer1991]</a></td><td>G van Rossum and J de Boer, Interactively testing remote servers using the python programming language. CWI Quarterly 4(4) (1991), 283–303.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/dna-tree-forest.png" alt="Logo"/>
+            </a></p>
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-ecolopy">What is EcoloPy?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-an-other-package">Why an other package?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/load_abundance.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">EcoloPy&#8217;s Reference Guide</a></li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/intro.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">EcoloPy-UNTBgen</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="next chapter">Download and Install</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="install.html" title="Download and Install"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="EcoloPy-UNTBgen"
+             >previous</a> |</li>
+        <li><a href="index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Francois Serra, Hernán Dopazo.
+      Last updated on Mar 03, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

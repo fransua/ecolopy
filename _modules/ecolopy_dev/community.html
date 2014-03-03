@@ -1,0 +1,532 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ecolopy_dev.community &mdash; EcoloPy-UNTBgen 0.1.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="EcoloPy-UNTBgen 0.1.3 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ecolopy_dev.community</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">04 Jul 2011</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span>  <span class="o">=</span> <span class="s">&quot;Francois-Jose Serra&quot;</span>
+<span class="n">__email__</span>   <span class="o">=</span> <span class="s">&quot;francois@barrabin.org&quot;</span>
+<span class="n">__licence__</span> <span class="o">=</span> <span class="s">&quot;GPLv3&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.13&quot;</span>
+
+<span class="kn">from</span> <span class="nn">scipy.stats</span>    <span class="kn">import</span> <span class="n">chisqprob</span>
+<span class="kn">from</span> <span class="nn">math</span>           <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">exp</span>
+<span class="kn">from</span> <span class="nn">cPickle</span>        <span class="kn">import</span> <span class="n">dump</span><span class="p">,</span> <span class="n">load</span>
+<span class="kn">from</span> <span class="nn">os.path</span>        <span class="kn">import</span> <span class="n">isfile</span><span class="p">,</span> <span class="n">exists</span>
+<span class="kn">from</span> <span class="nn">sys</span>            <span class="kn">import</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span>
+<span class="kn">from</span> <span class="nn">numpy</span>          <span class="kn">import</span> <span class="n">arange</span>
+<span class="kn">from</span> <span class="nn">warnings</span>       <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">ecolopy_dev.utils</span>  <span class="kn">import</span> <span class="n">shannon_entropy</span>
+<span class="kn">from</span> <span class="nn">ecolopy_dev.models</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="Community"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community">[docs]</a><span class="k">class</span> <span class="nc">Community</span> <span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Main community class.</span>
+
+<span class="sd">    :argument data: containing species count, can be given in one of:</span>
+<span class="sd">    </span>
+<span class="sd">       * python list, each element being a species count</span>
+<span class="sd">       * text file containing one species count per line</span>
+<span class="sd">       * pickle file containing community object</span>
+
+<span class="sd">    :argument None j_tot: is the size of the metacommunity, if not defined</span>
+<span class="sd">    j_tot = J * 3</span>
+
+<span class="sd">    :returns: an Community object</span>
+
+<span class="sd">    **Examples:**</span>
+<span class="sd">    ::</span>
+
+<span class="sd">      # python list</span>
+<span class="sd">      abd = Community([1, 1, 2, 3, 4, 8, 12])</span>
+<span class="sd">      # text file</span>
+<span class="sd">      abd = Community(&quot;bci.txt&quot;, j_tot=256987)</span>
+<span class="sd">      # finally a saved Community object</span>
+<span class="sd">      abd = Community(&quot;abundance_bci_first_try.pik&quot;)</span>
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">j_tot</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        creation of Community object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__models</span>  <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_infile</span> <span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">abund</span>     <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span> <span class="p">(</span><span class="n">data</span> <span class="p">[:])]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">J</span>         <span class="o">=</span> <span class="nb">sum</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abund</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S</span>         <span class="o">=</span> <span class="nb">len</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abund</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">j_tot</span>     <span class="o">=</span> <span class="n">j_tot</span> <span class="k">if</span> <span class="n">j_tot</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span> <span class="o">*</span> <span class="mi">3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shannon</span>   <span class="o">=</span> <span class="n">shannon_entropy</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abund</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__current_model</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        for print</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&quot;&quot;&quot;Community (object)</span>
+<span class="s">    Number of individuals (J) : </span><span class="si">%d</span><span class="s"></span>
+<span class="s">    Number of species (S)     : </span><span class="si">%d</span><span class="s"></span>
+<span class="s">    Shannon&#39;s index (shannon) : </span><span class="si">%.4f</span><span class="s"></span>
+<span class="s">    Metacommunity size (j_tot): </span><span class="si">%d</span><span class="s"></span>
+<span class="s">    Models computed           : </span><span class="si">%s</span><span class="s"></span>
+<span class="s">    Model loaded              : </span><span class="si">%s</span><span class="s"></span>
+<span class="s">    &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shannon</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j_tot</span><span class="p">,</span>
+           <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+           <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__current_model</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span> <span class="o">+</span> \
+            <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__current_model</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]]</span>
+            <span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_model</span> <span class="k">else</span> <span class="s">&quot;None&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Community.rsa_ascii"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.rsa_ascii">[docs]</a>    <span class="k">def</span> <span class="nf">rsa_ascii</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">pch</span><span class="o">=</span><span class="s">&#39;o&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Draw Relative Species Abundances curve (ASCII format).</span>
+
+<span class="sd">        :argument 100 width: width in term of characters</span>
+<span class="sd">        :argument 100 height: height in term of characters</span>
+<span class="sd">        :argument o pch: dot character</span>
+
+<span class="sd">        :returns: string corresponding to plot</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dots</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">abund</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">rabd</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">dot</span> <span class="ow">in</span> <span class="n">dots</span><span class="p">:</span>
+            <span class="n">rabd</span><span class="o">.</span><span class="n">append</span> <span class="p">(</span><span class="n">log</span> <span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">dot</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">)))</span>
+        <span class="n">y_arange</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">rabd</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">rabd</span><span class="p">),</span>
+                                 <span class="nb">abs</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">rabd</span><span class="p">)</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">rabd</span><span class="p">))</span><span class="o">/</span><span class="n">height</span><span class="p">),</span>
+                          <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">x_arange</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">)</span> <span class="o">/</span> <span class="n">width</span><span class="p">))</span>
+        <span class="n">yval</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">xval</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">spaces</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">(%) Relative</span><span class="se">\n</span><span class="s">Abundances</span><span class="se">\n\n</span><span class="s">&#39;</span>
+        <span class="n">graph</span> <span class="o">+=</span> <span class="s">&#39;{0:&lt;7.4f}+&#39;</span><span class="o">.</span><span class="n">format</span> <span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">rabd</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dot</span> <span class="ow">in</span> <span class="nb">enumerate</span> <span class="p">(</span><span class="n">rabd</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">dot</span> <span class="o">&lt;</span> <span class="n">y_arange</span><span class="p">[</span><span class="n">yval</span><span class="p">]:</span>
+                <span class="n">graph</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">yval</span><span class="p">)</span><span class="o">%</span><span class="mi">5</span> <span class="ow">and</span> <span class="n">yval</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">graph</span> <span class="o">+=</span> <span class="s">&#39;{0:&lt;7.4f}+&#39;</span><span class="o">.</span><span class="n">format</span> <span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">y_arange</span><span class="p">[</span><span class="n">yval</span><span class="p">]))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">graph</span> <span class="o">+=</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="mi">7</span> <span class="o">+</span> <span class="s">&#39;|&#39;</span>
+                <span class="n">graph</span> <span class="o">+=</span> <span class="n">spaces</span>
+                <span class="k">while</span> <span class="n">dot</span> <span class="o">&lt;</span> <span class="n">y_arange</span><span class="p">[</span><span class="n">yval</span><span class="p">]:</span>
+                    <span class="n">yval</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">x_arange</span><span class="p">[</span><span class="n">xval</span><span class="p">]:</span>
+                <span class="n">graph</span> <span class="o">+=</span> <span class="n">pch</span>
+                <span class="n">spaces</span> <span class="o">+=</span> <span class="s">&#39; &#39;</span>
+                <span class="k">if</span>  <span class="n">xval</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="n">width</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">xval</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">graph</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="n">graph</span> <span class="o">+=</span> <span class="s">&#39; 1/inf &#39;</span> <span class="o">+</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span><span class="s">&#39;+&#39;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">%</span><span class="mi">5</span> <span class="k">else</span> <span class="s">&#39;-&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">width</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="n">graph</span> <span class="o">+=</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="mi">7</span> <span class="o">+</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span><span class="s">&#39;{0:&lt;5}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x_arange</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">width</span><span class="p">,</span><span class="mi">5</span><span class="p">)]</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span><span class="n">x_arange</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n\n</span><span class="s">&#39;</span>
+        <span class="n">graph</span> <span class="o">+=</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="mi">7</span> <span class="o">+</span> <span class="s">&#39;{0:^{1}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s">&#39;Species rank&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">graph</span>
+
+</div>
+<div class="viewcode-block" id="Community.draw_rsa"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.draw_rsa">[docs]</a>    <span class="k">def</span> <span class="nf">draw_rsa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Draw Relative Species Abundances curve.</span>
+
+<span class="sd">        :argument None outfile: path were image will be saved, if none, plot</span>
+<span class="sd">        will be shown using matplotlib GUI</span>
+<span class="sd">        :argument None filetype: pdf or png</span>
+<span class="sd">        :argument (15,15) size: size in inches of the drawing</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">pylab</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span class="kn">as</span> <span class="nn">ticker</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s">&quot;WARNING: matplotlib not found, try rsa_ascii()  instead&quot;</span><span class="p">)</span>
+            
+        <span class="n">pylab</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+        <span class="n">yval</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">xval</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">abd</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abund</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                          <span class="n">key</span><span class="o">=</span><span class="nb">float</span><span class="p">)):</span>
+            <span class="n">xval</span><span class="o">.</span><span class="n">append</span> <span class="p">(</span><span class="n">rank</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">yval</span><span class="o">.</span><span class="n">append</span> <span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">abd</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">yval</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span> <span class="p">(</span><span class="s">&#39;list of abundances is too short man&#39;</span><span class="p">)</span>
+        
+        <span class="n">pylab</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xval</span><span class="p">,</span> <span class="n">yval</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s">&#39;o&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;grey&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                   <span class="n">mfc</span><span class="o">=</span><span class="s">&#39;black&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
+        <span class="c"># title legend...</span>
+        <span class="n">max_x</span> <span class="o">=</span> <span class="nb">len</span> <span class="p">(</span><span class="n">xval</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_x</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_x</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Ranked Species Abundance&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Species rank number (rank according to abundance)&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Relative abundance percentage of each species&#39;</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xval</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">)),</span> <span class="nb">max</span><span class="p">(</span><span class="n">yval</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1115.5</span><span class="p">)</span>
+        <span class="n">axe</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+        <span class="n">axe</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">ticker</span><span class="o">.</span><span class="n">FormatStrFormatter</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%.4f</span><span class="s">&#39;</span><span class="p">))</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+        <span class="n">dpi</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">get_dpi</span><span class="p">()</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span> <span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filetype</span> <span class="o">==</span> <span class="s">&#39;pdf&#39;</span><span class="p">:</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="o">+</span><span class="mi">30</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="s">&#39;pdf&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">filetype</span> <span class="o">==</span> <span class="s">&#39;png&#39;</span><span class="p">:</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="o">+</span><span class="mi">30</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="s">&#39;png&#39;</span><span class="p">)</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        
+</div>
+<div class="viewcode-block" id="Community.lrt"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.lrt">[docs]</a>    <span class="k">def</span> <span class="nf">lrt</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_1</span><span class="p">,</span> <span class="n">model_2</span><span class="p">,</span> <span class="n">dgf</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        likelihood-ratio-test between two neutral models</span>
+
+<span class="sd">        :argument model_1: string representing simplest model, usually Ewens</span>
+<span class="sd">        :argument model_2: string representing most complex model, usually</span>
+<span class="sd">        Etienne</span>
+<span class="sd">        :argument 1 dgf: number of degrees of freedom (1 when comparing Etienne</span>
+<span class="sd">        and Ewens)</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: p-value of rejection of alternative model</span>
+<span class="sd">        </span>
+<span class="sd">        eg: usually ewens, etienne. And if pval &lt; 0.05 than use etienne</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">chisqprob</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="nb">float</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">model_1</span><span class="p">)</span><span class="o">.</span><span class="n">lnL</span><span class="p">)</span> <span class="o">-</span> \
+                              <span class="nb">float</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">model_2</span><span class="p">)</span><span class="o">.</span><span class="n">lnL</span><span class="p">)),</span> <span class="n">df</span><span class="o">=</span><span class="n">dgf</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Community.get_current_model_name"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.get_current_model_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_model_name</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :returns: current model name</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_model</span><span class="o">.</span><span class="n">name</span>
+</div>
+<div class="viewcode-block" id="Community.iter_models"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.iter_models">[docs]</a>    <span class="k">def</span> <span class="nf">iter_models</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        iterate over pre computed models</span>
+
+<span class="sd">        :returns: model object</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">model</span>
+</div>
+<div class="viewcode-block" id="Community.fit_model"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.fit_model">[docs]</a>    <span class="k">def</span> <span class="nf">fit_model</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;ewens&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit Community to model.</span>
+<span class="sd">        Extra arguments can be pssed depending on the model to fit. See doc of</span>
+<span class="sd">        its corresponding optimize function.</span>
+
+<span class="sd">        :argument Ewens name: name of the model, between Etienne, Ewens or</span>
+<span class="sd">        Log-normal</span>
+
+<span class="sd">        :return: model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;etienne&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">[</span><span class="s">&#39;etienne&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">EtienneModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;ewens&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">[</span><span class="s">&#39;ewens&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">EwensModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;lognormal&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">[</span><span class="s">&#39;lognormal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">LognormalModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Community.set_model"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.set_model">[docs]</a>    <span class="k">def</span> <span class="nf">set_model</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        add one model computed externally to the computed models of current</span>
+<span class="sd">        Community object</span>
+
+<span class="sd">        :argument model: model object</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span>  <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;Model&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
+
+</div>
+<div class="viewcode-block" id="Community.get_model"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.get_model">[docs]</a>    <span class="k">def</span> <span class="nf">get_model</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :argument name: name of a computed model</span>
+<span class="sd">        :returns: a EcologicalModel object corresponding to one of the computed</span>
+<span class="sd">        models</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="Community.set_current_model"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.set_current_model">[docs]</a>    <span class="k">def</span> <span class="nf">set_current_model</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        set on model as default/current model.</span>
+
+<span class="sd">        :argument name: model name of precomputed model</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__current_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">,</span> <span class="s">&#39;m&#39;</span><span class="p">]:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_model</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">[</span><span class="s">&#39;lnL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_model</span><span class="o">.</span><span class="n">lnL</span>
+                
+</div>
+<div class="viewcode-block" id="Community.test_neutrality"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.test_neutrality">[docs]</a>    <span class="k">def</span> <span class="nf">test_neutrality</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s">&#39;ewens&#39;</span><span class="p">,</span> <span class="n">gens</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">fix_s</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                         <span class="n">tries</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;shannon&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        test for neutrality comparing Shannon entropy</span>
+<span class="sd">        if (Hobs &gt; Hrand_neut) then evenness of observed data is</span>
+<span class="sd">        higher then neutral</span>
+
+<span class="sd">        :argument ewens model: model name otherwise, current model is used</span>
+<span class="sd">        :argument 100 gens: number of random neutral distributions to generate</span>
+<span class="sd">        :argument False full: also return list of compared values (H or lnL) for</span>
+<span class="sd">        simulated abundances</span>
+<span class="sd">        :argument False fix_s: decide whether to fix or not the number of</span>
+<span class="sd">        species for the generation of random neutral communities</span>
+<span class="sd">        :argument False tries: in case S is fixed, determines the number of</span>
+<span class="sd">        tries in order to obtain the exact same number of species as original</span>
+<span class="sd">        community. In case The number of tries is exceeded, an ERROR message is</span>
+<span class="sd">        displayed, and p-value returned is 1.0.</span>
+<span class="sd">        :argument shannon method: can be either &#39;Shannon&#39; for comparing</span>
+<span class="sd">        Shannon&#39;s entropies or &#39;loglike&#39; for comparing log-likelihood values</span>
+<span class="sd">        (Etienne 2007). Last method is much more computationally expensive, as</span>
+<span class="sd">        likelihood of neutral distribution must be calculated.</span>
+<span class="sd">        :returns: p_value if full=True also returns Shannon entropy (or</span>
+<span class="sd">        likelihoods if method=&#39;loglike&#39;) of all random neutral abundances</span>
+<span class="sd">        generated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fast_shannon</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">abund</span><span class="p">:</span> <span class="nb">sum</span> <span class="p">([</span><span class="o">-</span><span class="n">spe</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">spe</span><span class="p">)</span> <span class="k">for</span> <span class="n">spe</span> <span class="ow">in</span> <span class="n">abund</span><span class="p">])</span>
+        <span class="n">pval</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="k">if</span> <span class="s">&#39;LognormalModel&#39;</span> <span class="ow">in</span> <span class="nb">repr</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s">&quot;WARNING: Model &#39;</span><span class="si">%s</span><span class="s">&#39; not found.</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">model</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="n">neut_h</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="n">gens</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">stdout</span><span class="o">.</span><span class="n">write</span> <span class="p">(</span><span class="s">&quot;</span><span class="se">\r</span><span class="s">  Generating random neutral abundances </span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> \
+                              <span class="o">%</span> <span class="p">(</span><span class="n">_</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">gens</span><span class="p">))</span>
+                <span class="n">stdout</span><span class="o">.</span><span class="n">flush</span> <span class="p">()</span>
+            <span class="k">if</span> <span class="n">fix_s</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="n">tries</span><span class="p">):</span>
+                    <span class="n">tmp</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">random_community</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;ERROR: Unable to obtain S by simulation&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">full</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s">&#39;nan&#39;</span><span class="p">),</span> <span class="p">[]</span>
+                    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s">&#39;nan&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">random_community</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+            <span class="n">l_tmp</span> <span class="o">=</span> <span class="nb">sum</span> <span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;shannon&#39;</span><span class="p">:</span>
+                <span class="n">neut_h</span><span class="o">.</span><span class="n">append</span> <span class="p">((</span><span class="n">fast_shannon</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">+</span> <span class="n">l_tmp</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">l_tmp</span><span class="p">))</span><span class="o">/</span><span class="n">l_tmp</span><span class="p">)</span>
+                <span class="n">pval</span> <span class="o">+=</span> <span class="n">neut_h</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">shannon</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;loglike&#39;</span><span class="p">:</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">Community</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+                <span class="n">tmp</span><span class="o">.</span><span class="n">_get_kda</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                <span class="n">neut_h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">etienne_likelihood</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">m</span><span class="p">]))</span>
+                <span class="n">pval</span> <span class="o">+=</span> <span class="n">neut_h</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">model</span><span class="o">.</span><span class="n">lnL</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">stdout</span><span class="o">.</span><span class="n">write</span> <span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">full</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span> <span class="p">(</span><span class="n">pval</span><span class="p">)</span><span class="o">/</span><span class="n">gens</span><span class="p">,</span> <span class="n">neut_h</span>
+        <span class="k">return</span> <span class="nb">float</span> <span class="p">(</span><span class="n">pval</span><span class="p">)</span><span class="o">/</span><span class="n">gens</span>
+    
+</div>
+    <span class="k">def</span> <span class="nf">_parse_infile</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        TODO: use other columns</span>
+<span class="sd">        parse infile and return list of abundances</span>
+<span class="sd">        infile can contain several columns</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">abundances</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">):</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="nb">open</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;(dp1&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_community</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">abundances</span><span class="o">.</span><span class="n">append</span> <span class="p">(</span><span class="nb">int</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">abundances</span>
+
+
+<div class="viewcode-block" id="Community.dump_community"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.dump_community">[docs]</a>    <span class="k">def</span> <span class="nf">dump_community</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        save params and kda with pickle</span>
+<span class="sd">        force option is for writing pickle with no consideration</span>
+<span class="sd">        if existing</span>
+
+<span class="sd">        :argument outfile: path of the outfile</span>
+<span class="sd">        :argument False force: overwrite existing outfile</span>
+<span class="sd">        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">isfile</span> <span class="p">(</span><span class="n">outfile</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_community</span> <span class="p">(</span><span class="n">outfile</span><span class="p">)</span>
+        <span class="c"># changed, kda no longer here</span>
+        <span class="c">#try:</span>
+        <span class="c">#    self.__models[&#39;KDA&#39;]   = self._kda[:]</span>
+        <span class="c">#except TypeError:</span>
+        <span class="c">#    self.__models[&#39;KDA&#39;] = None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">[</span><span class="s">&#39;ABUND&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abund</span><span class="p">[:]</span>
+        <span class="n">dump</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">,</span> <span class="nb">open</span> <span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">))</span>
+        <span class="k">del</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">[</span><span class="s">&#39;ABUND&#39;</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="Community.load_community"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.load_community">[docs]</a>    <span class="k">def</span> <span class="nf">load_community</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        load params and kda with pickle from infile</span>
+<span class="sd">        WARNING: do not overwrite values of params.</span>
+
+<span class="sd">        :argument infile: path of the outfile</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">old_params</span> <span class="o">=</span> <span class="n">load</span> <span class="p">(</span><span class="nb">open</span> <span class="p">(</span><span class="n">infile</span><span class="p">))</span>
+        <span class="n">old_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__models</span> <span class="o">=</span> <span class="n">old_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abund</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">[</span><span class="s">&#39;ABUND&#39;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__models</span><span class="p">[</span><span class="s">&#39;ABUND&#39;</span><span class="p">])</span>
+        <span class="c">#if &#39;KDA&#39; in self.__models:</span>
+        <span class="c">#    self._kda  = self.__models[&#39;KDA&#39;]</span>
+        <span class="c">#    del (self.__models[&#39;KDA&#39;])</span>
+        <span class="c">#else:</span>
+        <span class="c">#    self._kda = None</span>
+
+</div>
+<div class="viewcode-block" id="Community.generate_random_neutral_distribution"><a class="viewcode-back" href="../../reference/reference_community.html#ecolopy_dev.community.Community.generate_random_neutral_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">generate_random_neutral_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">J</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        return distribution of abundance, according to a given model</span>
+<span class="sd">        and a given community size.</span>
+<span class="sd">        if none of them are given, values of current Community are used.</span>
+
+<span class="sd">        :argument None model: model name (default current model)</span>
+<span class="sd">        :argument None J: size of wanted community (default size of the</span>
+<span class="sd">        community of current abundance)</span>
+<span class="sd">        :returns: random neutral distribution of abundances</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__current_model</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span> <span class="p">(</span><span class="s">&#39;Need first to optimize this model,</span><span class="se">\n</span><span class="s">       &#39;</span> <span class="o">+</span> \
+                             <span class="s">&#39;    Unable to generate random distribution.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">J</span><span class="p">:</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="k">if</span> <span class="s">&#39;LognormalModel&#39;</span> <span class="ow">in</span> <span class="nb">repr</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">random_community</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/dna-tree-forest.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Download and Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial/load_abundance.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">EcoloPy&#8217;s Reference Guide</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Francois Serra, Hernán Dopazo.
+      Last updated on Mar 03, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

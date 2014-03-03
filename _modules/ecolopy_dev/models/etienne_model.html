@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ecolopy_dev.models.etienne_model &mdash; EcoloPy-UNTBgen 0.1.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="EcoloPy-UNTBgen 0.1.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ecolopy_dev.models.etienne_model</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">21 Sep 2011</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span>  <span class="o">=</span> <span class="s">&quot;Francois-Jose Serra&quot;</span>
+<span class="n">__email__</span>   <span class="o">=</span> <span class="s">&quot;francois@barrabin.org&quot;</span>
+<span class="n">__licence__</span> <span class="o">=</span> <span class="s">&quot;GPLv3&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.13&quot;</span>
+
+
+<span class="kn">from</span> <span class="nn">ecolopy_dev.models.untb_model</span> <span class="kn">import</span> <span class="n">UNTBModel</span>
+<span class="kn">from</span> <span class="nn">ecolopy_dev.utils</span>             <span class="kn">import</span> <span class="n">table_mpfr</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">factorial_div</span>
+<span class="kn">from</span> <span class="nn">ecolopy_dev.utils</span>             <span class="kn">import</span> <span class="n">power_polyn</span><span class="p">,</span> <span class="n">lpoch</span>
+<span class="kn">from</span> <span class="nn">ecolopy_dev.utils</span>             <span class="kn">import</span> <span class="n">pre_get_stirlings</span><span class="p">,</span> <span class="n">stirling</span><span class="p">,</span> <span class="n">mul_polyn</span>
+<span class="kn">from</span> <span class="nn">warnings</span>                      <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">gmpy2</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">lngamma</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">mpfr</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s">&quot;WARNING: GMPY2 library not found, using numpy&quot;</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">numpy</span>         <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">float128</span> <span class="k">as</span> <span class="n">mpfr</span>
+    <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">gammaln</span> <span class="k">as</span> <span class="n">lngamma</span>
+    
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">fmin</span><span class="p">,</span> <span class="n">fmin_slsqp</span><span class="p">,</span> <span class="n">fmin_tnc</span><span class="p">,</span> <span class="n">fmin_l_bfgs_b</span>
+<span class="kn">from</span> <span class="nn">sys</span>            <span class="kn">import</span> <span class="n">stdout</span>
+<span class="kn">from</span> <span class="nn">random</span>         <span class="kn">import</span> <span class="n">random</span>
+
+
+<div class="viewcode-block" id="EtienneModel"><a class="viewcode-back" href="../../../reference/reference_etienne_model.html#ecolopy_dev.models.etienne_model.EtienneModel">[docs]</a><span class="k">class</span> <span class="nc">EtienneModel</span><span class="p">(</span><span class="n">UNTBModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class representing Ecological models</span>
+
+<span class="sd">    :argument name: name of the class, can be either ewens, etienne or lognorm</span>
+<span class="sd">    :returns: EcologicalModel object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;kda&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kda</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">EtienneModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">community</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="EtienneModel.random_community"><a class="viewcode-back" href="../../../reference/reference_etienne_model.html#ecolopy_dev.models.etienne_model.EtienneModel.random_community">[docs]</a>    <span class="k">def</span> <span class="nf">random_community</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inds</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">immig</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        generates random distribution according to J, theta and I</span>
+
+<span class="sd">        :argument inds: number of individuals in community (J)</span>
+<span class="sd">        :argument theta: corresponding to the model</span>
+<span class="sd">        :argument immig: immigration rate (I)</span>
+
+<span class="sd">        :returns: distribution of abundance (list)</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">theta</span>    <span class="o">=</span> <span class="nb">float</span> <span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="k">if</span> <span class="n">theta</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span>
+        <span class="n">inds</span>     <span class="o">=</span> <span class="n">inds</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span>
+        <span class="n">immig</span>    <span class="o">=</span> <span class="nb">float</span> <span class="p">(</span><span class="n">immig</span><span class="p">)</span> <span class="k">if</span> <span class="n">immig</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">I</span>
+        <span class="n">mcnum</span>    <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">int</span> <span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+        <span class="n">locnum</span>   <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">int</span> <span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+        <span class="n">mcnum</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="n">nxt</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="n">inds</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">random</span> <span class="p">()</span> <span class="o">&gt;</span> <span class="n">immig</span> <span class="o">/</span> <span class="p">(</span><span class="n">ind</span> <span class="o">+</span> <span class="n">immig</span><span class="p">):</span>
+                <span class="n">locnum</span> <span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">locnum</span> <span class="p">[</span><span class="nb">int</span> <span class="p">(</span><span class="n">random</span> <span class="p">()</span> <span class="o">*</span> <span class="n">ind</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">random</span> <span class="p">()</span> <span class="o">&lt;=</span> <span class="n">theta</span> <span class="o">/</span> <span class="p">(</span><span class="n">theta</span> <span class="o">+</span> <span class="n">new</span><span class="p">):</span>
+                    <span class="n">nxt</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">mcnum</span><span class="p">[</span><span class="n">new</span><span class="p">]</span> <span class="o">=</span> <span class="n">nxt</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mcnum</span><span class="p">[</span><span class="n">new</span><span class="p">]</span> <span class="o">=</span> <span class="n">mcnum</span><span class="p">[</span><span class="nb">int</span> <span class="p">(</span><span class="n">random</span> <span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="n">new</span><span class="p">))]</span>
+                <span class="n">locnum</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">mcnum</span><span class="p">[</span><span class="n">new</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">table</span><span class="p">(</span><span class="n">locnum</span><span class="p">,</span> <span class="n">new</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="EtienneModel.likelihood"><a class="viewcode-back" href="../../../reference/reference_etienne_model.html#ecolopy_dev.models.etienne_model.EtienneModel.likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        log-likelihood function</span>
+<span class="sd">        </span>
+<span class="sd">        :argument params: a list of 2 parameters:</span>
+<span class="sd">        </span>
+<span class="sd">          * theta = params[0]</span>
+<span class="sd">          * m     = params[1]</span>
+<span class="sd">        :returns: log likelihood of given theta and I</span>
+<span class="sd">        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">kda</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kda</span>
+        <span class="n">theta</span>     <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">immig</span>     <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">log_immig</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">immig</span><span class="p">)</span>
+        <span class="n">theta_s</span>   <span class="o">=</span> <span class="n">theta</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span>
+        <span class="n">poch1</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_factor</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span> <span class="o">-</span> \
+                    <span class="n">lpoch</span><span class="p">(</span><span class="n">immig</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span><span class="p">)</span> <span class="o">+</span> \
+                    <span class="n">log_immig</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span> <span class="o">+</span> <span class="n">lngamma</span><span class="p">(</span><span class="n">theta</span><span class="p">))</span>
+        <span class="n">gam_theta_s</span> <span class="o">=</span> <span class="n">gamma</span><span class="p">(</span><span class="n">theta_s</span><span class="p">)</span>
+        <span class="n">lik</span> <span class="o">=</span> <span class="n">mpfr</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">abd</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span><span class="p">):</span>
+            <span class="n">lik</span> <span class="o">+=</span> <span class="n">poch1</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="n">kda</span><span class="p">[</span><span class="n">abd</span><span class="p">]</span> <span class="o">+</span> <span class="n">abd</span> <span class="o">*</span> <span class="n">log_immig</span><span class="p">)</span> <span class="o">/</span> <span class="n">gam_theta_s</span>
+            <span class="n">gam_theta_s</span> <span class="o">*=</span> <span class="n">theta_s</span> <span class="o">+</span> <span class="n">abd</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="n">lik</span><span class="p">)</span>
+
+        </div>
+<div class="viewcode-block" id="EtienneModel.optimize"><a class="viewcode-back" href="../../../reference/reference_etienne_model.html#ecolopy_dev.models.etienne_model.EtienneModel.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;fmin&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Main function to optimize theta and I using etienne likelihood function</span>
+<span class="sd">        using Scipy package, values that are closest to the one proposed</span>
+<span class="sd">        by Tetame, are raised by fmin function.</span>
+
+<span class="sd">        :argument fmin method: optimization strategy, can be one of fmin,</span>
+<span class="sd">        slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)</span>
+<span class="sd">        :argument (community.S,0.5) start: tupple for startin values of theta</span>
+<span class="sd">        and m</span>
+<span class="sd">        :argument True verbose: displays running status</span>
+<span class="sd">        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c"># define bounds</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">abund</span><span class="p">)),</span> <span class="p">(</span><span class="mf">1e-49</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="mf">1e-49</span><span class="p">)]</span>
+        <span class="n">all_ok</span>  <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="c"># define starting values</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">start</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span>
+        <span class="c"># compute kda</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kda</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">Getting K(D,A) according to Etienne 2005 formula:&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_kda</span> <span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="c"># function minimization</span>
+        <span class="k">if</span>   <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;fmin&#39;</span><span class="p">:</span>
+            <span class="n">theta</span><span class="p">,</span> <span class="n">mut</span> <span class="o">=</span> <span class="n">fmin</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span>
+                               <span class="n">full_output</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">disp</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;slsqp&#39;</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">mut</span><span class="p">),</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">fmin_slsqp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span>
+                                                    <span class="nb">iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">iprint</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                                    <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+                                                    <span class="n">full_output</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">all_ok</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;l_bfgs_b&#39;</span><span class="p">:</span>
+            <span class="n">theta</span><span class="p">,</span> <span class="n">mut</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">fmin_l_bfgs_b</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span>
+                                               <span class="n">maxfun</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+                                               <span class="n">iprint</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">approx_grad</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">err</span><span class="p">[</span><span class="s">&#39;warnflag&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">all_ok</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;tnc&#39;</span><span class="p">:</span>
+            <span class="n">theta</span><span class="p">,</span> <span class="n">mut</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">fmin_tnc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">maxfun</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                                          <span class="n">messages</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+                                          <span class="n">approx_grad</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">all_ok</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;I&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">mut</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mut</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lnL</span>                 <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span> <span class="p">([</span><span class="n">theta</span><span class="p">,</span> <span class="n">mut</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;m&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">mut</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">theta</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">all_ok</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span> <span class="p">(</span><span class="s">&#39;Optimization failed</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+
+</div>
+    <span class="k">def</span> <span class="nf">_get_kda</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        compute K(D,A) according to etienne formula</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">specabund</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">abund</span><span class="p">))),</span>
+                     <span class="n">table_mpfr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">abund</span><span class="p">)]</span>
+        <span class="n">sdiff</span>     <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">specabund</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">polyn</span>     <span class="o">=</span> <span class="p">[]</span>
+        <span class="c"># compute all stirling numbers taking advantage of recurrence function</span>
+        <span class="n">needed</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">sdiff</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">specabund</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">needed</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">specabund</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">])]</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;  Getting some stirling numbers...</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">pre_get_stirlings</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">specabund</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">needed</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">sdiff</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\r</span><span class="s">  Computing K(D,A) at species </span><span class="si">%s</span><span class="s"> out of </span><span class="si">%s</span><span class="s">&quot;</span> \
+                             <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">sdiff</span><span class="p">))</span>
+                <span class="n">stdout</span><span class="o">.</span><span class="n">flush</span> <span class="p">()</span>
+            <span class="n">sai</span> <span class="o">=</span> <span class="n">specabund</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">polyn1</span> <span class="o">=</span> <span class="p">[</span><span class="n">stirling</span><span class="p">(</span><span class="n">sai</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">factorial_div</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">sai</span><span class="p">)</span> \
+                      <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sai</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+            <span class="n">polyn1</span> <span class="o">=</span> <span class="n">power_polyn</span><span class="p">(</span><span class="n">polyn1</span><span class="p">,</span> <span class="n">specabund</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> \
+                     <span class="k">if</span> <span class="n">polyn1</span> <span class="k">else</span> <span class="p">[</span><span class="n">mpfr</span><span class="p">(</span><span class="mf">1.</span><span class="p">)]</span>
+            <span class="n">polyn</span> <span class="o">=</span> <span class="n">mul_polyn</span><span class="p">(</span><span class="n">polyn</span><span class="p">,</span> <span class="n">polyn1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kda</span> <span class="o">=</span> <span class="p">[</span><span class="n">log</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">polyn</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/dna-tree-forest.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Download and Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial/load_abundance.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">EcoloPy&#8217;s Reference Guide</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Francois Serra, Hernán Dopazo.
+      Last updated on Mar 03, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

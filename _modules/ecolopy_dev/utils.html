@@ -1,0 +1,510 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ecolopy_dev.utils &mdash; EcoloPy-UNTBgen 0.1.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="EcoloPy-UNTBgen 0.1.3 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ecolopy_dev.utils</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">13 Jul 2011</span>
+
+<span class="sd">some utilities for abundance, essentially for computation of K(D,A)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span>  <span class="o">=</span> <span class="s">&quot;Francois-Jose Serra&quot;</span>
+<span class="n">__email__</span>   <span class="o">=</span> <span class="s">&quot;francois@barrabin.org&quot;</span>
+<span class="n">__licence__</span> <span class="o">=</span> <span class="s">&quot;GPLv3&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.12&quot;</span>
+
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">gmpy2</span>            <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">lngamma</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">mpfr</span><span class="p">,</span> <span class="n">mul</span><span class="p">,</span> <span class="n">div</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s">&quot;WARNING: GMPY2 library not found, using numpy&quot;</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">numpy</span>            <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">float128</span> <span class="k">as</span> <span class="n">mpfr</span>
+    <span class="kn">from</span> <span class="nn">scipy.special</span>    <span class="kn">import</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">gammaln</span> <span class="k">as</span> <span class="n">lngamma</span>
+    <span class="kn">from</span> <span class="nn">operator</span>         <span class="kn">import</span> <span class="n">mul</span><span class="p">,</span> <span class="n">div</span>
+
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stdout</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">print</span> <span class="s">&#39;matplotlib or numpy not found&#39;</span>
+
+<span class="k">global</span> <span class="n">STIRLINGS</span>
+<span class="n">STIRLINGS</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="generate_random_neutral_abundance"><a class="viewcode-back" href="../../reference/reference_utils.html#ecolopy_dev.utils.generate_random_neutral_abundance">[docs]</a><span class="k">def</span> <span class="nf">generate_random_neutral_abundance</span> <span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    :argument model_name: model name (ewens, etienne, lognorm)</span>
+<span class="sd">    :argument size: size of the community (J), if log-normal distribution size should be equal to number of species (S)</span>
+<span class="sd">    :returns: random neutral distribution of abundance</span>
+
+<span class="sd">    other args should be of kind theta, I, m</span>
+<span class="sd">    </span>
+<span class="sd">    **Example:**</span>
+<span class="sd">    </span>
+<span class="sd">    ::</span>
+<span class="sd">    </span>
+<span class="sd">      import ecolopy_dev</span>
+<span class="sd">      ecolopy.generate_random_neutral_abundance(&#39;ewens&#39;, 100, theta=12, I=12)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c"># import inside because otherwise strange never-ending import...</span>
+    <span class="kn">from</span> <span class="nn">ecolopy_dev.models</span> <span class="kn">import</span> <span class="n">EcologicalModel</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">EcologicalModel</span> <span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">rand_neutral</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">lpoch</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    returns log Pochhammer symbol taking advantage of:</span>
+<span class="sd">    Pochhammer symbol (z)_m = (z)(z+1)....(z+m-1) = gamma(z+m)/gamma(z)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">lngamma</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="n">m</span><span class="p">)</span> <span class="o">-</span> <span class="n">lngamma</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="shannon_entropy"><a class="viewcode-back" href="../../reference/reference_utils.html#ecolopy_dev.utils.shannon_entropy">[docs]</a><span class="k">def</span> <span class="nf">shannon_entropy</span><span class="p">(</span><span class="n">abund</span><span class="p">,</span> <span class="n">inds</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    computes Shannon entropy (H) for a given abundance table</span>
+<span class="sd">    and number of individuals.</span>
+
+<span class="sd">    :argument abund: distribution of abundances as list</span>
+<span class="sd">    :returns: Shannon entropy</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">sum</span> <span class="p">([</span><span class="o">-</span><span class="n">spe</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">spe</span><span class="p">)</span> <span class="k">for</span> <span class="n">spe</span> <span class="ow">in</span> <span class="n">abund</span><span class="p">])</span> <span class="o">+</span> <span class="n">inds</span> <span class="o">*</span> <span class="n">log</span> <span class="p">(</span><span class="n">inds</span><span class="p">))</span> <span class="o">/</span> <span class="n">inds</span>
+
+</div>
+<span class="k">def</span> <span class="nf">table_mpfr</span> <span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">spp</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    data to contingency table</span>
+<span class="sd">    any kind of data</span>
+
+<span class="sd">    :argument out: species abundance</span>
+<span class="sd">    :returns: list of counts of individuals by species</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">setout</span> <span class="o">=</span> <span class="nb">set</span> <span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spp</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">spp</span> <span class="o">=</span> <span class="nb">len</span> <span class="p">(</span><span class="n">setout</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="nb">dict</span> <span class="p">(</span><span class="nb">zip</span> <span class="p">(</span><span class="n">setout</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="mf">0.</span><span class="p">)]</span><span class="o">*</span><span class="n">spp</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+        <span class="n">counts</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">+=</span> <span class="n">mpfr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">counts</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span> <span class="p">(</span><span class="n">counts</span><span class="p">)]</span>
+
+
+<div class="viewcode-block" id="table"><a class="viewcode-back" href="../../reference/reference_utils.html#ecolopy_dev.utils.table">[docs]</a><span class="k">def</span> <span class="nf">table</span> <span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">spp</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    data to contingency table</span>
+<span class="sd">    any kind of data</span>
+
+<span class="sd">    :argument out: species abundance</span>
+<span class="sd">    :returns: list of counts of individuals by species</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">setout</span> <span class="o">=</span> <span class="nb">set</span> <span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spp</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">spp</span> <span class="o">=</span> <span class="nb">len</span> <span class="p">(</span><span class="n">setout</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="nb">dict</span> <span class="p">(</span><span class="nb">zip</span> <span class="p">(</span><span class="n">setout</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="mf">0.</span><span class="p">)]</span><span class="o">*</span><span class="n">spp</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+        <span class="n">counts</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">counts</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span> <span class="p">(</span><span class="n">counts</span><span class="p">)]</span>
+    
+</div>
+<span class="k">def</span> <span class="nf">factorial_div</span> <span class="p">(</span><span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    computes a!/b!</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">one</span> <span class="o">&lt;</span> <span class="n">two</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">div</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="nb">reduce</span> <span class="p">(</span><span class="n">mul</span><span class="p">,</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">)))</span>
+    <span class="k">elif</span> <span class="n">one</span> <span class="o">&gt;</span> <span class="n">two</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">reduce</span> <span class="p">(</span><span class="n">mul</span><span class="p">,</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">two</span><span class="p">,</span> <span class="n">one</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mpfr</span> <span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="power_polyn"><a class="viewcode-back" href="../../reference/reference_utils.html#ecolopy_dev.utils.power_polyn">[docs]</a><span class="k">def</span> <span class="nf">power_polyn</span> <span class="p">(</span><span class="n">polyn_a</span><span class="p">,</span> <span class="n">power</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="nb">reduce</span> <span class="p">(</span><span class="n">mul_polyn</span><span class="p">,</span> <span class="p">(</span><span class="n">polyn_a</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="n">power</span><span class="p">)))</span>
+
+</div>
+<div class="viewcode-block" id="mul_polyn"><a class="viewcode-back" href="../../reference/reference_utils.html#ecolopy_dev.utils.mul_polyn">[docs]</a><span class="k">def</span> <span class="nf">mul_polyn</span><span class="p">(</span><span class="n">polyn_a</span><span class="p">,</span> <span class="n">polyn_b</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    computes the product of 2 polynomials, depending of the differences in length</span>
+<span class="sd">    of the two polynomials, this function will call one of:</span>
+<span class="sd">    * _mul_uneq_polyn: when length of polyn_a is &gt;= length of polyn_b, will iterate over coefficient.</span>
+<span class="sd">    * _mul_simil_polyn: in case both polynomials have equal length, will iterate over factors.</span>
+
+<span class="sd">    to test multiplication of pylnomials try equality of the two functions:</span>
+<span class="sd">    mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b) == _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)</span>
+
+<span class="sd">    **Example:**</span>
+<span class="sd">    ::</span>
+
+<span class="sd">      from ecolopy_dev.utils import mul_polyn</span>
+<span class="sd">      # (2 + 3^x + 5x^2)  * (x)</span>
+<span class="sd">      mul_polyn([2,3,5], [0,1])</span>
+<span class="sd">      # will return: [mpfr(&#39;0.0&#39;), mpfr(&#39;2.0&#39;), mpfr(&#39;3.0&#39;), mpfr(&#39;5.0&#39;)]</span>
+<span class="sd">      # that is: 0 + 2x + 3x^2 + 5x^3</span>
+<span class="sd">      </span>
+<span class="sd">    :argument polyn_a: list of indices of polynomial</span>
+<span class="sd">    :argument polyn_b: list of indices of polynomial (e.g.: [1,3,5,0,2] for :math:`2 + 3^x + 5x^2 + 0x^3 + 2x^4`)</span>
+<span class="sd">    :returns: a list representing multiplication of the two polynomials</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">polyn_a</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">polyn_b</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">polyn_b</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">polyn_a</span>
+    <span class="c"># set default values</span>
+    <span class="n">len_a</span> <span class="o">=</span> <span class="nb">len</span> <span class="p">(</span><span class="n">polyn_a</span><span class="p">)</span>
+    <span class="n">len_b</span> <span class="o">=</span> <span class="nb">len</span> <span class="p">(</span><span class="n">polyn_b</span><span class="p">)</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="nb">abs</span> <span class="p">(</span><span class="n">len_a</span> <span class="o">-</span> <span class="n">len_b</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">len_a</span> <span class="o">&gt;=</span> <span class="n">len_b</span><span class="p">:</span>
+        <span class="n">polyn_b</span> <span class="o">=</span> <span class="n">polyn_b</span> <span class="o">+</span> <span class="p">[</span><span class="n">mpfr</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_</span>  <span class="o">=</span> <span class="n">polyn_a</span> <span class="o">+</span> <span class="p">[</span><span class="n">mpfr</span><span class="p">(</span><span class="mf">0.</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+        <span class="n">polyn_a</span> <span class="o">=</span> <span class="n">polyn_b</span><span class="p">[:]</span>
+        <span class="n">polyn_b</span> <span class="o">=</span> <span class="n">_</span>
+        <span class="n">len_a</span> <span class="o">=</span> <span class="n">len_b</span>
+        <span class="n">len_b</span> <span class="o">=</span> <span class="nb">len</span> <span class="p">(</span><span class="n">polyn_b</span><span class="p">)</span>
+    <span class="c"># switcher</span>
+    <span class="k">if</span> <span class="n">len_a</span> <span class="o">&gt;</span> <span class="n">len_b</span><span class="o">*</span><span class="mi">2</span><span class="p">:</span> <span class="c"># most</span>
+        <span class="k">return</span> <span class="n">_mul_uneq_polyn</span><span class="p">(</span><span class="n">polyn_a</span><span class="p">,</span> <span class="n">polyn_b</span><span class="p">,</span> <span class="n">len_a</span><span class="p">,</span> <span class="n">len_b</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_mul_simil_polyn</span><span class="p">(</span><span class="n">polyn_a</span><span class="p">,</span> <span class="n">polyn_b</span><span class="p">,</span> <span class="n">len_a</span><span class="p">,</span> <span class="n">len_b</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_mul_simil_polyn</span><span class="p">(</span><span class="n">polyn_a</span><span class="p">,</span> <span class="n">polyn_b</span><span class="p">,</span> <span class="n">len_a</span><span class="p">,</span> <span class="n">len_b</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    fast polynomial multiplication when polynomials are nearly equal</span>
+<span class="sd">    -&gt; iterates over factors</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">mult_one</span> <span class="p">(</span><span class="n">la</span><span class="p">,</span> <span class="n">lb</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        internal that computes row multiplication of 2 lists</span>
+<span class="sd">        start and stops are here to skip multiplications by zero</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">mul</span> <span class="p">(</span><span class="n">la</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">lb</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)]</span>
+    <span class="n">max_len</span> <span class="o">=</span> <span class="n">len_a</span> <span class="o">+</span> <span class="n">len_b</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">len_a</span> <span class="o">-</span> <span class="n">len_b</span>
+    <span class="n">new</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">len_a</span> <span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">append</span> <span class="p">(</span><span class="nb">sum</span> <span class="p">(</span><span class="n">mult_one</span> <span class="p">(</span><span class="n">polyn_a</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span> <span class="n">polyn_b</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="p">)))</span>
+    <span class="n">len_a2</span> <span class="o">=</span> <span class="n">len_a</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">len_a1</span> <span class="o">=</span> <span class="n">len_a</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">len_a3</span> <span class="o">=</span> <span class="n">len_a</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="n">len_a</span><span class="p">,</span> <span class="n">max_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">append</span> <span class="p">(</span><span class="nb">sum</span> <span class="p">(</span><span class="n">mult_one</span> <span class="p">(</span><span class="n">polyn_a</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">len_a3</span> <span class="p">:</span> <span class="n">len_a1</span><span class="p">],</span>
+                              <span class="n">polyn_b</span><span class="p">[</span><span class="n">len_a</span>    <span class="p">:</span> <span class="n">i</span><span class="o">-</span><span class="n">len_a</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">len_a2</span><span class="o">-</span><span class="n">i</span><span class="p">,</span> <span class="n">diff</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">new</span>
+
+
+<span class="k">def</span> <span class="nf">_mul_uneq_polyn</span><span class="p">(</span><span class="n">polyn_a</span><span class="p">,</span> <span class="n">polyn_b</span><span class="p">,</span> <span class="n">len_a</span><span class="p">,</span> <span class="n">len_b</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    fast polynomial multiplication when 1 polynomial &gt;~ 2 times larger.</span>
+<span class="sd">    -&gt; iterates over coefficients</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">new</span> <span class="o">=</span> <span class="p">[</span><span class="n">mpfr</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="n">len_a</span> <span class="o">+</span> <span class="n">len_b</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="n">len_a</span><span class="p">):</span>
+        <span class="n">pai</span> <span class="o">=</span> <span class="n">polyn_a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="n">len_b</span><span class="p">):</span>
+            <span class="n">new</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">pai</span> <span class="o">*</span> <span class="n">polyn_b</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">new</span>
+
+
+<div class="viewcode-block" id="pre_get_stirlings"><a class="viewcode-back" href="../../reference/reference_utils.html#ecolopy_dev.utils.pre_get_stirlings">[docs]</a><span class="k">def</span> <span class="nf">pre_get_stirlings</span><span class="p">(</span><span class="n">max_nm</span><span class="p">,</span> <span class="n">needed</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    takes advantage of recurrence function:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">      </span>
+<span class="sd">        s(n, m) = s(n-1, m-1) - (n-1) \cdot s(n-1, m)</span>
+
+<span class="sd">    and as  *s(whatever, 0) = 0* :</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">      </span>
+<span class="sd">        s(n+1, 1) = -n \cdot s(n, 1)</span>
+
+<span class="sd">    keep only needed stirling numbers (necessary for large communities)</span>
+
+<span class="sd">    :argument max_nm: max number of individuals in a species</span>
+<span class="sd">    :argument needed: list of individuals count in species in our dataset, needed</span>
+<span class="sd">                      in order to limit the number of stirling numbers kept in</span>
+<span class="sd">                      memory.</span>
+<span class="sd">    :argument True verbose: displays information about state.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">STIRLINGS</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">mpfr</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">one</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_nm</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">one</span> <span class="o">%</span> <span class="mi">1000</span><span class="p">:</span>
+            <span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\r</span><span class="s">    </span><span class="si">%s</span><span class="s"> of </span><span class="si">%s</span><span class="s">, size: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">one</span><span class="p">,</span> <span class="n">max_nm</span><span class="p">,</span>
+                                                  <span class="n">STIRLINGS</span><span class="o">.</span><span class="n">__sizeof__</span><span class="p">()))</span>
+            <span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">STIRLINGS</span> <span class="p">[</span><span class="n">one</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">one</span> <span class="o">*</span> <span class="n">STIRLINGS</span> <span class="p">[</span><span class="n">one</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">two</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">one</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">STIRLINGS</span><span class="p">[</span><span class="n">one</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">two</span><span class="p">]</span> <span class="o">=</span> <span class="n">STIRLINGS</span><span class="p">[</span><span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">one</span> <span class="o">*</span> <span class="n">STIRLINGS</span><span class="p">[</span><span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">]</span>
+        <span class="n">STIRLINGS</span><span class="p">[</span><span class="n">one</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">STIRLINGS</span><span class="p">[</span><span class="n">one</span><span class="p">,</span> <span class="n">one</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">one</span><span class="o">-</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">needed</span><span class="p">:</span> <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">one</span><span class="p">):</span>
+            <span class="k">del</span> <span class="p">(</span><span class="n">STIRLINGS</span><span class="p">[</span><span class="n">one</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">j</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">stirling</span> <span class="p">(</span><span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    returns log unsigned stirling number, taking advantage of the fact that</span>
+<span class="sd">    if x+y if odd signed stirling will be negative.</span>
+<span class="sd">    takes also advantage of recurrence function:</span>
+<span class="sd">    s(n,m) = s(n-1, m-1) - (n-1) * s(n-1,m)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c"># return abs of stirling number</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">one</span> <span class="o">+</span> <span class="n">two</span><span class="p">)</span><span class="o">%</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">STIRLINGS</span> <span class="p">[</span><span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">STIRLINGS</span> <span class="p">[</span><span class="n">one</span><span class="p">,</span> <span class="n">two</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="fast_etienne_likelihood"><a class="viewcode-back" href="../../reference/reference_utils.html#ecolopy_dev.utils.fast_etienne_likelihood">[docs]</a><span class="k">def</span> <span class="nf">fast_etienne_likelihood</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">kda</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">kda_x</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    same as Abundance inner function, but takes advantage of constant</span>
+<span class="sd">    m value when varying only theta.</span>
+
+<span class="sd">    :argument abd: Abundance object</span>
+<span class="sd">    :argument params: list containing theta and m</span>
+<span class="sd">    :argument kda_x: precomputed list of exp(kda + ind*immig)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">theta</span>     <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">immig</span>     <span class="o">=</span> <span class="nb">float</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">log_immig</span> <span class="o">=</span> <span class="n">log</span> <span class="p">(</span><span class="n">immig</span><span class="p">)</span>
+    <span class="n">theta_s</span>   <span class="o">=</span> <span class="n">theta</span> <span class="o">+</span> <span class="n">mod</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">kda_x</span><span class="p">:</span>
+        <span class="n">kda_x</span> <span class="o">=</span> <span class="p">[</span><span class="n">exp</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">_kda</span><span class="p">[</span><span class="n">val</span><span class="p">]</span> <span class="o">+</span> <span class="n">val</span> <span class="o">*</span> <span class="n">log_immig</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> \
+                 <span class="nb">xrange</span> <span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span> <span class="o">-</span> <span class="n">mod</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span><span class="p">)]</span>
+    <span class="n">poch1</span> <span class="o">=</span> <span class="n">exp</span> <span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">_factor</span> <span class="o">+</span> <span class="n">log</span> <span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">*</span> <span class="n">mod</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span> <span class="o">-</span> \
+                 <span class="n">lpoch</span> <span class="p">(</span><span class="n">immig</span><span class="p">,</span> <span class="n">mod</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span><span class="p">)</span> <span class="o">+</span> \
+                 <span class="n">log_immig</span> <span class="o">*</span> <span class="n">mod</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span> <span class="o">+</span> <span class="n">lngamma</span><span class="p">(</span><span class="n">theta</span><span class="p">))</span>
+    <span class="n">gam_theta_s</span> <span class="o">=</span> <span class="n">gamma</span> <span class="p">(</span><span class="n">theta_s</span><span class="p">)</span>
+    <span class="n">lik</span> <span class="o">=</span> <span class="n">mpfr</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span> <span class="o">-</span> <span class="n">mod</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span><span class="p">):</span>
+        <span class="n">lik</span> <span class="o">+=</span> <span class="n">poch1</span> <span class="o">*</span> <span class="n">kda_x</span><span class="p">[</span><span class="n">val</span><span class="p">]</span> <span class="o">/</span> <span class="n">gam_theta_s</span>
+        <span class="n">gam_theta_s</span> <span class="o">*=</span> <span class="n">theta_s</span> <span class="o">+</span> <span class="n">val</span>
+    <span class="k">return</span> <span class="p">((</span><span class="o">-</span><span class="n">log</span> <span class="p">(</span><span class="n">lik</span><span class="p">)),</span> <span class="n">kda_x</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="draw_contour_likelihood"><a class="viewcode-back" href="../../reference/reference_utils.html#ecolopy_dev.utils.draw_contour_likelihood">[docs]</a><span class="k">def</span> <span class="nf">draw_contour_likelihood</span> <span class="p">(</span><span class="n">abd</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">theta_range</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                             <span class="n">m_range</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">num_dots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">local_optima</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                             <span class="n">write_lnl</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Draw contour plot of the log likelihood of a given abundance to fit Etienne model.   </span>
+
+<span class="sd">    :argument abd: Community object</span>
+<span class="sd">    :argument None model: model name, if None current model is used</span>
+<span class="sd">    :argument None theta_range: minimum and maximum value of theta as list. If None, goes from 1 to number of species (S)</span>
+<span class="sd">    :argument None m_range:  minimum and maximum value of m as list. If None, goes from 0 to 1</span>
+<span class="sd">    :argument 100 num_dots: Number of dots to paint</span>
+<span class="sd">    :argument True local_optima: display all local optima founds as white cross</span>
+<span class="sd">    :argument False write_lnl: allow to write likelihood values manually by left click on the contour plot.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">theta_range</span><span class="p">:</span>
+        <span class="n">theta_range</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span> <span class="p">(</span><span class="n">abd</span><span class="o">.</span><span class="n">S</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">m_range</span><span class="p">:</span>
+        <span class="n">m_range</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1e-16</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="mf">1e-9</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">abd</span><span class="o">.</span><span class="n">get_current_model_name</span><span class="p">()</span>
+    
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">theta_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">theta_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">num_dots</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">m_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">m_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">num_dots</span><span class="p">)</span>
+    <span class="n">kda</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="k">if</span> <span class="n">model</span> <span class="o">==</span> <span class="s">&#39;etienne&#39;</span><span class="p">:</span>
+        <span class="n">lnl_fun</span> <span class="o">=</span> <span class="n">fast_etienne_likelihood</span>
+    <span class="k">elif</span> <span class="n">model</span><span class="o">==</span><span class="s">&#39;ewens&#39;</span><span class="p">:</span>
+        <span class="n">lnl_fun</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">abd</span><span class="o">.</span><span class="n">ewens_likelihood</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">model</span> <span class="o">==</span> <span class="s">&#39;lognorm&#39;</span><span class="p">:</span>
+        <span class="n">lnl_fun</span> <span class="o">=</span> <span class="n">abd</span><span class="o">.</span><span class="n">lognorm_likelihood</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span> <span class="p">(</span><span class="s">&#39;Model not available.&#39;</span><span class="p">)</span>
+
+    <span class="n">mod</span> <span class="o">=</span> <span class="n">abd</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span> <span class="p">((</span><span class="n">num_dots</span><span class="p">,</span> <span class="n">num_dots</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">model</span><span class="o">==</span><span class="s">&#39;etienne&#39;</span><span class="p">:</span>
+        <span class="n">kdas</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">print</span> <span class="n">k</span><span class="p">,</span> <span class="s">&#39;of&#39;</span><span class="p">,</span> <span class="n">num_dots</span>
+            <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span> <span class="p">(</span><span class="n">y</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">kdas</span><span class="p">:</span>
+                    <span class="n">lnl</span><span class="p">,</span> <span class="n">kda_x</span> <span class="o">=</span> <span class="n">lnl_fun</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+                    <span class="n">lnl</span> <span class="o">=</span> <span class="o">-</span><span class="n">lnl</span>
+                    <span class="n">kdas</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">kda_x</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lnl</span> <span class="o">=</span> <span class="o">-</span><span class="n">lnl_fun</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">kda_x</span><span class="o">=</span><span class="n">kdas</span><span class="p">[</span><span class="n">j</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">z</span><span class="p">[</span><span class="n">l</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">lnl</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">print</span> <span class="n">k</span><span class="p">,</span> <span class="s">&#39;of&#39;</span><span class="p">,</span> <span class="n">num_dots</span>
+            <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span> <span class="p">(</span><span class="n">y</span><span class="p">):</span>
+                <span class="n">lnl</span> <span class="o">=</span> <span class="o">-</span><span class="n">lnl_fun</span> <span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+                <span class="n">z</span><span class="p">[</span><span class="n">l</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">lnl</span>
+
+    <span class="k">if</span> <span class="n">local_optima</span><span class="p">:</span>
+        <span class="n">loc_opt</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> \
+                   <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> \
+                   <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="ow">and</span> \
+                   <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">z</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="n">loc_opt</span><span class="o">.</span><span class="n">append</span> <span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">loc_opt</span><span class="p">:</span>
+            <span class="n">pyplot</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+
+    <span class="c"># define number of color categories... perhaps not the best way</span>
+    <span class="n">perc10</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">perc90</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
+    <span class="n">levels</span> <span class="o">=</span> <span class="nb">list</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span> <span class="p">(</span><span class="n">perc90</span><span class="p">,</span> <span class="n">perc10</span><span class="p">,</span> <span class="o">-</span><span class="p">(</span><span class="n">perc90</span><span class="o">-</span><span class="n">perc10</span><span class="p">)</span><span class="o">/</span><span class="n">num_dots</span><span class="p">))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> \
+             <span class="nb">list</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span> <span class="p">(</span><span class="n">perc90</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">-</span><span class="n">perc90</span><span class="p">)</span><span class="o">/</span><span class="n">num_dots</span><span class="p">))[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="p">[</span><span class="n">z</span><span class="o">.</span><span class="n">max</span><span class="p">()]</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">abd</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="n">abd</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">contourf</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">levels</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">colorbar</span> <span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%.3f</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">abd</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">abd</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;dashed&#39;</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="n">abd</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">abd</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;dashed&#39;</span><span class="p">)</span>    
+    <span class="k">if</span> <span class="n">write_lnl</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">contour</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">levels</span><span class="p">)</span>
+        <span class="n">pyplot</span><span class="o">.</span><span class="n">clabel</span> <span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s">&#39;black&#39;</span><span class="p">,</span> <span class="n">manual</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">title</span> <span class="p">(</span><span class="s">&quot;Log likelihood of abundance under Etienne model&quot;</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">xlabel</span> <span class="p">(</span><span class="s">&quot;theta&quot;</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span> <span class="p">(</span><span class="s">&quot;m&quot;</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">axis</span> <span class="p">(</span><span class="n">theta_range</span> <span class="o">+</span> <span class="n">m_range</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="draw_shannon_distrib"><a class="viewcode-back" href="../../reference/reference_utils.html#ecolopy_dev.utils.draw_shannon_distrib">[docs]</a><span class="k">def</span> <span class="nf">draw_shannon_distrib</span><span class="p">(</span><span class="n">neut_h</span><span class="p">,</span> <span class="n">obs_h</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    draws distribution of Shannon values for random neutral</span>
+
+<span class="sd">    :argument neut_h: list of Shannon entropies corresponding to simulation under neutral model</span>
+<span class="sd">    :argument obs_h: Shannon entropy of observed distribution of abundance</span>
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">neut_h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="p">([</span><span class="nb">float</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">neut_h</span><span class="p">])</span>
+    <span class="n">obs_h</span> <span class="o">=</span> <span class="nb">float</span> <span class="p">(</span><span class="n">obs_h</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">neut_h</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;green&#39;</span><span class="p">,</span> <span class="n">histtype</span><span class="o">=</span><span class="s">&#39;bar&#39;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">obs_h</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;dashed&#39;</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">axvspan</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">obs_h</span><span class="p">)</span> <span class="o">-</span> <span class="n">neut_h</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span> <span class="nb">float</span><span class="p">(</span><span class="n">obs_h</span><span class="p">)</span> <span class="o">+</span> <span class="n">neut_h</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span>
+                    <span class="n">facecolor</span><span class="o">=</span><span class="s">&#39;orange&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Shannon entropy (H)&#39;</span><span class="p">)</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Number of observations over </span><span class="si">%s</span><span class="s"> simulations&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span> <span class="p">(</span><span class="n">neut_h</span><span class="p">)))</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;Histogram of entropies from </span><span class="si">%s</span><span class="s"> simulations compared to </span><span class="se">\n</span><span class="s">observed entropy (red), deviation computed from simulation&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span> <span class="p">(</span><span class="n">neut_h</span><span class="p">)))</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+</div>
+<span class="k">def</span> <span class="nf">mean</span> <span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :argument x: list of values</span>
+<span class="sd">    :returns: mean of this list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">float</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">/</span><span class="nb">len</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+
+<span class="k">def</span> <span class="nf">std</span> <span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :argument x: list of values</span>
+<span class="sd">    :returns: standard deviation of this list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mean_x</span> <span class="o">=</span> <span class="n">mean</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">sum</span><span class="p">([(</span><span class="n">i</span> <span class="o">-</span> <span class="n">mean_x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span><span class="o">/</span><span class="nb">len</span> <span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">**.</span><span class="mi">5</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/dna-tree-forest.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Download and Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial/load_abundance.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">EcoloPy&#8217;s Reference Guide</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Francois Serra, Hernán Dopazo.
+      Last updated on Mar 03, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

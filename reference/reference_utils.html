@@ -1,0 +1,321 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Some utilities &mdash; EcoloPy-UNTBgen 0.1.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="EcoloPy-UNTBgen 0.1.3 documentation" href="../index.html" />
+    <link rel="up" title="EcoloPy’s Reference Guide" href="index.html" />
+    <link rel="next" title="UNTB Model Class" href="reference_lognormal_model.html" />
+    <link rel="prev" title="EcologicalModel Class" href="reference_ecological_model.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="reference_lognormal_model.html" title="UNTB Model Class"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference_ecological_model.html" title="EcologicalModel Class"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">EcoloPy&#8217;s Reference Guide</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="some-utilities">
+<h1>Some utilities<a class="headerlink" href="#some-utilities" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="ecolopy_dev.utils.generate_random_neutral_abundance">
+<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">generate_random_neutral_abundance</tt><big>(</big><em>model_name</em>, <em>size</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#generate_random_neutral_abundance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.generate_random_neutral_abundance" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>model_name</strong> &#8211; model name (ewens, etienne, lognorm)</li>
+<li><strong>size</strong> &#8211; size of the community (J), if log-normal distribution size should be equal to number of species (S)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">random neutral distribution of abundance</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>other args should be of kind theta, I, m</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">ecolopy_dev</span>
+<span class="n">ecolopy</span><span class="o">.</span><span class="n">generate_random_neutral_abundance</span><span class="p">(</span><span class="s">&#39;ewens&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">I</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="ecolopy_dev.utils.shannon_entropy">
+<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">shannon_entropy</tt><big>(</big><em>abund</em>, <em>inds</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#shannon_entropy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.shannon_entropy" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes Shannon entropy (H) for a given abundance table
+and number of individuals.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>abund</strong> &#8211; distribution of abundances as list</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Shannon entropy</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ecolopy_dev.utils.draw_contour_likelihood">
+<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">draw_contour_likelihood</tt><big>(</big><em>abd</em>, <em>model=None</em>, <em>theta_range=None</em>, <em>m_range=None</em>, <em>num_dots=100</em>, <em>local_optima=True</em>, <em>write_lnl=False</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#draw_contour_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.draw_contour_likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw contour plot of the log likelihood of a given abundance to fit Etienne model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>abd</strong> &#8211; Community object</li>
+<li><strong>model</strong> (<em>None</em>) &#8211; model name, if None current model is used</li>
+<li><strong>theta_range</strong> (<em>None</em>) &#8211; minimum and maximum value of theta as list. If None, goes from 1 to number of species (S)</li>
+<li><strong>m_range</strong> (<em>None</em>) &#8211; minimum and maximum value of m as list. If None, goes from 0 to 1</li>
+<li><strong>num_dots</strong> (<em>100</em>) &#8211; Number of dots to paint</li>
+<li><strong>local_optima</strong> (<em>True</em>) &#8211; display all local optima founds as white cross</li>
+<li><strong>write_lnl</strong> (<em>False</em>) &#8211; allow to write likelihood values manually by left click on the contour plot.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ecolopy_dev.utils.draw_shannon_distrib">
+<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">draw_shannon_distrib</tt><big>(</big><em>neut_h</em>, <em>obs_h</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#draw_shannon_distrib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.draw_shannon_distrib" title="Permalink to this definition">¶</a></dt>
+<dd><p>draws distribution of Shannon values for random neutral</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>neut_h</strong> &#8211; list of Shannon entropies corresponding to simulation under neutral model</li>
+<li><strong>obs_h</strong> &#8211; Shannon entropy of observed distribution of abundance</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ecolopy_dev.utils.fast_etienne_likelihood">
+<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">fast_etienne_likelihood</tt><big>(</big><em>mod</em>, <em>params</em>, <em>kda=None</em>, <em>kda_x=None</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#fast_etienne_likelihood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.fast_etienne_likelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>same as Abundance inner function, but takes advantage of constant
+m value when varying only theta.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>abd</strong> &#8211; Abundance object</li>
+<li><strong>params</strong> &#8211; list containing theta and m</li>
+<li><strong>kda_x</strong> &#8211; precomputed list of exp(kda + ind*immig)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ecolopy_dev.utils.pre_get_stirlings">
+<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">pre_get_stirlings</tt><big>(</big><em>max_nm</em>, <em>needed</em>, <em>verbose=True</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#pre_get_stirlings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.pre_get_stirlings" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes advantage of recurrence function:</p>
+<div class="math">
+<p><img src="../_images/math/8b6fceb3107b89472d0f64a6535d2640c19afb0d.png" alt="s(n, m) = s(n-1, m-1) - (n-1) \cdot s(n-1, m)"/></p>
+</div><p>and as  <em>s(whatever, 0) = 0</em> :</p>
+<div class="math">
+<p><img src="../_images/math/35c5dd40113bae4328a4e7f2ced9e8cd09bf706f.png" alt="s(n+1, 1) = -n \cdot s(n, 1)"/></p>
+</div><p>keep only needed stirling numbers (necessary for large communities)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>max_nm</strong> &#8211; max number of individuals in a species</li>
+<li><strong>needed</strong> &#8211; list of individuals count in species in our dataset, needed
+in order to limit the number of stirling numbers kept in
+memory.</li>
+<li><strong>verbose</strong> (<em>True</em>) &#8211; displays information about state.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ecolopy_dev.utils.mul_polyn">
+<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">mul_polyn</tt><big>(</big><em>polyn_a</em>, <em>polyn_b</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#mul_polyn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.mul_polyn" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the product of 2 polynomials, depending of the differences in length
+of the two polynomials, this function will call one of:
+* _mul_uneq_polyn: when length of polyn_a is &gt;= length of polyn_b, will iterate over coefficient.
+* _mul_simil_polyn: in case both polynomials have equal length, will iterate over factors.</p>
+<p>to test multiplication of pylnomials try equality of the two functions:
+mul_uneq_polyn(polyn_a, polyn_b, len_a, len_b) == _mul_simil_polyn(polyn_a, polyn_b, len_a, len_b)</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">ecolopy_dev.utils</span> <span class="kn">import</span> <span class="n">mul_polyn</span>
+<span class="c"># (2 + 3^x + 5x^2)  * (x)</span>
+<span class="n">mul_polyn</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="c"># will return: [mpfr(&#39;0.0&#39;), mpfr(&#39;2.0&#39;), mpfr(&#39;3.0&#39;), mpfr(&#39;5.0&#39;)]</span>
+<span class="c"># that is: 0 + 2x + 3x^2 + 5x^3</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>polyn_a</strong> &#8211; list of indices of polynomial</li>
+<li><strong>polyn_b</strong> &#8211; list of indices of polynomial (e.g.: [1,3,5,0,2] for <img class="math" src="../_images/math/af43ab1b4e83a512e40f616272419eb5afd3d602.png" alt="2 + 3^x + 5x^2 + 0x^3 + 2x^4"/>)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list representing multiplication of the two polynomials</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ecolopy_dev.utils.power_polyn">
+<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">power_polyn</tt><big>(</big><em>polyn_a</em>, <em>power</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#power_polyn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.power_polyn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ecolopy_dev.utils.table">
+<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">table</tt><big>(</big><em>out</em>, <em>spp=None</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.table" title="Permalink to this definition">¶</a></dt>
+<dd><p>data to contingency table
+any kind of data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>out</strong> &#8211; species abundance</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of counts of individuals by species</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/dna-tree-forest.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Download and Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/load_abundance.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">EcoloPy&#8217;s Reference Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="reference_community.html">Community Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_ecological_model.html">EcologicalModel Class</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Some utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_lognormal_model.html">UNTB Model Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_untb_model.html">UNTB Model Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_ewens_model.html">Ewens Model Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference_etienne_model.html">Etienne Model Class</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/reference/reference_utils.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="reference_ecological_model.html"
+                        title="previous chapter">EcologicalModel Class</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="reference_lognormal_model.html"
+                        title="next chapter">UNTB Model Class</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="reference_lognormal_model.html" title="UNTB Model Class"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="reference_ecological_model.html" title="EcologicalModel Class"
+             >previous</a> |</li>
+        <li><a href="../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >EcoloPy&#8217;s Reference Guide</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Francois Serra, Hernán Dopazo.
+      Last updated on Mar 03, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

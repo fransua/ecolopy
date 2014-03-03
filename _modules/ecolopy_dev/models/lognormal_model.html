@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ecolopy_dev.models.lognormal_model &mdash; EcoloPy-UNTBgen 0.1.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="EcoloPy-UNTBgen 0.1.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for ecolopy_dev.models.lognormal_model</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">21 Sep 2011</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span>  <span class="o">=</span> <span class="s">&quot;Francois-Jose Serra&quot;</span>
+<span class="n">__email__</span>   <span class="o">=</span> <span class="s">&quot;francois@barrabin.org&quot;</span>
+<span class="n">__licence__</span> <span class="o">=</span> <span class="s">&quot;GPLv3&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.13&quot;</span>
+
+
+<span class="kn">from</span> <span class="nn">ecolopy_dev.models</span> <span class="kn">import</span> <span class="n">EcologicalModel</span>
+<span class="kn">from</span> <span class="nn">ecolopy_dev.utils</span>  <span class="kn">import</span> <span class="n">table</span><span class="p">,</span> <span class="n">lpoch</span>
+<span class="kn">from</span> <span class="nn">math</span>               <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">lgamma</span>
+<span class="kn">from</span> <span class="nn">numpy</span>              <span class="kn">import</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span>
+<span class="kn">from</span> <span class="nn">random</span>             <span class="kn">import</span> <span class="n">lognormvariate</span>
+
+<div class="viewcode-block" id="LognormalModel"><a class="viewcode-back" href="../../../reference/reference_lognormal_model.html#ecolopy_dev.models.lognormal_model.LognormalModel">[docs]</a><span class="k">class</span> <span class="nc">LognormalModel</span><span class="p">(</span><span class="n">EcologicalModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LognormalModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">community</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;sd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+    
+<div class="viewcode-block" id="LognormalModel.likelihood"><a class="viewcode-back" href="../../../reference/reference_lognormal_model.html#ecolopy_dev.models.lognormal_model.LognormalModel.likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">likelihood</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        get likelihood value of Ewens according to Parthy/Tetame (Jabot 2008)</span>
+<span class="sd">        </span>
+<span class="sd">        :argument theta: value of theta</span>
+<span class="sd">        :returns: likelihood</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">lgamma</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">table</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">abund</span><span class="p">)</span>
+        <span class="n">phi</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">int</span> <span class="p">(</span><span class="nb">max</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">abund</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span> <span class="p">(</span><span class="n">phi</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">spe</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span><span class="p">):</span>
+            <span class="n">factor</span> <span class="o">-=</span> <span class="n">log</span> <span class="p">(</span><span class="nb">max</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">abund</span><span class="p">[</span><span class="n">spe</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">spe</span> <span class="ow">in</span> <span class="nb">xrange</span> <span class="p">(</span><span class="nb">max</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">abund</span><span class="p">)):</span>
+            <span class="n">factor</span> <span class="o">-=</span> <span class="n">lgamma</span> <span class="p">(</span><span class="n">phi</span><span class="p">[</span><span class="n">spe</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">lnl</span> <span class="o">=</span> <span class="n">lpoch</span> <span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">J</span><span class="p">)</span> <span class="o">-</span> <span class="n">log</span> <span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span> <span class="o">-</span> <span class="n">factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span> <span class="o">=</span> <span class="n">factor</span>
+        <span class="k">return</span> <span class="n">lnl</span>
+</div>
+<div class="viewcode-block" id="LognormalModel.optimize"><a class="viewcode-back" href="../../../reference/reference_lognormal_model.html#ecolopy_dev.models.lognormal_model.LognormalModel.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Main function to optimize theta using theta likelihood function, according to Ewens</span>
+<span class="sd">        model.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean</span><span class="p">([</span><span class="nb">float</span> <span class="p">(</span><span class="n">log</span> <span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">abund</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;sd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span> <span class="p">([</span><span class="nb">float</span> <span class="p">(</span><span class="n">log</span> <span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">abund</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lnL</span>              <span class="o">=</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="LognormalModel.random_community"><a class="viewcode-back" href="../../../reference/reference_lognormal_model.html#ecolopy_dev.models.lognormal_model.LognormalModel.random_community">[docs]</a>    <span class="k">def</span> <span class="nf">random_community</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inds</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sd</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        generates random lognormal distribution</span>
+
+<span class="sd">        :argument inds: number of individuals in community (J)</span>
+<span class="sd">        :argument sd: usually standard deviation of the distribution of abundances</span>
+<span class="sd">        :argument mu: usually mean of the distribution of abundances</span>
+
+<span class="sd">        :returns: distribution of abundance (list)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">inds</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">community</span><span class="o">.</span><span class="n">S</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="n">sd</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;sd&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">lognormvariate</span> <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sd</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">inds</span><span class="p">)]</span>
+        </div>
+    <span class="k">def</span> <span class="nf">get_mu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]</span>
+
+    <span class="n">mu</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_mu</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s">&quot;mu&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_sd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="p">[</span><span class="s">&#39;sd&#39;</span><span class="p">]</span>
+
+    <span class="n">sd</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_sd</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s">&quot;standard deviation&quot;</span><span class="p">)</span>
+
+        </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/dna-tree-forest.png" alt="Logo"/>
+            </a></p>
+<h3><a href="../../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Download and Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial/load_abundance.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">EcoloPy&#8217;s Reference Guide</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../../index.html">EcoloPy-UNTBgen 0.1.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Francois Serra, Hernán Dopazo.
+      Last updated on Mar 03, 2014.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
