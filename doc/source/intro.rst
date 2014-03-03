@@ -3,8 +3,6 @@
 Introduction
 ************
 
-.. contents::
-
 
 What is EcoloPy?
 ================
@@ -28,7 +26,6 @@ The ecological models currently implemented are:
   * Hubbell's implementation of Ewens sampling formula [Hubbell2001]_.
   * Etienne's sampling formula [Etienne2005]_.
   * Log-normal.
-
 
 
 References

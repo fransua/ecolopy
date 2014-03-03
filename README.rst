@@ -2,6 +2,31 @@
 EcoloPy
 =======
 
+**a Python package to test for Unified Neutral Theory of Biodiversity and biogeography in Large dataset.**
+EcoloPy deal with species abundance and diversity data. It allows to fit this data into ecological models and implements some statistical tests.
+It is able to deal with large dataset like genetic element content of mammalian genomes.
+
+The package was implemented in the context of a study of the distribution of genetic elements in Eukaryotic genomes `[Serra2013]`_.
+
+
+Documentation
+=============
+
+http://fransua.github.io/ecolopy/
+
+
+.. _[Serra2013]:
+
+Citing EcoloPy
+--------------
+
+Please refer to the following article if you use this package to analyze or process results that are part of a published work:
+
+Serra, F., Becher, V., & Dopazo, H. (2013). 
+**Neutral Theory Predicts the Relative Abundance and Diversity of Genetic Elements in a Broad Array of Eukaryotic Genomes.** 
+PloS One, 8(6), e63915. doi:`10.1371/journal.pone.0063915 <http://dx.plos.org/10.1371/journal.pone.0063915>`_
+
+
 PREREQUISITE
 ============
 
@@ -16,7 +41,7 @@ This is to install python packages easily.
 
 
 MPFR 
-----
+-----
 
 http://www.mpfr.org/
 
@@ -118,23 +143,13 @@ test usage:
 
 TODO:
 -----
-* revise all doc.
 * do something with metacommunity
 
-Links
-=====
 
-Documentation
--------------
-
-http://fransua.github.io/ecolopy/
-
-
-
-travis build
+Travis build
 ------------
 
-`Travis CI <https://travis-ci.org/#!/tkf/emacs-jedi>`_ |build-status|
+*Broken* -> problem with scipy install at travis.
 
 .. |build-status|
    image:: https://secure.travis-ci.org/fransua/ecolopy.png
