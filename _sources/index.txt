@@ -16,7 +16,7 @@ The source is freely available for download here:
 https://github.com/fransua/ecolopy *(Do not hesitate to send us feedback)*.
 
 Table of Contents:
-******************
+==================
 
 .. toctree::
    :maxdepth: 2
