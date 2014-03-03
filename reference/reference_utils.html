@@ -121,7 +121,7 @@ and number of individuals.</p>
 
 <dl class="function">
 <dt id="ecolopy_dev.utils.draw_shannon_distrib">
-<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">draw_shannon_distrib</tt><big>(</big><em>neut_h</em>, <em>obs_h</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#draw_shannon_distrib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.draw_shannon_distrib" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">ecolopy_dev.utils.</tt><tt class="descname">draw_shannon_distrib</tt><big>(</big><em>neut_h</em>, <em>obs_h</em>, <em>outfile=None</em>, <em>filetype=None</em>, <em>size=(15</em>, <em>15)</em><big>)</big><a class="reference internal" href="../_modules/ecolopy_dev/utils.html#draw_shannon_distrib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ecolopy_dev.utils.draw_shannon_distrib" title="Permalink to this definition">¶</a></dt>
 <dd><p>draws distribution of Shannon values for random neutral</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -130,6 +130,10 @@ and number of individuals.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>neut_h</strong> &#8211; list of Shannon entropies corresponding to simulation under neutral model</li>
 <li><strong>obs_h</strong> &#8211; Shannon entropy of observed distribution of abundance</li>
+<li><strong>outfile</strong> (<em>None</em>) &#8211; path were image will be saved, if none, plot
+will be shown using matplotlib GUI</li>
+<li><strong>filetype</strong> (<em>None</em>) &#8211; pdf or png</li>
+<li><strong>size</strong> (<em>(15,15)</em>) &#8211; size in inches of the drawing</li>
 </ul>
 </td>
 </tr>
