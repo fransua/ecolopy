@@ -1,14 +1,17 @@
-
+import matplotlib
+matplotlib.use('Agg')
 
 from ecolopy_dev import Community
 from ecolopy_dev.utils import draw_shannon_distrib
 
-abd = Community('test.txt')
+abd = Community('dataset_trial/bci_short.txt')
 abd.fit_model('lognormal')
 abd.set_current_model('lognormal')
 pval, neut_h = abd.test_neutrality (model='lognormal',
                                     gens=1000, full=True)
-draw_shannon_distrib(neut_h, abd.shannon)
+draw_shannon_distrib(neut_h, abd.shannon, outfile='lala.png')
+
+
 
 abd2 = Community('test2.txt')
 abd2.fit_model('lognormal')

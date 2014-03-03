@@ -374,12 +374,17 @@ def draw_contour_likelihood (abd, model=None, theta_range=None,
     pyplot.show()
 
 
-def draw_shannon_distrib(neut_h, obs_h):
+def draw_shannon_distrib(neut_h, obs_h, outfile=None, filetype=None,
+                         size=(15, 15)):
     '''
     draws distribution of Shannon values for random neutral
 
     :argument neut_h: list of Shannon entropies corresponding to simulation under neutral model
     :argument obs_h: Shannon entropy of observed distribution of abundance
+    :argument None outfile: path were image will be saved, if none, plot
+       will be shown using matplotlib GUI
+    :argument None filetype: pdf or png
+    :argument (15,15) size: size in inches of the drawing
     
     '''
     neut_h = np.array ([float (x) for x in neut_h])
@@ -391,7 +396,14 @@ def draw_shannon_distrib(neut_h, obs_h):
     pyplot.xlabel('Shannon entropy (H)')
     pyplot.ylabel('Number of observations over %s simulations' % (len (neut_h)))
     pyplot.title("Histogram of entropies from %s simulations compared to \nobserved entropy (red), deviation computed from simulation" % (len (neut_h)))
-    pyplot.show()
+    fig = pyplot.gcf()
+    dpi = fig.get_dpi()
+    fig.set_size_inches (size)
+    if outfile:
+        fig.savefig(outfile, dpi=dpi+30, filetype=filetype)
+        pyplot.close()
+    else:
+        pyplot.show()
 
 
 def mean (x):

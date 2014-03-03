@@ -138,7 +138,7 @@ class Community (object):
         Draw Relative Species Abundances curve.
 
         :argument None outfile: path were image will be saved, if none, plot
-        will be shown using matplotlib GUI
+           will be shown using matplotlib GUI
         :argument None filetype: pdf or png
         :argument (15,15) size: size in inches of the drawing
 
