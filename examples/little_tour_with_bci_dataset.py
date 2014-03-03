@@ -321,7 +321,6 @@ print 'Best optimization method was: ' + met
 # load it as 'etienne' model
 com.set_model(tmp[met]['model'])
 
-raw_input()
 
 print """
 we have run now one new model, Community object are able to decide though LRT
