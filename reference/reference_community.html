@@ -61,7 +61,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>data</strong> &#8211; <p>containing species count, can be given in one of:</p>
 <ul>
 <li>python list, each element being a species count</li>
@@ -69,18 +69,13 @@
 <li>pickle file containing community object</li>
 </ul>
 </li>
-<li><strong>j_tot</strong> (<em>None</em>) &#8211; is the size of the metacommunity, if not defined</li>
+<li><strong>j_tot</strong> (<em>None</em>) &#8211; is the size of the metacommunity, if not defined
+j_tot = J * 3</li>
 </ul>
 </td>
 </tr>
-</tbody>
-</table>
-<p>j_tot = J * 3</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">an Community object</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">an Community object</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -143,16 +138,10 @@ its corresponding optimize function.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>Ewens</em>) &#8211; name of the model, between Etienne, Ewens or</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>Ewens</em>) &#8211; name of the model, between Etienne, Ewens or
+Log-normal</td>
 </tr>
-</tbody>
-</table>
-<p>Log-normal</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">model</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">model</td>
 </tr>
 </tbody>
 </table>
@@ -168,16 +157,18 @@ if none of them are given, values of current Community are used.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>model</strong> (<em>None</em>) &#8211; model name (default current model)</li>
-<li><strong>J</strong> (<em>None</em>) &#8211; size of wanted community (default size of the</li>
+<li><strong>J</strong> (<em>None</em>) &#8211; size of wanted community (default size of the
+community of current abundance)</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">random neutral distribution of abundances</p>
 </td>
 </tr>
 </tbody>
 </table>
-<p>community of current abundance)
-:returns: random neutral distribution of abundances</p>
 </dd></dl>
 
 <dl class="method">
@@ -202,11 +193,11 @@ if none of them are given, values of current Community are used.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> &#8211; name of a computed model</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a EcologicalModel object corresponding to one of the computed</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a EcologicalModel object corresponding to one of the computed
+models</td>
 </tr>
 </tbody>
 </table>
-<p>models</p>
 </dd></dl>
 
 <dl class="method">
@@ -246,22 +237,17 @@ WARNING: do not overwrite values of params.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>model_1</strong> &#8211; string representing simplest model, usually Ewens</li>
-<li><strong>model_2</strong> &#8211; string representing most complex model, usually</li>
+<li><strong>model_2</strong> &#8211; string representing most complex model, usually
+Etienne</li>
+<li><strong>dgf</strong> (<em>1</em>) &#8211; number of degrees of freedom (1 when comparing Etienne
+and Ewens)</li>
 </ul>
 </td>
 </tr>
-</tbody>
-</table>
-<p>Etienne
-:argument 1 dgf: number of degrees of freedom (1 when comparing Etienne
-and Ewens)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">p-value of rejection of alternative model</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">p-value of rejection of alternative model</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -329,30 +315,32 @@ higher then neutral</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>model</strong> (<em>ewens</em>) &#8211; model name otherwise, current model is used</li>
 <li><strong>gens</strong> (<em>100</em>) &#8211; number of random neutral distributions to generate</li>
-<li><strong>full</strong> (<em>False</em>) &#8211; also return list of compared values (H or lnL) for</li>
+<li><strong>full</strong> (<em>False</em>) &#8211; also return list of compared values (H or lnL) for
+simulated abundances</li>
+<li><strong>fix_s</strong> (<em>False</em>) &#8211; decide whether to fix or not the number of
+species for the generation of random neutral communities</li>
+<li><strong>tries</strong> (<em>False</em>) &#8211; in case S is fixed, determines the number of
+tries in order to obtain the exact same number of species as original
+community. In case The number of tries is exceeded, an ERROR message is
+displayed, and p-value returned is 1.0.</li>
+<li><strong>method</strong> (<em>shannon</em>) &#8211; can be either &#8216;Shannon&#8217; for comparing
+Shannon&#8217;s entropies or &#8216;loglike&#8217; for comparing log-likelihood values
+(Etienne 2007). Last method is much more computationally expensive, as
+likelihood of neutral distribution must be calculated.</li>
+<li><strong>n_cpus</strong> (<em>1</em>) &#8211; number of CPUs to use</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">p_value if full=True also returns Shannon entropy (or
+likelihoods if method=&#8217;loglike&#8217;) of all random neutral abundances
+generated</p>
 </td>
 </tr>
 </tbody>
 </table>
-<p>simulated abundances
-:argument False fix_s: decide whether to fix or not the number of
-species for the generation of random neutral communities
-:argument False tries: in case S is fixed, determines the number of
-tries in order to obtain the exact same number of species as original
-community. In case The number of tries is exceeded, an ERROR message is
-displayed, and p-value returned is 1.0.
-:argument shannon method: can be either &#8216;Shannon&#8217; for comparing
-Shannon&#8217;s entropies or &#8216;loglike&#8217; for comparing log-likelihood values
-(Etienne 2007). Last method is much more computationally expensive, as
-likelihood of neutral distribution must be calculated.
-:argument 1 n_cpus: number of CPUs to use
-:returns: p_value if full=True also returns Shannon entropy (or
-likelihoods if method=&#8217;loglike&#8217;) of all random neutral abundances
-generated</p>
 </dd></dl>
 
 </dd></dl>
