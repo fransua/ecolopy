@@ -30,12 +30,14 @@ class EwensModel(UNTBModel):
         :argument theta: value of theta
         :returns: likelihood
         '''
+        if type(theta) is list:
+            theta = theta[0]
         factor = lgamma(self.community.J + 1)
         phi = table (self.community.abund)
         phi += [0] * int(max(self.community.abund) - len (phi))
         for spe in xrange(self.community.S):
             factor -= log(max(1, self.community.abund[spe]))
-        for spe in xrange(max(self.community.abund)):
+        for spe in xrange(int(max(self.community.abund))):
             factor -= lgamma(phi[spe] + 1)
         lnl = lpoch(theta, self.community.J) - log(theta) * self.community.S - factor
         self._factor = factor

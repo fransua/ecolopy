@@ -96,7 +96,7 @@ class EtienneModel(UNTBModel):
                     log_immig * self.community.S + lngamma(theta))
         gam_theta_s = gamma(theta_s)
         lik = mpfr(0.0)
-        for abd in xrange(self.community.J - self.community.S):
+        for abd in xrange(int(self.community.J - self.community.S)):
             lik += poch1 * exp(kda[abd] + abd * log_immig) / gam_theta_s
             gam_theta_s *= theta_s + abd
         return -log(lik)
@@ -168,17 +168,17 @@ class EtienneModel(UNTBModel):
         # compute all stirling numbers taking advantage of recurrence function
         needed = {0: True}
         for i in xrange(sdiff):
-            for k in xrange(1, specabund[0][i] + 1):
+            for k in xrange(1, int(specabund[0][i] + 1)):
                 needed[int(specabund[0][i])] = True
         if verbose:
             stdout.write('  Getting some stirling numbers...\n')
-        pre_get_stirlings(max(specabund[0]), needed, verbose=verbose)
+        pre_get_stirlings(int(max(specabund[0])), needed, verbose=verbose)
         for i in xrange(sdiff):
             if verbose:
                 stdout.write("\r  Computing K(D,A) at species %s out of %s" \
                              % (i+1, sdiff))
                 stdout.flush ()
-            sai = specabund[0][i]
+            sai = int(specabund[0][i])
             polyn1 = [stirling(sai, k) * factorial_div(k, sai) \
                       for k in xrange(1, sai+1)]
             polyn1 = power_polyn(polyn1, specabund[1][i]) \

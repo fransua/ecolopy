@@ -17,6 +17,7 @@ from os.path        import isfile, exists
 from sys            import stdout, stderr
 from numpy          import arange
 from warnings       import warn
+import multiprocessing as mu
 
 from ecolopy_dev.utils  import shannon_entropy
 from ecolopy_dev.models import *
@@ -280,7 +281,7 @@ class Community (object):
                 
 
     def test_neutrality (self, model='ewens', gens=100, full=False, fix_s=False,
-                         tries=1000, method='shannon', verbose=False):
+                         tries=1000, method='shannon', verbose=False, n_cpus=1):
         """
         test for neutrality comparing Shannon entropy
         if (Hobs > Hrand_neut) then evenness of observed data is
@@ -300,50 +301,47 @@ class Community (object):
         Shannon's entropies or 'loglike' for comparing log-likelihood values
         (Etienne 2007). Last method is much more computationally expensive, as
         likelihood of neutral distribution must be calculated.
+        :argument 1 n_cpus: number of CPUs to use
         :returns: p_value if full=True also returns Shannon entropy (or
         likelihoods if method='loglike') of all random neutral abundances
         generated
         """
-        fast_shannon = lambda abund: sum ([-spe * log(spe) for spe in abund])
         pval = 0
         inds = self.S if 'LognormalModel' in repr(model) else self.J
         model = self.get_model(model)
         if not model:
             warn("WARNING: Model '%s' not found.\n" % model)
             return None
-        neut_h = []
-        for _ in xrange (gens):
+        # pool = mu.Pool(n_cpus)
+        jobs = {}
+        for i in xrange(gens):
             if verbose:
                 stdout.write ("\r  Generating random neutral abundances %s/%s" \
                               % (_ + 1, gens))
                 stdout.flush ()
-            if fix_s:
-                for _ in xrange (tries):
-                    tmp = model.random_community(inds)
-                    if len(tmp) == self.S:
-                        break
-                else:
-                    stderr.write('ERROR: Unable to obtain S by simulation')
-                    if full:
-                        return float('nan'), []
-                    return float('nan')
-            else:
-                tmp = model.random_community(inds)
-            l_tmp = sum (tmp)
+            # jobs[i] = pool.apply_async(
+            #     _one_neutrality_test, args=(self.S, model, fix_s, full, tries,
+            #                                 inds, method))
+            jobs[i] = _one_neutrality_test(self.S, model, fix_s, full, tries,
+                                           inds, method)
+        # pool.close()
+        # pool.join()
+        
+        neut_h = []
+        for i in xrange (gens):
+            # neut_h.append(jobs[i].get())
+            neut_h.append(jobs[i])
             if method == 'shannon':
-                neut_h.append ((fast_shannon(tmp) + l_tmp*log(l_tmp))/l_tmp)
                 pval += neut_h[-1] < self.shannon
             elif method == 'loglike':
-                tmp = Community(tmp)
-                tmp._get_kda(verbose=False)
-                neut_h.append(tmp.etienne_likelihood([model.theta, model.m]))
                 pval += neut_h[-1] < model.lnL
         if verbose:
             stdout.write ('\n')
         if full:
             return float (pval)/gens, neut_h
         return float (pval)/gens
-    
+
+  
 
     def _parse_infile (self):
         '''
@@ -433,3 +431,25 @@ class Community (object):
             J = self.S if 'LognormalModel' in repr(model) else self.J
         return model.random_community(J)
 
+
+_fast_shannon = lambda abund: sum ([-spe * log(spe) for spe in abund])
+
+def _one_neutrality_test(S, model, fix_s, full, tries, inds, method):
+    if fix_s:
+        for _ in xrange (tries):
+            tmp = model.random_community(inds)
+            if len(tmp) == S:
+                break
+        else:
+            stderr.write('ERROR: Unable to obtain S by simulation')
+            if full:
+                return float('nan'), []
+            return float('nan')
+    else:
+        tmp = model.random_community(inds)
+    l_tmp = sum (tmp)
+    if method == 'shannon':
+        return (_fast_shannon(tmp) + l_tmp*log(l_tmp))/l_tmp
+    elif method == 'loglike':
+        return model.__class__(Community(tmp), verbose=False).likelihood(
+            [model.theta, model.m])

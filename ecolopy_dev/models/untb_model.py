@@ -35,11 +35,11 @@ class UNTBModel(EcologicalModel):
         
     def __compute_factor(self):
         self._factor = lgamma (self.community.J + 1)
-        phi = table (self.community.abund)
+        phi = table(self.community.abund)
         phi += [0] * int (max (self.community.abund) - len (phi))
         for spe in xrange (self.community.S):
             self._factor -= log (max (1, self.community.abund[spe]))
-        for spe in xrange (max (self.community.abund)):
+        for spe in xrange (int(max(self.community.abund))):
             self._factor -= lgamma (phi[spe] + 1)
 
             
