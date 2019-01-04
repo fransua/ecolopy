@@ -33,7 +33,7 @@ class Community (object):
        * pickle file containing community object
 
     :argument None j_tot: is the size of the metacommunity, if not defined
-    j_tot = J * 3
+       j_tot = J * 3
 
     :returns: an Community object
 
@@ -192,9 +192,9 @@ class Community (object):
 
         :argument model_1: string representing simplest model, usually Ewens
         :argument model_2: string representing most complex model, usually
-        Etienne
+           Etienne
         :argument 1 dgf: number of degrees of freedom (1 when comparing Etienne
-        and Ewens)
+           and Ewens)
         
         :returns: p-value of rejection of alternative model
         
@@ -229,7 +229,7 @@ class Community (object):
         its corresponding optimize function.
 
         :argument Ewens name: name of the model, between Etienne, Ewens or
-        Log-normal
+           Log-normal
 
         :return: model
         """
@@ -256,7 +256,7 @@ class Community (object):
         """
         :argument name: name of a computed model
         :returns: a EcologicalModel object corresponding to one of the computed
-        models
+           models
         """
         if name in self.__models:
             return self.__models[name]
@@ -290,21 +290,21 @@ class Community (object):
         :argument ewens model: model name otherwise, current model is used
         :argument 100 gens: number of random neutral distributions to generate
         :argument False full: also return list of compared values (H or lnL) for
-        simulated abundances
+           simulated abundances
         :argument False fix_s: decide whether to fix or not the number of
-        species for the generation of random neutral communities
+           species for the generation of random neutral communities
         :argument False tries: in case S is fixed, determines the number of
-        tries in order to obtain the exact same number of species as original
-        community. In case The number of tries is exceeded, an ERROR message is
-        displayed, and p-value returned is 1.0.
+           tries in order to obtain the exact same number of species as original
+           community. In case The number of tries is exceeded, an ERROR message is
+           displayed, and p-value returned is 1.0.
         :argument shannon method: can be either 'Shannon' for comparing
-        Shannon's entropies or 'loglike' for comparing log-likelihood values
-        (Etienne 2007). Last method is much more computationally expensive, as
-        likelihood of neutral distribution must be calculated.
+           Shannon's entropies or 'loglike' for comparing log-likelihood values
+           (Etienne 2007). Last method is much more computationally expensive, as
+           likelihood of neutral distribution must be calculated.
         :argument 1 n_cpus: number of CPUs to use
         :returns: p_value if full=True also returns Shannon entropy (or
-        likelihoods if method='loglike') of all random neutral abundances
-        generated
+           likelihoods if method='loglike') of all random neutral abundances
+           generated
         """
         pval = 0
         inds = self.S if 'LognormalModel' in repr(model) else self.J
@@ -413,7 +413,7 @@ class Community (object):
 
         :argument None model: model name (default current model)
         :argument None J: size of wanted community (default size of the
-        community of current abundance)
+           community of current abundance)
         :returns: random neutral distribution of abundances
         
         """

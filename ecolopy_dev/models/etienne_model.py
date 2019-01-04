@@ -109,9 +109,9 @@ class EtienneModel(UNTBModel):
         by Tetame, are raised by fmin function.
 
         :argument fmin method: optimization strategy, can be one of fmin,
-        slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)
+           slsqp, l_bfgs_b or tnc (see scipy.optimize documentation)
         :argument (community.S,0.5) start: tupple for startin values of theta
-        and m
+           and m
         :argument True verbose: displays running status
         
         '''
